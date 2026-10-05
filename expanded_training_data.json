@@ -1,0 +1,9658 @@
+[
+  {
+    "text": "open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch console",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch code",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch top",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch files",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch google",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch github",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "start chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "start google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "start browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "start web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "start internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "start firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "start chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "start terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "start bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "start console",
+    "intent": "open_app"
+  },
+  {
+    "text": "start shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "start command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "start cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "start command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "start geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "start geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "start sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "start sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "start sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "start visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "start matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "start matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "start top",
+    "intent": "open_app"
+  },
+  {
+    "text": "start system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "start calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "start settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "start system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "start control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "start files",
+    "intent": "open_app"
+  },
+  {
+    "text": "start my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "start file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "start folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "start home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "start explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "start youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "start google",
+    "intent": "open_app"
+  },
+  {
+    "text": "start github",
+    "intent": "open_app"
+  },
+  {
+    "text": "start reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "start twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "start wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "start learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "start learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "start html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "start my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "run chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "run google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "run browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "run web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "run internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "run firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "run chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "run terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "run bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "run console",
+    "intent": "open_app"
+  },
+  {
+    "text": "run shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "run command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "run cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "run command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "run geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "run geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "run sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "run sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "run sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "run vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "run visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "run code",
+    "intent": "open_app"
+  },
+  {
+    "text": "run vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "run vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "run neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "run text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "run matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "run matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "run htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "run top",
+    "intent": "open_app"
+  },
+  {
+    "text": "run system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "run calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "run settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "run system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "run control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "run files",
+    "intent": "open_app"
+  },
+  {
+    "text": "run my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "run file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "run folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "run home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "run explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "run youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "run google",
+    "intent": "open_app"
+  },
+  {
+    "text": "run github",
+    "intent": "open_app"
+  },
+  {
+    "text": "run reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "run twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "run wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "run learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "run learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "run html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "run my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up console",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up top",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up files",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up google",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up github",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "start up my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up console",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up code",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up top",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up files",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up google",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up github",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "fire up my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up console",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up code",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up top",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up files",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up google",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up github",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "bring up my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up console",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up top",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up files",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up google",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up github",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "open up my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "please open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch console",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch code",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch top",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch files",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch google",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch github",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "please launch my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch console",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch code",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch top",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch files",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch google",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch github",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "can you launch my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch console",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch code",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch top",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch files",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch google",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch github",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "could you launch my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "i want to open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "let me open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to console",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to code",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to top",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to files",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to google",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to github",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "switch to my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to console",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to code",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to top",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to files",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to google",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to github",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "go to my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "access chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "access google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "access browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "access web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "access internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "access firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "access chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "access terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "access bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "access console",
+    "intent": "open_app"
+  },
+  {
+    "text": "access shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "access command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "access cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "access command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "access geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "access geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "access geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "access sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "access sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "access sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "access vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "access vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "access visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "access code",
+    "intent": "open_app"
+  },
+  {
+    "text": "access vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "access vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "access nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "access neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "access text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "access cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "access matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "access matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "access htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "access top",
+    "intent": "open_app"
+  },
+  {
+    "text": "access system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "access process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "access calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "access calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "access settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "access system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "access control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "access files",
+    "intent": "open_app"
+  },
+  {
+    "text": "access my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "access file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "access folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "access home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "access explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "access youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "access google",
+    "intent": "open_app"
+  },
+  {
+    "text": "access github",
+    "intent": "open_app"
+  },
+  {
+    "text": "access reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "access twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "access wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "access learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "access learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "access html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "access my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the console",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the top",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the files",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the google",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the github",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "open the my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the console",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the code",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the top",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the files",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the google",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the github",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "launch the my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the console",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the top",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the files",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the google",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the github",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "start the my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the console",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the code",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the top",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the files",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the google",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the github",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "run the my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey all thrown open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch console",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch code",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch top",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch files",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch google",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch github",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "ultron launch my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open google chrome",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open web browser",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open internet",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open firefox",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open chromium",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open terminal",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open bash",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open console",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open shell",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open command prompt",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open cmd",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open command line",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open geany",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open geany editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open geany ide",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open sublime",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open sublime text",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open sublime editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open vs code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open vscode",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open visual studio code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open vim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open vim editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open nvim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open neovim",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open text editor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open cmatrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open matrix",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open matrix code",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open htop",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open top",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open system monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open process monitor",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open calculator",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open calc",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open system settings",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open control center",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open files",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open my files",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open file manager",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open home folder",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open explorer",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open youtube",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open google",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open github",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open reddit",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open twitter",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open wikipedia",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open learning",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open learning project",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open html project",
+    "intent": "open_app"
+  },
+  {
+    "text": "hey ultron please open my website",
+    "intent": "open_app"
+  },
+  {
+    "text": "close chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "close google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "close browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "close web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "close internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "close firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "close chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "close terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "close bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "close console",
+    "intent": "close_app"
+  },
+  {
+    "text": "close shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "close command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "close cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "close command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "close geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "close geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "close geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "close sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "close sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "close sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "close vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "close vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "close visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "close code",
+    "intent": "close_app"
+  },
+  {
+    "text": "close vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down console",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down code",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut down vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate console",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate code",
+    "intent": "close_app"
+  },
+  {
+    "text": "terminate vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill console",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill code",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit console",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit code",
+    "intent": "close_app"
+  },
+  {
+    "text": "exit vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit console",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit code",
+    "intent": "close_app"
+  },
+  {
+    "text": "quit vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop console",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop code",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the console",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the code",
+    "intent": "close_app"
+  },
+  {
+    "text": "close the vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the console",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the code",
+    "intent": "close_app"
+  },
+  {
+    "text": "kill the vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close console",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close code",
+    "intent": "close_app"
+  },
+  {
+    "text": "please close vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close console",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close code",
+    "intent": "close_app"
+  },
+  {
+    "text": "can you close vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut console",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut code",
+    "intent": "close_app"
+  },
+  {
+    "text": "shut vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off console",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off code",
+    "intent": "close_app"
+  },
+  {
+    "text": "turn off vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "end chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "end google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "end browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "end web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "end internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "end firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "end chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "end terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "end bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "end console",
+    "intent": "close_app"
+  },
+  {
+    "text": "end shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "end command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "end cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "end command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "end geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "end geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "end geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "end sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "end sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "end sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "end vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "end vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "end visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "end code",
+    "intent": "close_app"
+  },
+  {
+    "text": "end vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running console",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running code",
+    "intent": "close_app"
+  },
+  {
+    "text": "stop running vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close console",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close code",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey ultron close vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close console",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close code",
+    "intent": "close_app"
+  },
+  {
+    "text": "hey all thrown close vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close google chrome",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close web browser",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close internet",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close firefox",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close chromium",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close terminal",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close bash",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close console",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close shell",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close command prompt",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close cmd",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close command line",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close geany",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close geany editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close geany ide",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close sublime",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close sublime text",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close sublime editor",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close vs code",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close vscode",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close visual studio code",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close code",
+    "intent": "close_app"
+  },
+  {
+    "text": "ultron close vim",
+    "intent": "close_app"
+  },
+  {
+    "text": "what time is it",
+    "intent": "query_time"
+  },
+  {
+    "text": "what is the time",
+    "intent": "query_time"
+  },
+  {
+    "text": "tell me the time",
+    "intent": "query_time"
+  },
+  {
+    "text": "current time",
+    "intent": "query_time"
+  },
+  {
+    "text": "what time is it now",
+    "intent": "query_time"
+  },
+  {
+    "text": "what day is it",
+    "intent": "query_time"
+  },
+  {
+    "text": "what is today's date",
+    "intent": "query_time"
+  },
+  {
+    "text": "tell me today's date",
+    "intent": "query_time"
+  },
+  {
+    "text": "what is the date",
+    "intent": "query_time"
+  },
+  {
+    "text": "what is the date today",
+    "intent": "query_time"
+  },
+  {
+    "text": "what day is today",
+    "intent": "query_time"
+  },
+  {
+    "text": "time now",
+    "intent": "query_time"
+  },
+  {
+    "text": "date today",
+    "intent": "query_time"
+  },
+  {
+    "text": "can you tell me the time",
+    "intent": "query_time"
+  },
+  {
+    "text": "do you have the time",
+    "intent": "query_time"
+  },
+  {
+    "text": "what's the time",
+    "intent": "query_time"
+  },
+  {
+    "text": "what's today's date",
+    "intent": "query_time"
+  },
+  {
+    "text": "give me the current time",
+    "intent": "query_time"
+  },
+  {
+    "text": "tell me the current date",
+    "intent": "query_time"
+  },
+  {
+    "text": "check the time",
+    "intent": "query_time"
+  },
+  {
+    "text": "check the date",
+    "intent": "query_time"
+  },
+  {
+    "text": "time please",
+    "intent": "query_time"
+  },
+  {
+    "text": "clock time",
+    "intent": "query_time"
+  },
+  {
+    "text": "show time",
+    "intent": "query_time"
+  },
+  {
+    "text": "hey ultron what time is it",
+    "intent": "query_time"
+  },
+  {
+    "text": "hey all thrown what time is it",
+    "intent": "query_time"
+  },
+  {
+    "text": "ultron what time is it",
+    "intent": "query_time"
+  },
+  {
+    "text": "hey all drone what time is it",
+    "intent": "query_time"
+  },
+  {
+    "text": "hey ultron tell me the time",
+    "intent": "query_time"
+  },
+  {
+    "text": "hey all thrown what is the date",
+    "intent": "query_time"
+  },
+  {
+    "text": "what month is it",
+    "intent": "query_time"
+  },
+  {
+    "text": "what year is this",
+    "intent": "query_time"
+  },
+  {
+    "text": "tell me what time it is",
+    "intent": "query_time"
+  },
+  {
+    "text": "tell me the hour",
+    "intent": "query_time"
+  },
+  {
+    "text": "search google for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search google for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search the web for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "google python",
+    "intent": "search_web"
+  },
+  {
+    "text": "google python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "google linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "google machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "google artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "google weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "google chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "google javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "google css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "google github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "google space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "google quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "google latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "google how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "google data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up python",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "look up data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "search python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "search linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "search machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "search artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "search weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "search chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "search javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "search css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "search github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "search space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "search latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on python",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "find info on data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "search online for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "look on google for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "query google for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "can you search for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google python",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "please google data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey ultron search for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for python",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "hey all thrown search google for data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search python",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "ultron search data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "find python on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find python tutorials on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find linux commands on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find machine learning on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find artificial intelligence on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find weather today on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find chromeos tips on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find javascript on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find css flexbox on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find github open source on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find space news on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find quantum computing on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find latest news on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find how to code in python on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "find data science on google",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search python",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search python tutorials",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search linux commands",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search machine learning",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search artificial intelligence",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search weather today",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search chromeos tips",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search javascript",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search css flexbox",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search github open source",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search space news",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search quantum computing",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search latest news",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search how to code in python",
+    "intent": "search_web"
+  },
+  {
+    "text": "web search data science",
+    "intent": "search_web"
+  },
+  {
+    "text": "hello",
+    "intent": "greet"
+  },
+  {
+    "text": "hi",
+    "intent": "greet"
+  },
+  {
+    "text": "hey",
+    "intent": "greet"
+  },
+  {
+    "text": "hey ultron",
+    "intent": "greet"
+  },
+  {
+    "text": "hey all thrown",
+    "intent": "greet"
+  },
+  {
+    "text": "hey all drone",
+    "intent": "greet"
+  },
+  {
+    "text": "hello ultron",
+    "intent": "greet"
+  },
+  {
+    "text": "hi ultron",
+    "intent": "greet"
+  },
+  {
+    "text": "are you there",
+    "intent": "greet"
+  },
+  {
+    "text": "are you online",
+    "intent": "greet"
+  },
+  {
+    "text": "are you listening",
+    "intent": "greet"
+  },
+  {
+    "text": "good morning",
+    "intent": "greet"
+  },
+  {
+    "text": "good afternoon",
+    "intent": "greet"
+  },
+  {
+    "text": "good evening",
+    "intent": "greet"
+  },
+  {
+    "text": "wake up",
+    "intent": "greet"
+  },
+  {
+    "text": "wake up ultron",
+    "intent": "greet"
+  },
+  {
+    "text": "yo ultron",
+    "intent": "greet"
+  },
+  {
+    "text": "how are you",
+    "intent": "greet"
+  },
+  {
+    "text": "how are you doing",
+    "intent": "greet"
+  },
+  {
+    "text": "what's up",
+    "intent": "greet"
+  },
+  {
+    "text": "hey there",
+    "intent": "greet"
+  },
+  {
+    "text": "greetings",
+    "intent": "greet"
+  },
+  {
+    "text": "hello assistant",
+    "intent": "greet"
+  },
+  {
+    "text": "hey robot",
+    "intent": "greet"
+  },
+  {
+    "text": "sup ultron",
+    "intent": "greet"
+  },
+  {
+    "text": "are you awake",
+    "intent": "greet"
+  },
+  {
+    "text": "good day",
+    "intent": "greet"
+  },
+  {
+    "text": "hey buddy",
+    "intent": "greet"
+  },
+  {
+    "text": "all thrown",
+    "intent": "greet"
+  },
+  {
+    "text": "ultron",
+    "intent": "greet"
+  },
+  {
+    "text": "what can you do",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "who are you",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "what are you",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "help me",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "help",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "what are your commands",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "list commands",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "show commands",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "what apps can you open",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "introduce yourself",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "tell me about yourself",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "what features do you have",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "what do you do",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "how can you help me",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "show features",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "give me instructions",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "how do i use you",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "what are your skills",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "capabilities",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "what are your capabilities",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "hey ultron what can you do",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "hey all thrown help me",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "ultron who are you",
+    "intent": "query_capabilities"
+  },
+  {
+    "text": "exit",
+    "intent": "exit"
+  },
+  {
+    "text": "quit",
+    "intent": "exit"
+  },
+  {
+    "text": "bye",
+    "intent": "exit"
+  },
+  {
+    "text": "goodbye",
+    "intent": "exit"
+  },
+  {
+    "text": "goodbye ultron",
+    "intent": "exit"
+  },
+  {
+    "text": "shutdown",
+    "intent": "exit"
+  },
+  {
+    "text": "power off",
+    "intent": "exit"
+  },
+  {
+    "text": "stop listening",
+    "intent": "exit"
+  },
+  {
+    "text": "go to sleep",
+    "intent": "exit"
+  },
+  {
+    "text": "sleep",
+    "intent": "exit"
+  },
+  {
+    "text": "exit assistant",
+    "intent": "exit"
+  },
+  {
+    "text": "terminate assistant",
+    "intent": "exit"
+  },
+  {
+    "text": "turn off",
+    "intent": "exit"
+  },
+  {
+    "text": "close ultron",
+    "intent": "exit"
+  },
+  {
+    "text": "power down",
+    "intent": "exit"
+  },
+  {
+    "text": "shut yourself down",
+    "intent": "exit"
+  },
+  {
+    "text": "good night",
+    "intent": "exit"
+  },
+  {
+    "text": "see you later",
+    "intent": "exit"
+  },
+  {
+    "text": "deactivate",
+    "intent": "exit"
+  },
+  {
+    "text": "stop assistant",
+    "intent": "exit"
+  },
+  {
+    "text": "close assistant",
+    "intent": "exit"
+  },
+  {
+    "text": "offline",
+    "intent": "exit"
+  },
+  {
+    "text": "go offline",
+    "intent": "exit"
+  },
+  {
+    "text": "hey ultron exit",
+    "intent": "exit"
+  },
+  {
+    "text": "hey all thrown shutdown",
+    "intent": "exit"
+  },
+  {
+    "text": "ultron goodbye",
+    "intent": "exit"
+  }
+]
