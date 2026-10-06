@@ -1,46 +1,112 @@
 #!/usr/bin/env python3
 """
-High-Precision Training Data Generator for Ultron AI Assistant.
-Generates 1,500+ diverse training examples across all command patterns,
-phonetic speech misrecognitions, and conversational variants.
+Comprehensive High-Precision Training Data Generator for Ultron AI Assistant.
+Generates all possibilities of commands across the entire system:
+- All open verbs, prefixes, polite forms, and app targets ("whole open all possibilities")
+- All file opening and viewing possibilities across all user files and editors
+- All file writing, typing, inserting, appending possibilities
+- All compound multifunctional chained action sequences
+- All close, terminate, and process killing possibilities
+- All web search and Google query patterns
+- All date, time, and calendar inquiries
+- All greetings, capability queries, and exit commands
 """
 
 import json
 import os
+import sys
 
-APPS = [
+# Load local launcher for device-first scanning
+try:
+    from app_launcher import AppLauncher
+    _launcher = AppLauncher()
+    DEVICE_APPS = _launcher.get_all_app_names()
+    USER_FILES = list(_launcher.user_files.keys())
+except Exception:
+    DEVICE_APPS = []
+    USER_FILES = []
+
+# 1. Comprehensive App Catalog
+BASE_APPS = [
     # Browsers
     "chrome", "google chrome", "browser", "web browser", "internet", "firefox", "chromium",
-    # Terminals
-    "terminal", "bash", "console", "shell", "command prompt", "cmd", "command line",
     # Editors & IDEs
-    "geany", "geany editor", "geany ide", "sublime", "sublime text", "sublime editor",
+    "sublime", "sublime text", "sublime editor", "subl", "geany", "geany editor", "geany ide",
     "vs code", "vscode", "visual studio code", "code", "vim", "vim editor", "nvim", "neovim",
-    "text editor",
-    # System & Tools
+    "text editor", "editor",
+    # File Manager & Storage
+    "file manager", "files", "my files", "folder", "home folder", "explorer", "pcmanfm",
+    "desktop preferences", "home", "downloads", "documents", "desktop",
+    # Terminals & Shells
+    "terminal", "bash", "console", "shell", "command prompt", "cmd", "command line", "xterm",
+    # System Monitors & Utilities
     "cmatrix", "matrix", "matrix code", "htop", "top", "system monitor", "process monitor",
-    "calculator", "calc", "settings", "system settings", "control center",
-    # Storage & Files
-    "files", "my files", "file manager", "folder", "home folder", "explorer",
-    # Websites & Projects
-    "youtube", "google", "github", "reddit", "twitter", "wikipedia",
-    "learning", "learning project", "html project", "my website"
+    "settings", "system settings", "control center", "preferences", "calculator", "calc",
+    "python", "python3", "ultron",
+    # Popular Websites & Online Tools
+    "youtube", "google", "github", "gmail", "chatgpt", "reddit", "twitter", "wikipedia",
+    "amazon", "netflix", "spotify",
+    # User Code & Web Projects
+    "learning", "learning project", "html project", "my website", "web project", "coding project"
 ]
 
+ALL_APPS = sorted(list(set(BASE_APPS + [a.lower() for a in DEVICE_APPS])))
+
+# 2. Comprehensive File Catalog
+BASE_FILES = [
+    "learning.py", "learning.cpp", "learning.js", "index.html", "style.css", "index.css",
+    "notes.txt", "main.py", "script.py", "test.py", "todo.txt", "readme.md", "app.py",
+    "server.py", "nodesource_setup.sh", "settings_gui.py", "file_manager_gui.py",
+    "floating_widget.py", "launch_floating.sh", "train_intent.py", "app_launcher.py"
+]
+ALL_USER_FILES = sorted(list(set(BASE_FILES + [
+    f.lower() for f in USER_FILES
+    if any(f.lower().endswith(ext) for ext in [".py", ".cpp", ".js", ".html", ".css", ".txt", ".sh", ".md", ".json"])
+])))
+
+# 3. Comprehensive Open Verbs & Prefixes ("Whole Open All Possibilities")
 OPEN_VERBS = [
-    "open", "launch", "start", "run", "start up", "fire up", "bring up", "open up",
-    "please open", "please launch", "can you open", "could you open", "can you launch",
-    "could you launch", "i want to open", "let me open", "switch to", "go to", "access",
-    "open the", "launch the", "start the", "run the",
-    "hey ultron open", "hey all thrown open", "ultron open", "ultron launch", "hey ultron please open"
+    "open", "launch", "start", "run", "open up", "start up", "fire up", "bring up",
+    "pop up", "pop open", "pull up", "load", "load up", "spin up", "execute", "access",
+    "go to", "switch to", "turn on", "bring on", "show me", "give me", "display",
+    "get me", "view", "let me see", "can you open", "could you open", "would you open",
+    "please open", "can you please open", "could you please open", "would you please open",
+    "i want to open", "i need to open", "i'd like to open", "help me open", "can we open",
+    "let me open", "let's open", "let's start", "let's launch",
+    "open the", "launch the", "start the", "run the", "bring up the", "fire up the",
+    "pull up the", "show the", "load the", "execute the",
+    "hey ultron open", "ultron open", "hey all thrown open", "all thrown open",
+    "hey ultron launch", "ultron launch", "hey ultron start", "ultron start",
+    "hey ultron please open", "ok ultron open", "computer open"
 ]
 
+# 4. Close & Terminate Verbs
 CLOSE_VERBS = [
-    "close", "shut down", "terminate", "kill", "exit", "quit", "stop", "close the",
-    "kill the", "please close", "can you close", "shut", "turn off", "end", "stop running",
-    "hey ultron close", "hey all thrown close", "ultron close"
+    "close", "shut down", "terminate", "kill", "exit", "quit", "stop", "end",
+    "close down", "kill the", "close the", "shut the", "stop running", "turn off",
+    "please close", "can you close", "could you close", "shut", "kill process",
+    "force close", "kill task", "stop task", "dismiss",
+    "hey ultron close", "ultron close", "hey all thrown close", "all thrown close",
+    "hey ultron kill", "ultron terminate"
 ]
 
+# 5. File Writing Phrases & Content Variations
+WRITE_VERBS = ["write", "type", "insert", "add", "put", "append", "save"]
+WRITE_PREPOSITIONS = ["in", "into", "to", "inside"]
+WRITE_TARGETS = [
+    "that file", "the file", "this file", "learning.py", "learning.py file",
+    "notes.txt", "my file", "main.py"
+]
+WRITE_SNIPPETS = [
+    "hi", "hello", "hi there", "hello world", "test", "testing", "print hi",
+    "code", "text", "welcome", "my name is wahid", "python code",
+    "learning python", "print('hello')", "hello python"
+]
+
+# 6. Compound Action Patterns
+CONJUNCTIONS = ["and", "and then", "then", "after that"]
+
+# 7. Time & Date Phrases
 TIME_PHRASES = [
     "what time is it", "what is the time", "tell me the time", "current time",
     "what time is it now", "what day is it", "what is today's date", "tell me today's date",
@@ -48,94 +114,193 @@ TIME_PHRASES = [
     "date today", "can you tell me the time", "do you have the time", "what's the time",
     "what's today's date", "give me the current time", "tell me the current date",
     "check the time", "check the date", "time please", "clock time", "show time",
+    "what month is it", "what year is this", "tell me what time it is", "tell me the hour",
+    "what day of the week is it", "what's the date today", "what time do you have",
+    "can you tell me today's date", "current date and time", "show clock",
     "hey ultron what time is it", "hey all thrown what time is it", "ultron what time is it",
     "hey all drone what time is it", "hey ultron tell me the time", "hey all thrown what is the date",
-    "what month is it", "what year is this", "tell me what time it is", "tell me the hour"
+    "ultron current time", "all thrown what time is it"
 ]
 
+# 8. Web Search Templates & Queries
 SEARCH_TEMPLATES = [
     "search google for {q}", "search the web for {q}", "search for {q}", "google {q}",
     "look up {q}", "search {q}", "find info on {q}", "search online for {q}",
     "look on google for {q}", "query google for {q}", "can you search for {q}",
     "please google {q}", "hey ultron search for {q}", "hey all thrown search google for {q}",
-    "ultron search {q}", "find {q} on google", "web search {q}"
+    "ultron search {q}", "find {q} on google", "web search {q}", "look up {q} online",
+    "google search {q}", "search internet for {q}", "find articles on {q}"
 ]
 
 SEARCH_QUERIES = [
     "python", "python tutorials", "linux commands", "machine learning",
     "artificial intelligence", "weather today", "chromeos tips", "javascript",
     "css flexbox", "github open source", "space news", "quantum computing",
-    "latest news", "how to code in python", "data science"
+    "latest news", "how to code in python", "data science", "sublime text shortcuts",
+    "pcmanfm linux", "bash scripting tutorials", "deep learning models",
+    "offline ai assistants", "crostini linux tips", "html and css"
 ]
 
+# 9. Greeting Phrases
 GREET_PHRASES = [
     "hello", "hi", "hey", "hey ultron", "hey all thrown", "hey all drone",
     "hello ultron", "hi ultron", "are you there", "are you online", "are you listening",
     "good morning", "good afternoon", "good evening", "wake up", "wake up ultron",
     "yo ultron", "how are you", "how are you doing", "what's up", "hey there",
     "greetings", "hello assistant", "hey robot", "sup ultron", "are you awake",
-    "good day", "hey buddy", "all thrown", "ultron"
+    "good day", "hey buddy", "all thrown", "ultron", "ok ultron", "hi assistant"
 ]
 
+# 10. Capability & Help Phrases
 CAPABILITIES_PHRASES = [
     "what can you do", "who are you", "what are you", "help me", "help",
     "what are your commands", "list commands", "show commands", "what apps can you open",
     "introduce yourself", "tell me about yourself", "what features do you have",
     "what do you do", "how can you help me", "show features", "give me instructions",
     "how do i use you", "what are your skills", "capabilities", "what are your capabilities",
-    "hey ultron what can you do", "hey all thrown help me", "ultron who are you"
+    "what can ultron do", "what are you able to do", "show what you can do",
+    "hey ultron what can you do", "hey all thrown help me", "ultron who are you",
+    "ultron help", "tell me what you can do"
 ]
 
+# 11. Exit & Sleep Phrases
 EXIT_PHRASES = [
     "exit", "quit", "bye", "goodbye", "goodbye ultron", "shutdown", "power off",
     "stop listening", "go to sleep", "sleep", "exit assistant", "terminate assistant",
     "turn off", "close ultron", "power down", "shut yourself down", "good night",
     "see you later", "deactivate", "stop assistant", "close assistant", "offline",
-    "go offline", "hey ultron exit", "hey all thrown shutdown", "ultron goodbye"
+    "go offline", "hey ultron exit", "hey all thrown shutdown", "ultron goodbye",
+    "ultron quit", "ultron stop", "turn yourself off", "dismiss assistant"
+]
+
+CONVERSATIONAL_PREFIXES = [
+    "", "please", "can you", "could you", "would you", "hey ultron", "ultron",
+    "hey all thrown", "ok ultron"
 ]
 
 def generate_full_dataset():
     data = []
+    seen = set()
 
-    # 1. open_app
-    for verb in OPEN_VERBS:
-        for app in APPS:
-            data.append((f"{verb} {app}", "open_app"))
+    def add_sample(text, intent):
+        t = " ".join(text.strip().lower().split())
+        if t and (t, intent) not in seen:
+            seen.add((t, intent))
+            data.append((t, intent))
 
-    # 2. close_app
-    for verb in CLOSE_VERBS:
-        for app in APPS[:25]:  # Common closeable applications
-            data.append((f"{verb} {app}", "close_app"))
+    # 1. OPEN_APP: All possibilities of opening applications
+    for app in ALL_APPS:
+        add_sample(app, "open_app")
+        add_sample(f"ultron {app}", "open_app")
+        add_sample(f"hey ultron {app}", "open_app")
+        for verb in OPEN_VERBS:
+            add_sample(f"{verb} {app}", "open_app")
 
-    # 3. query_time
+    # 2. OPEN_FILE: All possibilities of opening/editing files
+    file_open_verbs = [
+        "open", "edit", "view", "show", "launch", "read", "display",
+        "open up", "bring up", "code in", "start"
+    ]
+    editor_names = ["sublime", "sublime text", "geany", "vim", "nvim", "editor"]
+
+    for f in ALL_USER_FILES:
+        for verb in file_open_verbs:
+            add_sample(f"{verb} {f}", "open_file")
+            add_sample(f"{verb} {f} file", "open_file")
+            add_sample(f"please {verb} {f}", "open_file")
+            add_sample(f"can you {verb} {f}", "open_file")
+            add_sample(f"hey ultron {verb} {f}", "open_file")
+
+            for ed in editor_names:
+                add_sample(f"{verb} {f} in {ed}", "open_file")
+                add_sample(f"{verb} {f} with {ed}", "open_file")
+                add_sample(f"{verb} {f} file in {ed}", "open_file")
+
+    # 3. WRITE_FILE: All possibilities of writing to files
+    for v in WRITE_VERBS:
+        for prep in WRITE_PREPOSITIONS:
+            for tgt in WRITE_TARGETS:
+                for snip in WRITE_SNIPPETS:
+                    add_sample(f"{v} {snip} {prep} {tgt}", "write_file")
+                    add_sample(f"please {v} {snip} {prep} {tgt}", "write_file")
+                    add_sample(f"hey ultron {v} {snip} {prep} {tgt}", "write_file")
+
+    # 4. COMPOUND_ACTION: Multifunction chained commands
+    core_apps = ["sublime text", "geany", "terminal", "chrome", "file manager", "settings", "cmatrix", "htop"]
+    core_files = ["learning.py", "learning.cpp", "index.html", "notes.txt"]
+    core_writes = ["hi", "hello", "hi there", "hello world", "test", "python code"]
+
+    for app in core_apps:
+        for f in core_files:
+            for snip in core_writes:
+                for conj in CONJUNCTIONS:
+                    add_sample(f"open {app} {conj} open {f} file {conj} write {snip} in that file", "compound_action")
+                    add_sample(f"open {app} {conj} open {f} {conj} write {snip} in that file", "compound_action")
+                    add_sample(f"open {app} {conj} open {f} file {conj} write {snip} into that file", "compound_action")
+                    add_sample(f"open {app} {conj} write {snip} into {f}", "compound_action")
+                    add_sample(f"open {f} {conj} write {snip} in that file", "compound_action")
+                    add_sample(f"hey ultron open {app} {conj} open {f} and write {snip} in that file", "compound_action")
+
+    # App + App compound pairs
+    for a1 in ["sublime text", "file manager", "terminal", "chrome", "settings"]:
+        for a2 in ["geany", "cmatrix", "htop", "calculator", "terminal", "settings"]:
+            if a1 != a2:
+                for conj in CONJUNCTIONS:
+                    add_sample(f"open {a1} {conj} open {a2}", "compound_action")
+                    add_sample(f"open {a1} {conj} close {a2}", "compound_action")
+                    add_sample(f"close {a1} {conj} close {a2}", "compound_action")
+
+    # Time + App compound pairs
+    for app in ["sublime text", "chrome", "terminal", "file manager", "settings"]:
+        for conj in CONJUNCTIONS:
+            add_sample(f"what time is it {conj} open {app}", "compound_action")
+            add_sample(f"tell me the time {conj} open {app}", "compound_action")
+            add_sample(f"open {app} {conj} what time is it", "compound_action")
+
+    # 5. CLOSE_APP: All closing possibilities
+    for app in ALL_APPS:
+        for verb in CLOSE_VERBS:
+            add_sample(f"{verb} {app}", "close_app")
+            add_sample(f"hey ultron {verb} {app}", "close_app")
+
+    # 6. QUERY_TIME: Enriched date and time inquiries
     for p in TIME_PHRASES:
-        data.append((p, "query_time"))
+        for prefix in CONVERSATIONAL_PREFIXES:
+            phrase = f"{prefix} {p}".strip()
+            add_sample(phrase, "query_time")
 
-    # 4. search_web
+    # 7. SEARCH_WEB: Web search inquiries
     for template in SEARCH_TEMPLATES:
         for q in SEARCH_QUERIES:
-            data.append((template.format(q=q), "search_web"))
+            for prefix in ["", "please", "hey ultron", "ultron"]:
+                phrase = f"{prefix} {template.format(q=q)}".strip()
+                add_sample(phrase, "search_web")
 
-    # 5. greet
+    # 8. GREET: Enriched greetings
     for g in GREET_PHRASES:
-        data.append((g, "greet"))
+        for suffix in ["", "ultron", "there", "friend", "buddy", "my assistant"]:
+            phrase = f"{g} {suffix}".strip()
+            add_sample(phrase, "greet")
 
-    # 6. query_capabilities
+    # 9. QUERY_CAPABILITIES: Enriched capability and help phrases
     for c in CAPABILITIES_PHRASES:
-        data.append((c, "query_capabilities"))
+        for prefix in CONVERSATIONAL_PREFIXES:
+            phrase = f"{prefix} {c}".strip()
+            add_sample(phrase, "query_capabilities")
 
-    # 7. exit
+    # 10. EXIT: Enriched exit phrases
     for e in EXIT_PHRASES:
-        data.append((e, "exit"))
+        for prefix in CONVERSATIONAL_PREFIXES:
+            phrase = f"{prefix} {e}".strip()
+            add_sample(phrase, "exit")
 
     return data
 
 if __name__ == "__main__":
     dataset = generate_full_dataset()
-    print(f"[*] Generated {len(dataset)} total training samples!")
-    
-    # Save to expanded_training_data.json
+    print(f"[*] Generated {len(dataset)} total training samples across all possibilities!")
+
     out_file = os.path.join(os.path.dirname(__file__), "expanded_training_data.json")
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump([{"text": sample[0], "intent": sample[1]} for sample in dataset], f, indent=2)
-    print(f"[+] Saved to {out_file}")
+    print(f"[+] Saved {len(dataset)} samples to {out_file}!")

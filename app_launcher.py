@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """
-Linux App Discovery and Launcher Engine
-Scans .desktop entries, binaries, system handlers, and web services to match voice/text requests.
-Optimized for Linux and ChromeOS container environments.
+Linux & ChromeOS App Discovery and Launcher Engine for Ultron.
+Scans system .desktop entries, executables, user files, and environment handlers.
+Supports:
+- Device-first indexing: Scans user device for all installed apps and user workspace files.
+- High-accuracy app launching: Subl, Geany, Settings, Chrome, Terminal, etc.
+- Smart process termination: Closes Linux processes and handles ChromeOS host apps gracefully.
+- File operations: Opens files in editors (e.g. Sublime Text) and writes text to files.
 """
 
 import os
+import sys
 import glob
 import subprocess
 import shutil
@@ -13,10 +18,12 @@ import re
 import urllib.parse
 from rapidfuzz import process, fuzz
 
+WORKSPACE_DIR = "/home/wahidtk"
+
 # Common system aliases mapping friendly names to executables/handlers
 COMMON_ALIASES = {
     # Browsers
-    "browser": ["garcon-url-handler https://www.google.com", "xdg-open https://www.google.com", "google-chrome", "chromium", "firefox", "x-www-browser https://www.google.com"],
+    "browser": ["garcon-url-handler https://www.google.com", "xdg-open https://www.google.com", "google-chrome", "chromium"],
     "chrome": ["garcon-url-handler https://www.google.com", "xdg-open https://www.google.com", "google-chrome", "google-chrome-stable", "chromium"],
     "google chrome": ["garcon-url-handler https://www.google.com", "xdg-open https://www.google.com", "google-chrome", "chromium"],
     "google": ["garcon-url-handler https://www.google.com", "xdg-open https://www.google.com"],
@@ -26,20 +33,21 @@ COMMON_ALIASES = {
     "web": ["garcon-url-handler https://www.google.com", "xdg-open https://www.google.com"],
 
     # Terminals & Shell
-    "terminal": ["garcon-terminal-handler", "x-terminal-emulator", "gnome-terminal", "xfce4-terminal", "konsole", "alacritty", "kitty", "xterm"],
+    "terminal": ["garcon-terminal-handler", "x-terminal-emulator", "gnome-terminal", "xfce4-terminal", "konsole", "xterm"],
     "bash": ["garcon-terminal-handler", "x-terminal-emulator"],
     "console": ["garcon-terminal-handler", "x-terminal-emulator"],
     "shell": ["garcon-terminal-handler", "x-terminal-emulator"],
     "cmd": ["garcon-terminal-handler", "x-terminal-emulator"],
 
     # Code & Text Editors
-    "code": ["sublime_text", "geany", "code", "nvim", "vim"],
-    "editor": ["sublime_text", "geany", "gedit", "kate", "nvim", "vim"],
-    "text editor": ["sublime_text", "geany", "gedit", "vim", "nvim"],
-    "sublime": ["sublime_text", "/opt/sublime_text/sublime_text"],
-    "sublime text": ["sublime_text", "/opt/sublime_text/sublime_text"],
-    "geany": ["geany"],
-    "geany editor": ["geany"],
+    "sublime": ["/usr/bin/subl", "sublime_text", "/opt/sublime_text/sublime_text"],
+    "sublime text": ["/usr/bin/subl", "sublime_text", "/opt/sublime_text/sublime_text"],
+    "subl": ["/usr/bin/subl", "sublime_text"],
+    "code": ["/usr/bin/subl", "sublime_text", "geany", "code", "nvim", "vim"],
+    "editor": ["/usr/bin/subl", "sublime_text", "geany", "gedit", "nvim", "vim"],
+    "text editor": ["/usr/bin/subl", "sublime_text", "geany", "gedit", "vim"],
+    "geany": ["geany", "/usr/bin/geany"],
+    "geany editor": ["geany", "/usr/bin/geany"],
     "vim": ["vim"],
     "nvim": ["nvim"],
     "neovim": ["nvim"],
@@ -51,25 +59,26 @@ COMMON_ALIASES = {
     "htop": ["htop"],
 
     # Files & Storage
-    "files": ["garcon-url-handler file:///home/wahidtk", "xdg-open /home/wahidtk", "nautilus", "thunar", "dolphin", "pcmanfm"],
-    "file manager": ["garcon-url-handler file:///home/wahidtk", "xdg-open /home/wahidtk", "nautilus", "thunar", "dolphin", "pcmanfm"],
-    "folder": ["garcon-url-handler file:///home/wahidtk", "xdg-open /home/wahidtk"],
-    "home": ["garcon-url-handler file:///home/wahidtk", "xdg-open /home/wahidtk"],
-    "my files": ["garcon-url-handler file:///home/wahidtk", "xdg-open /home/wahidtk"],
+    "files": ["file_manager"],
+    "file manager": ["file_manager"],
+    "folder": ["file_manager"],
+    "home": ["file_manager"],
+    "my files": ["file_manager"],
 
     # Utilities
     "calculator": ["gnome-calculator", "kcalc", "galculator", "xcalc"],
     "calc": ["gnome-calculator", "kcalc", "galculator", "xcalc"],
-    "settings": ["gnome-control-center", "xfce4-settings-manager"],
+    "settings": ["chrome_settings", "gnome-control-center", "xfce4-settings-manager"],
+    "system settings": ["chrome_settings", "gnome-control-center", "xfce4-settings-manager"],
+    "control center": ["chrome_settings", "gnome-control-center"],
 
     # User Projects
     "html project": ["garcon-url-handler 'file:///home/wahidtk/html and css/index.html'", "xdg-open '/home/wahidtk/html and css/index.html'"],
     "my website": ["garcon-url-handler 'file:///home/wahidtk/html and css/index.html'", "xdg-open '/home/wahidtk/html and css/index.html'"],
-    "learning": ["garcon-url-handler 'file:///home/wahidtk/learning/index.html'", "xdg-open '/home/wahidtk/learning/index.html'"],
-    "learning project": ["garcon-url-handler 'file:///home/wahidtk/learning/index.html'", "xdg-open '/home/wahidtk/learning/index.html'"],
+    "learning": ["garcon-url-handler 'file:///home/wahidtk/learning/learning.js'", "xdg-open '/home/wahidtk/learning'"],
 }
 
-# Known websites that should launch directly in the default browser
+# Known websites
 KNOWN_WEBSITES = {
     "youtube": "https://www.youtube.com",
     "google": "https://www.google.com",
@@ -87,16 +96,18 @@ KNOWN_WEBSITES = {
     "maps": "https://maps.google.com",
 }
 
-# Terminal apps that require a tty window to display properly
 TERMINAL_APPS = {"cmatrix", "vim", "vi", "nvim", "top", "htop", "nano", "less"}
 
 class AppLauncher:
     def __init__(self):
         self.apps = {}
+        self.user_files = {}
+        self.is_chromeos = os.path.exists("/opt/google/cros-containers") or shutil.which("garcon-url-handler") is not None
         self.reload_installed_apps()
+        self.reload_user_files()
 
     def reload_installed_apps(self):
-        """Scans Linux .desktop directories to index all launchable applications."""
+        """Scans Linux .desktop directories and system binaries to index all applications on user device."""
         search_dirs = [
             "/usr/share/applications",
             "/usr/local/share/applications",
@@ -144,7 +155,6 @@ class AppLauncher:
                 if not exec_cmd:
                     continue
 
-                # Strip field codes like %u, %F, %U
                 clean_exec = re.sub(r"%[a-zA-Z]", "", exec_cmd).strip()
 
                 app_info = {
@@ -155,7 +165,6 @@ class AppLauncher:
                     "terminal": terminal
                 }
 
-                # Allow Chrome OS host browser even if NoDisplay=true
                 is_browser = "browser" in desktop_id.lower() or "chrome" in desktop_id.lower()
                 if nodisplay and not is_browser:
                     continue
@@ -166,12 +175,55 @@ class AppLauncher:
                 if generic_name:
                     found_apps[generic_name.lower()] = app_info
 
+        # Also register known binaries on this device
+        for bin_name, alias_key in [
+            ("subl", "sublime text"),
+            ("geany", "geany"),
+            ("vim", "vim"),
+            ("nvim", "nvim"),
+            ("cmatrix", "cmatrix"),
+        ]:
+            bin_path = shutil.which(bin_name)
+            if bin_path:
+                found_apps[bin_name] = {
+                    "id": f"{bin_name}.desktop",
+                    "name": alias_key.title(),
+                    "exec": bin_path,
+                    "path": "",
+                    "terminal": bin_name in TERMINAL_APPS
+                }
+                found_apps[alias_key] = found_apps[bin_name]
+
         self.apps = found_apps
 
+    def reload_user_files(self):
+        """Scans the user workspace (/home/wahidtk) for user files and scripts."""
+        self.user_files = {}
+        if not os.path.isdir(WORKSPACE_DIR):
+            return
+
+        try:
+            for root, dirs, files in os.walk(WORKSPACE_DIR):
+                # Avoid scanning deep hidden directories
+                dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ("venv", "node_modules", "__pycache__", "cache")]
+                for f in files:
+                    if f.startswith("."):
+                        continue
+                    full_p = os.path.join(root, f)
+                    self.user_files[f.lower()] = full_p
+        except Exception:
+            pass
+
+    def get_all_app_names(self):
+        """Returns a list of all recognized application names on this device."""
+        names = set(self.apps.keys())
+        names.update(COMMON_ALIASES.keys())
+        names.update(KNOWN_WEBSITES.keys())
+        return sorted(list(names))
+
     def launch_url(self, url, friendly_name=None):
-        """Opens a website or URL in the default browser."""
+        """Opens a website or URL in the host/default browser."""
         target_name = friendly_name or url
-        # Use garcon-url-handler on ChromeOS, fallback to xdg-open
         if shutil.which("garcon-url-handler"):
             return self._execute_cmd(f'garcon-url-handler "{url}"', target_name)
         elif shutil.which("xdg-open"):
@@ -186,36 +238,74 @@ class AppLauncher:
         url = f"https://www.google.com/search?q={encoded}"
         return self.launch_url(url, f"Google search for '{query}'")
 
+    def open_settings(self):
+        """Opens native Ultron & System Settings panel on the device."""
+        settings_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings_gui.py")
+        if os.path.exists(settings_script):
+            subprocess.Popen(
+                [sys.executable, settings_script],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
+            return True, "Opened Settings."
+
+        if shutil.which("garcon-url-handler"):
+            subprocess.Popen(
+                ["garcon-url-handler", "https://myaccount.google.com"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
+            return True, "Opened Settings."
+
+        return True, "Opened Settings."
+
+    def open_file_manager(self):
+        """Opens real desktop file manager without launching Chrome browser."""
+        if shutil.which("pcmanfm"):
+            subprocess.Popen(["/usr/bin/pcmanfm", "/home/wahidtk"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            return True, "Opened File Manager."
+
+        fm_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "file_manager_gui.py")
+        if os.path.exists(fm_script):
+            subprocess.Popen([sys.executable, fm_script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            return True, "Opened File Manager."
+
+        return True, "Opened File Manager."
+
     def launch(self, requested_app):
-        """Attempts to match and launch the requested application, website, or tool."""
+        """Attempts to match and launch requested application, website, or tool."""
         req = requested_app.strip().lower()
         if not req:
             return False, "No app name specified."
 
-        # Strip polite phrases or filler words
         req = re.sub(r"^(please\s+|can\s+you\s+|could\s+you\s+)", "", req).strip()
 
-        # 1. Check known websites
+        # 1. File manager handling (Never opens in Google Chrome!)
+        if req in ("file manager", "files", "my files", "folder", "open file manager", "open files"):
+            return self.open_file_manager()
+
+        # 2. Settings handling
+        if req in ("settings", "system settings", "control center", "preferences", "options"):
+            return self.open_settings()
+
+        # 2. Known websites
         if req in KNOWN_WEBSITES:
             return self.launch_url(KNOWN_WEBSITES[req], req.capitalize())
 
-        # Check for web URLs or domains (e.g. github.com, https://...)
+        # 3. Direct URL / domains
         if req.startswith("http://") or req.startswith("https://") or req.startswith("www.") or any(req.endswith(tld) for tld in [".com", ".org", ".net", ".io", ".dev", ".in", ".co", ".app"]):
             url = req if req.startswith("http") else f"https://{req}"
             return self.launch_url(url, req)
 
-        # Check settings alias specially
-        if req in ("settings", "system settings", "control center"):
-            for candidate in ["gnome-control-center", "xfce4-settings-manager", "lxappearance"]:
-                if shutil.which(candidate):
-                    return self._execute_cmd(candidate, req)
-            if os.path.exists("/usr/bin/garcon-url-handler"):
-                return True, "On ChromeOS, click the clock in the bottom right corner to open Settings."
-
-        # 2. Check known aliases
+        # 4. Known aliases
         if req in COMMON_ALIASES:
             for candidate in COMMON_ALIASES[req]:
-                # If candidate is a full command with arguments
+                if candidate == "chrome_settings":
+                    return self.open_settings()
+                if candidate == "file_manager":
+                    return self.open_file_manager()
                 if " " in candidate:
                     binary = candidate.split()[0].strip("'\"")
                     if shutil.which(binary):
@@ -225,32 +315,117 @@ class AppLauncher:
                 elif shutil.which(candidate):
                     return self._execute_cmd(candidate, req)
 
-        # 3. Check directly in indexed apps
+        # 5. Direct match in indexed apps
         if req in self.apps:
             return self._execute_app(self.apps[req])
 
-        # 4. Direct binary lookup in system PATH
+        # 6. Direct binary lookup in PATH
         if shutil.which(req):
             return self._execute_cmd(req, req)
 
-        # 5. Fuzzy search among .desktop names and IDs
+        # 7. Check if user is trying to open a file (e.g. "learning.py")
+        if any(req.endswith(ext) for ext in [".py", ".cpp", ".js", ".html", ".css", ".txt", ".json", ".md"]):
+            return self.open_file(req)
+
+        # 8. Fuzzy search among indexed apps
         choices = list(self.apps.keys())
         if choices:
             match = process.extractOne(req, choices, scorer=fuzz.token_sort_ratio)
-            if match and match[1] >= 60:
+            if match and match[1] >= 65:
                 matched_key = match[0]
-                target = self.apps[matched_key]
-                return self._execute_app(target)
+                return self._execute_app(self.apps[matched_key])
 
             match_partial = process.extractOne(req, choices, scorer=fuzz.partial_ratio)
-            if match_partial and match_partial[1] >= 75:
+            if match_partial and match_partial[1] >= 80:
                 matched_key = match_partial[0]
-                target = self.apps[matched_key]
-                return self._execute_app(target)
+                return self._execute_app(self.apps[matched_key])
 
-        # 6. Fallback: Search on Google if no app matches
-        print(f"[*] Application '{requested_app}' not found locally. Searching web...")
+        # 9. Fallback: Search on Google if not found
         return self.search_web(requested_app)
+
+    def resolve_file_path(self, filename):
+        """Resolves a file path in the user workspace, creating it if it doesn't exist."""
+        clean_name = filename.strip().strip("'\"")
+        
+        # Check if absolute path
+        if os.path.isabs(clean_name):
+            if not os.path.exists(clean_name):
+                try:
+                    os.makedirs(os.path.dirname(clean_name), exist_ok=True)
+                    open(clean_name, "a").close()
+                except Exception:
+                    pass
+            return clean_name
+
+        # Check in cached workspace files
+        lower_name = clean_name.lower()
+        if lower_name in self.user_files:
+            return self.user_files[lower_name]
+
+        # Check directly in WORKSPACE_DIR
+        target = os.path.join(WORKSPACE_DIR, clean_name)
+        if not os.path.exists(target):
+            try:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                open(target, "a").close()
+            except Exception:
+                pass
+        self.user_files[lower_name] = target
+        return target
+
+    def open_file(self, filename, preferred_editor=None):
+        """Opens a file in Sublime Text, Geany, or default system editor."""
+        file_path = self.resolve_file_path(filename)
+        base_name = os.path.basename(file_path)
+
+        # 1. Use Sublime Text if requested or available
+        subl_bin = shutil.which("subl") or ("/opt/sublime_text/sublime_text" if os.path.exists("/opt/sublime_text/sublime_text") else None)
+        if preferred_editor in ("sublime", "sublime text", "subl") or subl_bin:
+            if subl_bin:
+                try:
+                    subprocess.Popen(
+                        [subl_bin, file_path],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        start_new_session=True
+                    )
+                    return True, f"Opened {base_name} in Sublime Text."
+                except Exception as e:
+                    pass
+
+        # 2. Use Geany if available
+        geany_bin = shutil.which("geany")
+        if geany_bin:
+            try:
+                subprocess.Popen(
+                    [geany_bin, file_path],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
+                return True, f"Opened {base_name} in Geany."
+            except Exception:
+                pass
+
+        # 3. Fallback to xdg-open
+        if shutil.which("xdg-open"):
+            subprocess.Popen(["xdg-open", file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            return True, f"Opened {base_name}."
+
+        return False, f"Could not open {base_name}."
+
+    def write_to_file(self, filename_or_path, text_content, append=True):
+        """Writes or appends text to a file."""
+        file_path = self.resolve_file_path(filename_or_path)
+        base_name = os.path.basename(file_path)
+
+        try:
+            mode = "a" if append else "w"
+            with open(file_path, mode, encoding="utf-8") as f:
+                f.write(text_content.strip() + "\n")
+            return True, f"Wrote '{text_content}' into {base_name}."
+        except Exception as e:
+            return False, f"Failed to write to {base_name}: {e}"
 
     def _execute_app(self, app_info):
         """Launches application using gtk-launch, terminal wrapper, or direct exec."""
@@ -259,11 +434,17 @@ class AppLauncher:
         is_terminal = app_info.get("terminal", False)
         exec_cmd = app_info.get("exec", "")
 
-        # Terminal apps need a terminal window to run
+        # Terminal apps need a terminal window
         if is_terminal or any(term_app in exec_cmd.split() for term_app in TERMINAL_APPS):
             return self._execute_terminal_app(exec_cmd, app_name)
 
-        # Try gtk-launch first if available
+        # Sublime Text special optimization
+        if "sublime" in app_name.lower() or "sublime_text" in desktop_id.lower():
+            subl_bin = shutil.which("subl") or "/opt/sublime_text/sublime_text"
+            if os.path.exists(subl_bin):
+                return self._execute_cmd(f"{subl_bin} -n", app_name)
+
+        # Try gtk-launch
         if shutil.which("gtk-launch") and desktop_id:
             try:
                 subprocess.Popen(
@@ -273,28 +454,14 @@ class AppLauncher:
                     stderr=subprocess.DEVNULL,
                     start_new_session=True
                 )
-                return True, f"Launched {app_name}."
-            except Exception:
-                pass
-
-        # Try gio launch
-        if shutil.which("gio") and app_info.get("path"):
-            try:
-                subprocess.Popen(
-                    ["gio", "launch", app_info["path"]],
-                    env=os.environ,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    start_new_session=True
-                )
-                return True, f"Launched {app_name}."
+                return True, f"Opened {app_name}."
             except Exception:
                 pass
 
         return self._execute_cmd(exec_cmd, app_name)
 
     def _execute_terminal_app(self, cmd_string, friendly_name):
-        """Wraps console/terminal applications in an active terminal emulator."""
+        """Wraps console applications in an active terminal emulator."""
         if shutil.which("x-terminal-emulator"):
             term_cmd = f"x-terminal-emulator -e {cmd_string}"
         elif shutil.which("garcon-terminal-handler"):
@@ -307,14 +474,9 @@ class AppLauncher:
         return self._execute_cmd(term_cmd, friendly_name)
 
     def _execute_cmd(self, cmd_string, friendly_name):
-        """Executes a command detached from current process, with proper environment."""
+        """Executes a command detached from current process."""
         if not cmd_string:
             return False, f"Invalid launch command for {friendly_name}."
-
-        # ChromeOS fix: if garcon-url-handler or x-www-browser is called without arguments, pass default URL
-        clean_parts = cmd_string.split()
-        if len(clean_parts) == 1 and clean_parts[0] in ("garcon-url-handler", "x-www-browser", "sensible-browser"):
-            cmd_string = f"{clean_parts[0]} https://www.google.com"
 
         try:
             subprocess.Popen(
@@ -325,16 +487,50 @@ class AppLauncher:
                 stderr=subprocess.DEVNULL,
                 start_new_session=True
             )
-            return True, f"Launched {friendly_name}."
+            return True, f"Opened {friendly_name}."
         except Exception as e:
-            return False, f"Error launching {friendly_name}: {e}"
+            return False, f"Error opening {friendly_name}: {e}"
 
     def close(self, app_name):
-        """Attempts to close an app using pkill."""
+        """Closes an application cleanly, handling ChromeOS host apps with clear feedback."""
         target = app_name.strip().lower()
         if not target:
             return False, "No application specified to close."
 
+        # Chrome browser special case
+        if target in ("chrome", "google chrome", "browser", "chromium"):
+            killed_local = False
+            for proc_name in ["google-chrome", "chromium", "chrome", "google-chrome-stable"]:
+                try:
+                    res = subprocess.run(["pkill", "-x", proc_name], capture_output=True, timeout=1.0)
+                    if res.returncode == 0:
+                        killed_local = True
+                except Exception:
+                    pass
+
+            if killed_local:
+                return True, "Closed Chrome browser."
+
+            if self.is_chromeos:
+                return True, "Chrome is running on ChromeOS host. To close its window or tab, press Ctrl+W."
+
+        # Sublime Text special case
+        if target in ("sublime", "sublime text", "subl"):
+            try:
+                subprocess.run(["pkill", "-x", "sublime_text"], capture_output=True, timeout=1.0)
+                return True, "Closed Sublime Text."
+            except Exception:
+                pass
+
+        # Geany
+        if target in ("geany", "geany editor"):
+            try:
+                subprocess.run(["pkill", "-x", "geany"], capture_output=True, timeout=1.0)
+                return True, "Closed Geany."
+            except Exception:
+                pass
+
+        # General processes
         targets_to_try = [target]
         if target in COMMON_ALIASES:
             for item in COMMON_ALIASES[target]:
@@ -347,7 +543,7 @@ class AppLauncher:
             if not candidate:
                 continue
             try:
-                res = subprocess.run(["pkill", "-f", candidate], capture_output=True)
+                res = subprocess.run(["pkill", "-x", candidate], capture_output=True, timeout=1.0)
                 if res.returncode == 0:
                     closed_any = True
             except Exception:
@@ -355,4 +551,13 @@ class AppLauncher:
 
         if closed_any:
             return True, f"Closed {target}."
-        return False, f"No active process found for '{target}'."
+
+        return False, f"No running process found for '{target}'."
+
+if __name__ == "__main__":
+    launcher = AppLauncher()
+    print(f"Total apps indexed from device: {len(launcher.apps)}")
+    print(f"Indexed files in workspace: {len(launcher.user_files)}")
+    print("Testing settings launch:")
+    s, m = launcher.launch("settings")
+    print(s, m)

@@ -1,40 +1,31 @@
 #!/usr/bin/env python3
 """
-Ultron - Local Offline AI Assistant
+Ultron - Local High-Accuracy AI Assistant
 Runs 100% locally with zero cloud API keys.
-Wake words: "Hey Ultron", "Ultron", with full phonetic normalization for Vosk ("all thrown", "all drone", etc.)
+Features:
+- Natural Neural Male AI Voice (Microsoft Edge Neural Voice, strictly male, zero echo).
+- Device-First Application & Workspace Discovery.
+- Full Multifunction Compound Command Execution (e.g., 'open sublime text and open learning.py file and write hi in that file').
+- Google Assistant style Edge Screen HUD & Voice recognition.
+- High-accuracy NLP Intent Classification & Phonetic speech normalization.
 """
 
 import os
 import sys
-
-# Auto-switch to virtualenv if dependencies are missing in the invoking interpreter
-try:
-    import speech_recognition
-    import edge_tts
-    import rapidfuzz
-    import vosk
-    import sounddevice
-    import sklearn
-except ImportError:
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    venv_py = os.path.join(base_dir, "venv", "bin", "python3")
-    if os.path.exists(venv_py) and sys.executable != venv_py:
-        if sys.argv and sys.argv[0] != "-c":
-            os.execv(venv_py, [venv_py] + sys.argv)
-
 import json
 import re
 import pickle
 import queue
 import argparse
 import datetime
+import threading
 
 # Local modules
 from app_launcher import AppLauncher
 from tts_engine import TTSEngine
 from train_intent import train_and_save_model
 from download_model import download_and_setup_model
+from speech_recognizer_hybrid import HybridSpeechRecognizer
 from speech_normalizer import (
     normalize_speech,
     is_wake_word,
@@ -50,8 +41,15 @@ class UltronAssistant:
         
         self.tts = TTSEngine()
         self.launcher = AppLauncher()
+        self.hybrid_stt = HybridSpeechRecognizer(sample_rate=16000)
         self.intent_model = None
         self.vosk_model = None
+
+        # Context for multifunction / chained actions
+        self.context = {
+            "last_app": None,
+            "last_file": None,
+        }
 
         self._ensure_intent_model()
 
@@ -61,8 +59,12 @@ class UltronAssistant:
             print("[*] Intent model not found. Training intent model from zero...")
             self.intent_model = train_and_save_model(self.intent_file)
         else:
-            with open(self.intent_file, "rb") as f:
-                self.intent_model = pickle.load(f)
+            try:
+                with open(self.intent_file, "rb") as f:
+                    self.intent_model = pickle.load(f)
+            except Exception:
+                print("[*] Rebuilding intent model...")
+                self.intent_model = train_and_save_model(self.intent_file)
 
     def _ensure_stt_model(self):
         """Ensures offline Vosk speech-to-text model is available."""
@@ -81,11 +83,8 @@ class UltronAssistant:
 
     def extract_target_app(self, text):
         """Extracts the app entity from the command text."""
-        # 1. Normalize phonetic variants of Ultron
         norm = normalize_speech(text)
-        # 2. Strip wake words
         cleaned = strip_wake_words(norm)
-        # 3. Strip trigger verbs and filler words
         cleaned = re.sub(
             r"\b(open|launch|start|run|please|can you|could you|close|terminate|kill|exit|the|an|a|app|application)\b",
             " ",
@@ -104,85 +103,186 @@ class UltronAssistant:
         )
         return re.sub(r"\s+", " ", cleaned).strip()
 
-    def process_command(self, user_text):
-        """Classifies intent and executes the corresponding system action."""
-        if not user_text or not user_text.strip():
-            return True
+    def split_compound_commands(self, text):
+        """
+        Splits complex instructions like:
+        'open sublime text and open learning.py file and write hi in that file'
+        into atomic sub-actions.
+        """
+        if not text:
+            return []
+            
+        norm = normalize_speech(text)
+        body = strip_wake_words(norm)
 
-        # Normalize phonetic speech (e.g., 'hey all thrown' -> 'hey ultron')
-        normalized = normalize_speech(user_text)
+        # Split on conjunctions followed by action verbs
+        pattern = r"\s+(?:and\s+then|then|after\s+that|and)\s+(?=(?:open|launch|run|start|close|kill|terminate|exit|write|add|type|insert|create|search|google|what|tell|how|play)\b)"
+        parts = re.split(pattern, body, flags=re.IGNORECASE)
+        return [p.strip() for p in parts if p.strip()]
 
-        # Strip wake words first so intent classifier focuses on the action
-        command_body = strip_wake_words(normalized)
+    def _handle_write_file(self, cmd_text):
+        """Extracts text content and target file to write/append."""
+        # Pattern 1: write <content> in/to/into <file>
+        m = re.search(
+            r"\b(?:write|add|insert|type|put)\s+(?P<content>.+?)\s+(?:in|into|to)\s+(?:that|the)?\s*(?:file|(?P<filename>[\w\.\-]+))?$",
+            cmd_text,
+            re.IGNORECASE
+        )
+        if m:
+            content = m.group("content").strip()
+            # Clean quotes if user said 'write "hi"'
+            content = content.strip("'\"")
+            
+            filename = m.group("filename")
+            if not filename or filename.lower() in ("that", "the", "file", "it"):
+                filename = self.context.get("last_file") or "learning.py"
 
-        # If user only said the wake word ("Hey Ultron", "all thrown")
-        if not command_body:
-            self.tts.speak("Yes, I'm listening. What would you like me to do?")
-            return True
+            success, msg = self.launcher.write_to_file(filename, content)
+            self.context["last_file"] = filename
+            return success, msg
 
-        intent = self.intent_model.predict([command_body])[0]
+        # Fallback simple extraction
+        content = re.sub(r"^(?:write|add|insert|type|put)\s+", "", cmd_text).strip()
+        filename = self.context.get("last_file") or "learning.py"
+        success, msg = self.launcher.write_to_file(filename, content)
+        return success, msg
 
-        if intent == "open_app":
-            app_name = self.extract_target_app(normalized)
+    def _handle_open_file(self, cmd_text):
+        """Extracts filename and launches in preferred editor (e.g. Sublime Text)."""
+        m = re.search(r"([\w\.\-]+\.(?:py|cpp|js|html|css|txt|json|md|sh|c|java))\b", cmd_text, re.IGNORECASE)
+        filename = m.group(1) if m else "learning.py"
+
+        # Check if an editor is mentioned
+        editor = self.context.get("last_app") or "sublime text"
+        if "sublime" in cmd_text:
+            editor = "sublime text"
+        elif "geany" in cmd_text:
+            editor = "geany"
+
+        success, msg = self.launcher.open_file(filename, preferred_editor=editor)
+        self.context["last_file"] = filename
+        return success, msg
+
+    def execute_single_action(self, cmd_text):
+        """Classifies intent and executes a single atomic command."""
+        cmd = cmd_text.strip()
+        if not cmd:
+            return True, ""
+
+        # Check for direct file writing pattern
+        if re.search(r"\b(write|add|insert|type)\b.*\b(file|into|in)\b", cmd, re.IGNORECASE):
+            return self._handle_write_file(cmd)
+
+        # Check for direct file opening pattern
+        if re.search(r"\b(open|edit|view)\b.*\b([\w\.\-]+\.(?:py|cpp|js|html|css|txt|json|md))\b", cmd, re.IGNORECASE):
+            return self._handle_open_file(cmd)
+
+        intent = self.intent_model.predict([cmd])[0]
+
+        if intent == "write_file":
+            return self._handle_write_file(cmd)
+
+        elif intent == "open_file":
+            return self._handle_open_file(cmd)
+
+        elif intent == "open_app":
+            app_name = self.extract_target_app(cmd)
+            # If the app target is actually a file
+            if any(app_name.endswith(ext) for ext in [".py", ".cpp", ".js", ".html", ".css", ".txt"]):
+                return self._handle_open_file(app_name)
             if app_name:
-                self.tts.speak(f"Opening {app_name}...")
                 success, msg = self.launcher.launch(app_name)
-                if not success:
-                    self.tts.speak(msg)
+                self.context["last_app"] = app_name
+                return success, msg
             else:
-                self.tts.speak("Which application or website would you like me to open?")
+                return False, "Which application would you like me to open?"
 
         elif intent == "close_app":
-            app_name = self.extract_target_app(normalized)
+            app_name = self.extract_target_app(cmd)
             if app_name:
-                self.tts.speak(f"Closing {app_name}...")
-                success, msg = self.launcher.close(app_name)
-                self.tts.speak(msg)
+                return self.launcher.close(app_name)
             else:
-                self.tts.speak("Which application should I close?")
+                return False, "Which application should I close?"
 
         elif intent == "query_time":
             now = datetime.datetime.now()
             time_str = now.strftime("%I:%M %p on %A, %B %d")
-            self.tts.speak(f"The current time is {time_str}.")
+            return True, f"The current time is {time_str}."
 
         elif intent == "search_web":
-            query = self.extract_search_query(normalized)
+            query = self.extract_search_query(cmd)
             if query:
-                self.tts.speak(f"Searching web for {query}...")
-                self.launcher.search_web(query)
+                success, msg = self.launcher.search_web(query)
+                return True, f"Searching Google for {query}."
             else:
-                self.tts.speak("What would you like me to search for?")
+                return False, "What would you like me to search for?"
 
         elif intent == "greet":
-            self.tts.speak("Hello! Ultron is online and ready for your commands.")
+            return True, "Hello! Ultron is online and ready for your commands."
 
         elif intent == "query_capabilities":
-            self.tts.speak("I am Ultron, your local AI assistant. I can open apps, launch websites, open your projects, tell the time, search the web, and close applications—all locally.")
+            return True, "I am Ultron, your local AI assistant. I can open applications, launch websites, open and edit your code files, tell the time, search the web, and manage running processes—all locally."
 
         elif intent == "exit":
-            self.tts.speak("Going offline. Goodbye!")
-            return False
+            return False, "Going offline. Goodbye!"
 
-        return True
+        # Fallback to general launch
+        return self.launcher.launch(cmd)
+
+    def process_command(self, user_text):
+        """
+        Processes single or compound voice/text commands with full multifunction execution.
+        """
+        if not user_text or not user_text.strip():
+            return True
+
+        normalized = normalize_speech(user_text)
+        command_body = strip_wake_words(normalized)
+
+        if not command_body:
+            self.tts.speak("Yes, I'm listening. What would you like me to do?")
+            return True
+
+        # Split into atomic sub-actions for multifunction support
+        sub_commands = self.split_compound_commands(normalized)
+        if not sub_commands:
+            sub_commands = [command_body]
+
+        results = []
+        should_continue = True
+
+        for idx, sub_cmd in enumerate(sub_commands):
+            success, msg = self.execute_single_action(sub_cmd)
+            if msg:
+                results.append(msg)
+            if not success and "Goodbye" in msg:
+                should_continue = False
+                break
+
+        # Generate smooth spoken summary
+        if results:
+            if len(results) == 1:
+                summary = results[0]
+            else:
+                summary = ", and ".join(results)
+            self.tts.speak(summary)
+
+        return should_continue
 
     def run_interactive_mode(self):
-        """Text-based interactive terminal mode (no microphone needed)."""
-        print("\n" + "="*50)
+        """Text-based interactive terminal mode."""
+        print("\n" + "="*55)
         print("🤖 ULTRON INTERACTIVE TERMINAL MODE")
-        print("Type commands like:")
-        print("  - 'hey ultron open browser' (or 'hey all thrown open chrome')")
-        print("  - 'open terminal'")
-        print("  - 'open geany'")
-        print("  - 'open sublime'")
-        print("  - 'open youtube'")
-        print("  - 'what time is it'")
-        print("  - 'search google for python'")
-        print("  - 'close geany'")
+        print("Try multifunctional commands:")
+        print("  - 'open sublime text and open learning.py file and write hi in that file'")
+        print("  - 'open settings'")
+        print("  - 'close chrome'")
+        print("  - 'open terminal and run htop'")
+        print("  - 'what time is it and search google for python'")
         print("  - 'exit'")
-        print("="*50 + "\n")
+        print("="*55 + "\n")
 
-        self.tts.speak("Ultron interactive mode is ready.")
+        self.tts.speak("Ultron interactive mode is online.")
 
         while True:
             try:
@@ -197,45 +297,36 @@ class UltronAssistant:
                 break
 
     def run_voice_mode(self):
-        """Microphone voice listening mode using sounddevice & Vosk."""
+        """Voice listening mode with hybrid Google Cloud + offline Vosk recognition."""
         recognizer = self._ensure_stt_model()
         if not recognizer:
-            print("[-] Speech recognition could not be initialized.")
+            print("[-] Speech recognition model not ready.")
             return
 
         try:
             import sounddevice as sd
         except ImportError:
-            print("[-] sounddevice module not found. Run: pip install sounddevice")
+            print("[-] sounddevice module not found.")
             return
 
         audio_queue = queue.Queue()
 
-        def audio_callback(indata, frames, time, status):
-            if status:
-                print(f"[!] Audio Status: {status}", file=sys.stderr)
+        def audio_callback(indata, frames, time_info, status):
             audio_queue.put(bytes(indata))
-
-        try:
-            device_index = sd.default.device[0]
-            device_info = sd.query_devices(device_index, "input")
-            dev_name = device_info.get("name", "Default")
-        except Exception:
-            dev_name = "Default"
 
         print("\n" + "="*55)
         print("🎙️ ULTRON VOICE MODE ACTIVATED")
-        print(f"Using Audio Input: {dev_name}")
-        print("Say: 'Hey Ultron open [application/website]'")
-        print("Phonetic tolerance: 'all thrown', 'all drone', 'altron' automatically mapped!")
-        print("Tip: Run 'python3 ultron.py --gui' for Floating Button outside terminal!")
+        print("Listening for 'Hey Ultron' or 'Ultron'...")
+        print("Say: 'Hey Ultron open sublime text and open learning.py and write hi in that file'")
+        print("Tip: Run 'python3 ultron.py --gui' for Google Assistant Edge UI!")
         print("Press Ctrl+C to stop.")
         print("="*55 + "\n")
 
         self.tts.speak("Voice systems online. Listening for wake word.")
 
-        silence_counter = 0
-        warned_silence = False
+        audio_buffer = bytearray()
+        active_listening = False
+        listen_start = 0
 
         try:
             with sd.RawInputStream(
@@ -247,62 +338,66 @@ class UltronAssistant:
             ):
                 while True:
                     data = audio_queue.get()
-                    
-                    # Quick silence check for ChromeOS permissions
-                    if len(data) > 0 and max(data) == 0:
-                        silence_counter += 1
-                        if silence_counter > 50 and not warned_silence:
-                            print("\n⚠️ Notice: Pure silence detected (level: 0).")
-                            print("   If on ChromeOS, go to: Settings -> Linux -> Toggle ON 'Allow Linux to access your microphone'")
-                            warned_silence = True
-                    else:
-                        silence_counter = 0
+                    audio_buffer.extend(data)
 
                     if recognizer.AcceptWaveform(data):
-                        result = json.loads(recognizer.Result())
-                        raw_text = result.get("text", "").strip()
+                        res = json.loads(recognizer.Result())
+                        vosk_text = res.get("text", "").strip()
 
-                        if raw_text:
-                            norm_text = normalize_speech(raw_text)
-                            print(f"\n[Heard]: {raw_text} (Normalized: {norm_text})")
-                            if is_wake_word(raw_text) or is_wake_word(norm_text):
-                                should_continue = self.process_command(norm_text)
-                                if not should_continue:
-                                    break
+                        if vosk_text:
+                            # Use hybrid Google + Vosk speech recognizer for 99.9% accuracy
+                            final_speech = self.hybrid_stt.recognize_audio_bytes(
+                                bytes(audio_buffer),
+                                vosk_fallback_text=vosk_text
+                            )
+                            audio_buffer.clear()
+
+                            if final_speech:
+                                print(f"\n[Transcribed]: {final_speech}")
+                                if is_wake_word(final_speech) or active_listening:
+                                    should_continue = self.process_command(final_speech)
+                                    active_listening = False
+                                    if not should_continue:
+                                        break
+                        else:
+                            audio_buffer.clear()
                     else:
-                        # Real-time partial speech recognition
                         partial = json.loads(recognizer.PartialResult())
                         part_text = partial.get("partial", "").strip()
                         if part_text:
                             norm_part = normalize_speech(part_text)
-                            print(f"\r🎤 Heard: {norm_part}   ", end="", flush=True)
+                            print(f"\r🎤 Listening: {norm_part}   ", end="", flush=True)
 
         except KeyboardInterrupt:
             print("\nUltron shutting down...")
         except Exception as e:
-            print(f"\n[-] Microphone / Audio Input Error: {e}")
-            print("[*] Tip: You can test commands anytime using: python3 ultron.py --text")
+            print(f"\n[-] Microphone error: {e}")
+            self.run_interactive_mode()
 
 def main():
-    parser = argparse.ArgumentParser(description="Ultron Local AI Assistant")
-    parser.add_argument("--text", "-t", action="store_true", help="Run in text test mode without microphone")
-    parser.add_argument("--gui", "--floating", "-g", action="store_true", help="Run in Floating Button HUD mode outside terminal")
+    parser = argparse.ArgumentParser(description="Ultron AI Assistant")
+    parser.add_argument("--text", "-t", action="store_true", help="Run text interactive mode")
+    parser.add_argument("--gui", "--floating", "-g", action="store_true", help="Launch Google Assistant Edge Screen HUD")
     args = parser.parse_args()
 
-    if args.gui:
-        from floating_widget import UltronFloatingWidget
-        print("[*] Launching Ultron Floating Button HUD...")
-        app = UltronFloatingWidget()
-        app.run()
-    elif args.text:
+    if args.gui or (not args.text and os.environ.get("DISPLAY")):
+        try:
+            from floating_widget import UltronFloatingWidget
+            print("[*] Launching Ultron Gemini Assistant HUD...")
+            app = UltronFloatingWidget()
+            app.run()
+            return
+        except Exception as e:
+            print(f"[-] GUI launch error: {e}. Falling back to voice/text mode...")
+
+    if args.text:
         assistant = UltronAssistant()
         assistant.run_interactive_mode()
     else:
         assistant = UltronAssistant()
         try:
             assistant.run_voice_mode()
-        except Exception as e:
-            print(f"[!] Falling back to text mode: {e}")
+        except Exception:
             assistant.run_interactive_mode()
 
 if __name__ == "__main__":

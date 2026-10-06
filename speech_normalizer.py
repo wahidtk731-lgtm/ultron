@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 Speech Normalization & Phonetic Matching Engine for Ultron.
-Fixes offline speech recognition (Vosk/Kaldi) acoustic misrecognitions where
-'Ultron' / 'Hey Ultron' is transcribed as 'all thrown', 'all drone', 'out run', etc.
+Fixes offline speech recognition (Vosk/Kaldi & Google STT) acoustic misrecognitions.
+Provides high-accuracy phonetic normalization for wake words, apps, file extensions, and actions.
 """
 
 import re
 
-# Comprehensive regex of phonetic misrecognitions produced by Vosk acoustic models for "Ultron"
+# Comprehensive regex of phonetic misrecognitions for "Ultron"
 PHONETIC_VARIANTS_PATTERN = (
     r"\b("
     r"all\s+thrown|all\s+throne|all\s+throw\w*|all\s+thr\w+|"
@@ -16,7 +16,7 @@ PHONETIC_VARIANTS_PATTERN = (
     r"all\s+turn|all\s+grown|all\s+crown|all\s+round|all\s+train|all\s+churn|all\s+tone|"
     r"old\s+run|out\s+run|outrun|el\s+tr\w+|alter\s+on|ultra\s+on|"
     r"whole\s+turn|hole\s+turn|full\s+turn|"
-    r"altron|ultra"
+    r"altron|ultra|ultran|oltron"
     r")\b"
 )
 
@@ -41,21 +41,67 @@ WAKE_WORDS = [
     "old run",
     "hey all turn",
     "all turn",
+    "hey all round",
+    "all round",
+]
+
+# App & keyword phonetic replacements
+APP_PHONETIC_REPLACEMENTS = [
+    # Sublime Text
+    (r"\b(sub\s+lime\s+text|sub\s+line\s+text|sublime\s+test|sober\s+lime\s+text|sub\s+light\s+text)\b", "sublime text"),
+    (r"\b(sub\s+lime|sub\s+line|sober\s+lime|sub\s+light)\b", "sublime"),
+    
+    # Settings
+    (r"\b(set\s+things|sat\s+things|sad\s+things|set\s+in|setting|setting\'s|system\s+set\s+things)\b", "settings"),
+    
+    # Chrome / Browser
+    (r"\b(google\s+crown|google\s+crome|google\s+chrom)\b", "google chrome"),
+    (r"\b(close\s+crown|close\s+crome|open\s+crown|open\s+crome)\b", lambda m: m.group(0).replace("crown", "chrome").replace("crome", "chrome")),
+    
+    # Terminal
+    (r"\b(turn\s+min\s+al|terminator|ter\s+min\s+al|term\s+nal)\b", "terminal"),
+    
+    # Geany
+    (r"\b(genie\s+editor|jeannie\s+editor|jeany\s+editor)\b", "geany editor"),
+    (r"\b(genie|jeannie|jeany|gini)\b", "geany"),
+    
+    # Cmatrix
+    (r"\b(see\s+matrix|sea\s+matrix|c\s+matrix)\b", "cmatrix"),
+    
+    # YouTube
+    (r"\b(you\s+tube|u\s+tube|u-tube)\b", "youtube"),
+    
+    # Calculator
+    (r"\b(cal\s+cue\s+later|calcu\s+later)\b", "calculator"),
+    
+    # File extensions & filenames (learning.py, learning.cpp, etc.)
+    (r"\b(learning\s+dot\s+py|learning\s+dot\s+pi|learning\s+dot\s+pie|learning\s+py|learning\s+pi|learning\s+pie)\b", "learning.py"),
+    (r"\b(learning\s+dot\s+cpp|learning\s+dot\s+c\s+plus\s+plus|learning\s+c\s+plus\s+plus|learning\s+cpp)\b", "learning.cpp"),
+    (r"\b(learning\s+dot\s+js|learning\s+dot\s+j\s+s|learning\s+js)\b", "learning.js"),
+    (r"\b(index\s+dot\s+html|index\s+dot\s+h\s+t\s+m\s+l|index\s+html)\b", "index.html"),
+    (r"\bdot\s+(py|cpp|js|html|css|txt|json|md|sh|c|java)\b", r".\1"),
+    
+    # Action verbs
+    (r"\b(right|ride)\s+(hi|hello|text|code|print|something|notes)\b", r"write \2"),
+    (r"\b(claws|clothes)\s+(chrome|sublime|browser|terminal|geany)\b", r"close \2"),
 ]
 
 def normalize_speech(text: str) -> str:
     """
-    Normalizes speech-to-text output by standardizing phonetic variants of 'Ultron'
-    into 'ultron' and cleaning unnecessary symbols.
+    Normalizes speech-to-text output by standardizing phonetic variants of 'Ultron',
+    apps, file names, and actions into canonical representations.
     """
     if not text:
         return ""
     
-    # 1. Lowercase
     cleaned = text.lower().strip()
 
-    # 2. Replace phonetic misrecognitions with 'ultron'
+    # 1. Replace phonetic misrecognitions of Ultron
     cleaned = PHONETIC_REGEX.sub("ultron", cleaned)
+
+    # 2. Replace phonetic misrecognitions of apps, files, and actions
+    for pattern, replacement in APP_PHONETIC_REPLACEMENTS:
+        cleaned = re.sub(pattern, replacement, cleaned, flags=re.IGNORECASE)
 
     # 3. Clean multiple spaces
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
@@ -71,11 +117,9 @@ def is_wake_word(text: str) -> bool:
     
     normalized = normalize_speech(text)
     
-    # Check if normalized contains ultron
     if "ultron" in normalized:
         return True
         
-    # Check against raw wake words list
     lower = text.lower()
     for w in WAKE_WORDS:
         if w in lower:
@@ -85,19 +129,17 @@ def is_wake_word(text: str) -> bool:
 
 def strip_wake_words(text: str) -> str:
     """
-    Strips wake words from text so that the downstream intent classifier
-    and app launcher receive only the command body.
+    Strips wake words from text so downstream intent classifier and executor
+    receive only the active command body.
     """
     if not text:
         return ""
         
     normalized = normalize_speech(text)
     
-    # Strip 'hey ultron' or 'ultron'
     cleaned = re.sub(r"\bhey\s+ultron\b", " ", normalized)
     cleaned = re.sub(r"\bultron\b", " ", cleaned)
     
-    # Also strip any remaining raw wake words
     for w in WAKE_WORDS:
         cleaned = re.sub(rf"\b{re.escape(w)}\b", " ", cleaned)
         
@@ -106,23 +148,16 @@ def strip_wake_words(text: str) -> str:
 
 if __name__ == "__main__":
     test_cases = [
-        "hey all thrown",
-        "hey all thrown open chrome",
-        "all thrown open terminal",
-        "all drone what time is it",
-        "hey hall drone open geany",
-        "hey all turn launch browser",
-        "all thrown close sublime",
-        "hey out run search google for python",
-        "hey altron search for news",
-        "hey ultra open youtube",
-        "hey old run what is the date",
-        "what can you do all thrown",
-        "hey all drown open files",
+        "hey all thrown open sub lime text and open learning dot py file and write hi in that file",
+        "all drone open set things",
+        "hey all turn close crown",
+        "hey out run open see matrix",
+        "all thrown write hi in that file",
     ]
-    print("=== Testing Speech Normalizer ===")
+    print("=== Testing Enhanced Speech Normalizer ===")
     for t in test_cases:
         norm = normalize_speech(t)
-        wake = is_wake_word(t)
         body = strip_wake_words(t)
-        print(f"Raw: {t!r:<38} -> Norm: {norm!r:<36} | Wake: {wake} | Command: {body!r}")
+        print(f"Raw:  {t}")
+        print(f"Norm: {norm}")
+        print(f"Body: {body}\n")
