@@ -1,0 +1,66 @@
+name: Build Ultron Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK Build Tools
+        uses: android-actions/setup-android@v3
+
+      - name: Compile and Package Ultron APK
+        run: |
+          mkdir -p bin obj gen
+          ANDROID_JAR="${ANDROID_HOME}/platforms/android-33/android.jar"
+          if [ ! -f "$ANDROID_JAR" ]; then
+            ANDROID_JAR=$(find ${ANDROID_HOME}/platforms -name "android.jar" | head -n 1)
+          fi
+          
+          # 1. Generate R.java
+          aapt package -f -m -J gen \
+            -M android/app/src/main/AndroidManifest.xml \
+            -S android/app/src/main/res \
+            -I "$ANDROID_JAR"
+
+          # 2. Compile Java classes
+          javac -d obj -cp "$ANDROID_JAR:gen" \
+            $(find android/app/src/main/java gen -name "*.java")
+
+          # 3. Create DEX bytecode
+          d8 --output bin/ $(find obj -name "*.class")
+
+          # 4. Package APK
+          aapt package -f \
+            -M android/app/src/main/AndroidManifest.xml \
+            -S android/app/src/main/res \
+            -A android/app/src/main/assets \
+            -I "$ANDROID_JAR" \
+            -F bin/UltronAssistant-unaligned.apk \
+            bin/classes.dex
+
+          # 5. Align APK
+          zipalign -f -p 4 bin/UltronAssistant-unaligned.apk bin/UltronAssistant-unsigned.apk
+
+          # 6. Self-sign debug key
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Ultron,O=UltronAssistant,C=US" || true
+          apksigner sign --ks debug.keystore --ks-pass pass:android --out bin/UltronAssistant.apk bin/UltronAssistant-unsigned.apk
+
+      - name: Upload Ultron APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UltronAssistant-APK
+          path: bin/UltronAssistant.apk

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.UltronAssistant" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/gemini_bg</item>
+        <item name="android:statusBarColor">@color/gemini_bg</item>
+        <item name="android:navigationBarColor">@color/gemini_bg</item>
+    </style>
+
+    <style name="Theme.UltronAssistant.Translucent" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+    </style>
+</resources>

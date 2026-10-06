@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1E1F22">
+  <link rel="manifest" href="manifest.json">
+  <title>Ultron Gemini Assistant</title>
+  <style>
+    :root {
+      --gemini-bg: #1E1F22;
+      --gemini-border: #303238;
+      --gemini-pill-btn: #282A2E;
+      --gemini-hover: #353840;
+      --gemini-blue: #1A73E8;
+      --gemini-blue-active: #4285F4;
+      --gemini-red: #EA4335;
+      --gemini-amber: #FBBC05;
+      --gemini-green: #34A853;
+      --gemini-cyan: #00E5FF;
+      --gemini-purple: #9B51E0;
+      --gemini-pink: #EC4899;
+      --text-white: #FFFFFF;
+      --text-muted: #9AA0A6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #121316;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .main-screen {
+      position: absolute;
+      top: 20%;
+      text-align: center;
+      color: var(--text-white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      width: 72px;
+      height: 72px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, var(--gemini-blue-active), var(--gemini-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(66, 133, 244, 0.4);
+    }
+
+    .logo-badge svg {
+      width: 40px;
+      height: 40px;
+      fill: #FFFFFF;
+    }
+
+    .app-title {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .app-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 320px;
+      line-height: 1.4;
+    }
+
+    /* Assistant Container */
+    .assistant-container {
+      position: relative;
+      z-index: 10;
+      width: 94%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* Response / Transcription Bubble */
+    .response-card {
+      background: rgba(30, 31, 34, 0.95);
+      border: 1px solid var(--gemini-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 16px 20px;
+      width: 100%;
+      color: var(--text-white);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: none;
+      animation: slideUp 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    .response-card.active {
+      display: block;
+    }
+
+    .query-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-style: italic;
+    }
+
+    .reply-text {
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--text-white);
+    }
+
+    /* Suggestion Chips */
+    .chips-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      width: 100%;
+      padding: 2px 4px;
+      scrollbar-width: none;
+    }
+    .chips-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      background: var(--gemini-pill-btn);
+      border: 1px solid var(--gemini-border);
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .chip:active {
+      background: var(--gemini-hover);
+      color: var(--text-white);
+      border-color: var(--gemini-blue-active);
+    }
+
+    /* Stadium Pill Container (Matches 54px Gemini Capsule) */
+    .stadium-capsule {
+      position: relative;
+      width: 100%;
+      height: 56px;
+      background: var(--gemini-bg);
+      border: 1px solid var(--gemini-border);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      padding: 4px 6px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    /* Dynamic Gemini Shimmer Loading Wave */
+    .shimmer-wave {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, 
+        var(--gemini-blue), 
+        var(--gemini-purple), 
+        var(--gemini-pink), 
+        var(--gemini-amber), 
+        var(--gemini-cyan), 
+        var(--gemini-green)
+      );
+      background-size: 300% 100%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .stadium-capsule.processing .shimmer-wave {
+      opacity: 1;
+      animation: shimmerAnim 1.8s linear infinite;
+    }
+
+    @keyframes shimmerAnim {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    /* Glowing Microphone Button */
+    .mic-button {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--gemini-pill-btn);
+      border: 1px solid var(--gemini-border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mic-button svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-white);
+      transition: all 0.25s ease;
+    }
+
+    /* Glow States */
+    .mic-button.ready {
+      border-color: var(--gemini-cyan);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+    }
+    .mic-button.ready svg {
+      fill: var(--gemini-cyan);
+    }
+
+    .mic-button.listening {
+      background: #3b1b1f;
+      border-color: var(--gemini-red);
+      box-shadow: 0 0 20px rgba(234, 67, 53, 0.65);
+      animation: pulseGlow 1.2s infinite alternate;
+    }
+    .mic-button.listening svg {
+      fill: var(--gemini-red);
+    }
+
+    .mic-button.processing {
+      border-color: var(--gemini-amber);
+      box-shadow: 0 0 16px rgba(251, 188, 5, 0.5);
+    }
+    .mic-button.processing svg {
+      fill: var(--gemini-amber);
+    }
+
+    .mic-button.speaking {
+      border-color: var(--gemini-green);
+      box-shadow: 0 0 16px rgba(52, 168, 83, 0.5);
+    }
+    .mic-button.speaking svg {
+      fill: var(--gemini-green);
+    }
+
+    @keyframes pulseGlow {
+      from { transform: scale(0.96); box-shadow: 0 0 10px rgba(234, 67, 53, 0.4); }
+      to { transform: scale(1.06); box-shadow: 0 0 24px rgba(234, 67, 53, 0.85); }
+    }
+
+    /* Text Input Area */
+    .input-wrapper {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      margin: 0 10px;
+    }
+
+    .text-input {
+      width: 100%;
+      height: 38px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-white);
+      font-size: 15px;
+    }
+
+    .text-input::placeholder {
+      color: #8E9196;
+    }
+
+    /* Send Button */
+    .action-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      outline: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .action-btn:active {
+      color: var(--text-white);
+    }
+
+    .action-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Status Label */
+    .status-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+      text-align: center;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-screen">
+    <div class="logo-badge">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+      </svg>
+    </div>
+    <div class="app-title">Ultron Assistant</div>
+    <div class="app-subtitle">Offline Voice &amp; Intent Assistant with Google Gemini Edge HUD</div>
+  </div>
+
+  <div class="assistant-container">
+    
+    <!-- Quick Suggestion Chips -->
+    <div class="chips-row">
+      <div class="chip" onclick="quickCommand('What time is it?')">🕒 Time</div>
+      <div class="chip" onclick="quickCommand('Open YouTube')">▶️ YouTube</div>
+      <div class="chip" onclick="quickCommand('Open Chrome')">🌐 Chrome</div>
+      <div class="chip" onclick="quickCommand('Open Settings')">⚙️ Settings</div>
+      <div class="chip" onclick="quickCommand('Search Google for AI')">🔍 Search</div>
+    </div>
+
+    <!-- Response Card -->
+    <div class="response-card" id="responseCard">
+      <div class="query-text" id="queryText"></div>
+      <div class="reply-text" id="replyText"></div>
+    </div>
+
+    <!-- 54px Gemini Capsule Stadium Pill -->
+    <div class="stadium-capsule" id="stadiumCapsule">
+      <button class="mic-button ready" id="micBtn" onclick="toggleListening()">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+        </svg>
+      </button>
+
+      <div class="input-wrapper">
+        <input 
+          type="text" 
+          class="text-input" 
+          id="cmdInput" 
+          placeholder="Ask Ultron..." 
+          autocomplete="off" 
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          onkeydown="onInputKey(event)"
+        />
+      </div>
+
+      <button class="action-btn" id="sendBtn" onclick="submitTextInput()">
+        <svg viewBox="0 0 24 24">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+
+      <div class="shimmer-wave"></div>
+    </div>
+
+    <div class="status-text" id="statusLabel">Ultron AI Assistant • Ready</div>
+  </div>
+
+  <script>
+    let currentState = "ready";
+    let speechRec = null;
+
+    function setState(state, message) {
+      currentState = state;
+      const micBtn = document.getElementById("micBtn");
+      const capsule = document.getElementById("stadiumCapsule");
+      const statusLabel = document.getElementById("statusLabel");
+      const input = document.getElementById("cmdInput");
+
+      micBtn.className = "mic-button " + state;
+      capsule.className = "stadium-capsule " + (state === "processing" ? "processing" : "");
+
+      if (message) {
+        statusLabel.innerText = message;
+      } else {
+        if (state === "ready") statusLabel.innerText = "Ultron AI Assistant • Ready";
+        if (state === "listening") statusLabel.innerText = "Listening for command...";
+        if (state === "processing") statusLabel.innerText = "Thinking...";
+        if (state === "speaking") statusLabel.innerText = "Speaking...";
+      }
+
+      input.disabled = (state === "speaking");
+    }
+
+    function toggleListening() {
+      if (currentState === "listening") {
+        if (speechRec) speechRec.stop();
+        setState("ready");
+      } else {
+        startListening();
+      }
+    }
+
+    function startListening() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) {
+        alert("Speech Recognition is not supported in this browser. Please type your command.");
+        return;
+      }
+      try {
+        speechRec = new SpeechRec();
+        speechRec.lang = "en-US";
+        speechRec.interimResults = false;
+        speechRec.onstart = () => setState("listening", "Listening...");
+        speechRec.onresult = (e) => {
+          const text = e.results[0][0].transcript;
+          processCommand(text);
+        };
+        speechRec.onerror = (e) => setState("ready", "Error: " + e.error);
+        speechRec.onend = () => {
+          if (currentState === "listening") setState("ready");
+        };
+        speechRec.start();
+      } catch (e) {
+        setState("ready", "Microphone access denied");
+      }
+    }
+
+    function submitTextInput() {
+      const input = document.getElementById("cmdInput");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      processCommand(text);
+    }
+
+    function onInputKey(e) {
+      if (e.key === "Enter") submitTextInput();
+    }
+
+    function quickCommand(cmd) {
+      processCommand(cmd);
+    }
+
+    function processCommand(text) {
+      setState("processing", "Processing...");
+      showCard(text, "Thinking...");
+
+      setTimeout(() => {
+        const reply = evaluateUltron(text);
+        showCard(text, reply);
+        speakText(reply);
+      }, 400);
+    }
+
+    function showCard(query, reply) {
+      const card = document.getElementById("responseCard");
+      document.getElementById("queryText").innerText = `"${query}"`;
+      document.getElementById("replyText").innerText = reply;
+      card.classList.add("active");
+    }
+
+    function speakText(text) {
+      setState("speaking", "Speaking...");
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.0;
+        utter.pitch = 0.95;
+        utter.onend = () => setState("ready");
+        window.speechSynthesis.speak(utter);
+      } else {
+        setTimeout(() => setState("ready"), 1500);
+      }
+    }
+
+    // Ultron NLP Normalizer and Intent Evaluator in JavaScript
+    function evaluateUltron(text) {
+      const lower = text.toLowerCase().trim();
+      
+      // Time query
+      if (lower.includes("time") || lower.includes("clock")) {
+        const now = new Date();
+        return `The current time is ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} on ${now.toLocaleDateString([], {weekday: 'long', month: 'long', day: 'numeric'})}.`;
+      }
+      
+      // Greetings
+      if (lower.match(/\b(hello|hi|hey|good morning|good afternoon)\b/)) {
+        return "Hello! Ultron is online and ready for your commands.";
+      }
+      
+      // Capabilities
+      if (lower.includes("who are you") || lower.includes("what can you do") || lower.includes("capabilities")) {
+        return "I am Ultron, your local AI assistant. I can open applications, search the web, tell the time, and execute commands—all offline.";
+      }
+      
+      // Open app
+      if (lower.startsWith("open ") || lower.startsWith("launch ")) {
+        const app = lower.replace(/^(open|launch)\s+/, "").trim();
+        if (app.includes("youtube")) {
+          window.open("https://www.youtube.com", "_blank");
+          return "Opening YouTube...";
+        } else if (app.includes("chrome") || app.includes("browser")) {
+          window.open("https://www.google.com", "_blank");
+          return "Opening Chrome...";
+        }
+        return `Opening ${app}...`;
+      }
+
+      // Search web
+      if (lower.includes("search") || lower.includes("google")) {
+        const q = lower.replace(/^(search google for|search for|google|search)\s+/, "").trim();
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, "_blank");
+        return `Searching Google for "${q}".`;
+      }
+
+      return `Command processed: "${text}".`;
+    }
+
+    // Register Service Worker for offline PWA installation
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

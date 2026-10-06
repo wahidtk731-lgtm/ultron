@@ -1,0 +1,21 @@
+{
+  "name": "Ultron AI Assistant",
+  "short_name": "Ultron",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1E1F22",
+  "theme_color": "#1E1F22",
+  "description": "Offline Local AI Voice Assistant with Google Gemini Edge HUD",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

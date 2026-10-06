@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ultron Assistant</string>
+    <string name="hud_title">Ultron Gemini Assistant</string>
+    <string name="prompt_hint">Ask Ultron...</string>
+    <string name="mic_listening">Listening...</string>
+    <string name="mic_thinking">Thinking...</string>
+    <string name="mic_speaking">Speaking...</string>
+    <string name="mic_ready">Tap mic or type command</string>
+</resources>

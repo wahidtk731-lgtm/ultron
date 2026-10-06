@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ultron Gemini Assistant</title>
+  <style>
+    :root {
+      --gemini-bg: #1E1F22;
+      --gemini-border: #303238;
+      --gemini-pill-btn: #282A2E;
+      --gemini-hover: #353840;
+      --gemini-blue: #1A73E8;
+      --gemini-blue-active: #4285F4;
+      --gemini-red: #EA4335;
+      --gemini-amber: #FBBC05;
+      --gemini-green: #34A853;
+      --gemini-cyan: #00E5FF;
+      --gemini-purple: #9B51E0;
+      --gemini-pink: #EC4899;
+      --text-white: #FFFFFF;
+      --text-muted: #9AA0A6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: transparent;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 16px;
+      overflow: hidden;
+    }
+
+    /* Backdrop dim */
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 1;
+    }
+
+    /* Assistant Container */
+    .assistant-container {
+      position: relative;
+      z-index: 10;
+      width: 94%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Response / Transcription Bubble */
+    .response-card {
+      background: rgba(30, 31, 34, 0.95);
+      border: 1px solid var(--gemini-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 14px 18px;
+      width: 100%;
+      color: var(--text-white);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      display: none;
+      animation: slideUp 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    .response-card.active {
+      display: block;
+    }
+
+    .query-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-style: italic;
+    }
+
+    .reply-text {
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--text-white);
+      font-weight: 400;
+    }
+
+    /* Suggestion Chips */
+    .chips-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      width: 100%;
+      padding: 2px 4px;
+      scrollbar-width: none;
+    }
+    .chips-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      background: var(--gemini-pill-btn);
+      border: 1px solid var(--gemini-border);
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .chip:active {
+      background: var(--gemini-hover);
+      color: var(--text-white);
+      border-color: var(--gemini-blue-active);
+    }
+
+    /* Stadium Pill Container (Matches 54px Gemini Capsule) */
+    .stadium-capsule {
+      position: relative;
+      width: 100%;
+      height: 56px;
+      background: var(--gemini-bg);
+      border: 1px solid var(--gemini-border);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      padding: 4px 6px 4px 6px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+    }
+
+    /* Dynamic Gemini Shimmer Loading Wave */
+    .shimmer-wave {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, 
+        var(--gemini-blue), 
+        var(--gemini-purple), 
+        var(--gemini-pink), 
+        var(--gemini-amber), 
+        var(--gemini-cyan), 
+        var(--gemini-green)
+      );
+      background-size: 300% 100%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .stadium-capsule.processing .shimmer-wave {
+      opacity: 1;
+      animation: shimmerAnim 1.8s linear infinite;
+    }
+
+    @keyframes shimmerAnim {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    /* Glowing Microphone Button */
+    .mic-button {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--gemini-pill-btn);
+      border: 1px solid var(--gemini-border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mic-button svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-white);
+      transition: all 0.25s ease;
+    }
+
+    /* Glow States */
+    .mic-button.ready {
+      border-color: var(--gemini-cyan);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+    }
+    .mic-button.ready svg {
+      fill: var(--gemini-cyan);
+    }
+
+    .mic-button.listening {
+      background: #3b1b1f;
+      border-color: var(--gemini-red);
+      box-shadow: 0 0 20px rgba(234, 67, 53, 0.65);
+      animation: pulseGlow 1.2s infinite alternate;
+    }
+    .mic-button.listening svg {
+      fill: var(--gemini-red);
+    }
+
+    .mic-button.processing {
+      border-color: var(--gemini-amber);
+      box-shadow: 0 0 16px rgba(251, 188, 5, 0.5);
+    }
+    .mic-button.processing svg {
+      fill: var(--gemini-amber);
+    }
+
+    .mic-button.speaking {
+      border-color: var(--gemini-green);
+      box-shadow: 0 0 16px rgba(52, 168, 83, 0.5);
+    }
+    .mic-button.speaking svg {
+      fill: var(--gemini-green);
+    }
+
+    @keyframes pulseGlow {
+      from { transform: scale(0.96); box-shadow: 0 0 10px rgba(234, 67, 53, 0.4); }
+      to { transform: scale(1.06); box-shadow: 0 0 24px rgba(234, 67, 53, 0.85); }
+    }
+
+    /* Text Input Area */
+    .input-wrapper {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      margin: 0 10px;
+    }
+
+    .text-input {
+      width: 100%;
+      height: 38px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-white);
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .text-input::placeholder {
+      color: #8E9196;
+    }
+
+    /* Send / Action Button */
+    .action-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      outline: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .action-btn:active {
+      color: var(--text-white);
+    }
+
+    .action-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Status Label */
+    .status-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="backdrop" id="backdrop" onclick="onBackdropClick()"></div>
+
+  <div class="assistant-container">
+    
+    <!-- Quick Suggestion Chips -->
+    <div class="chips-row">
+      <div class="chip" onclick="quickCommand('What time is it?')">🕒 Time</div>
+      <div class="chip" onclick="quickCommand('Open YouTube')">▶️ YouTube</div>
+      <div class="chip" onclick="quickCommand('Open Chrome')">🌐 Chrome</div>
+      <div class="chip" onclick="quickCommand('Open Settings')">⚙️ Settings</div>
+      <div class="chip" onclick="quickCommand('Search Google for AI')">🔍 Search</div>
+    </div>
+
+    <!-- Response / Feedback Card -->
+    <div class="response-card" id="responseCard">
+      <div class="query-text" id="queryText"></div>
+      <div class="reply-text" id="replyText"></div>
+    </div>
+
+    <!-- 54px Gemini Capsule Stadium Pill -->
+    <div class="stadium-capsule" id="stadiumCapsule">
+      <!-- Microphone Button -->
+      <button class="mic-button ready" id="micBtn" onclick="toggleListening()">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+        </svg>
+      </button>
+
+      <!-- Text Entry -->
+      <div class="input-wrapper">
+        <input 
+          type="text" 
+          class="text-input" 
+          id="cmdInput" 
+          placeholder="Ask Ultron..." 
+          autocomplete="off" 
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          onkeydown="onInputKey(event)"
+        />
+      </div>
+
+      <!-- Send Button -->
+      <button class="action-btn" id="sendBtn" onclick="submitTextInput()">
+        <svg viewBox="0 0 24 24">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+
+      <!-- Gradient Shimmer Wave -->
+      <div class="shimmer-wave"></div>
+    </div>
+
+    <div class="status-text" id="statusLabel">Ultron AI Assistant • 100% Offline</div>
+  </div>
+
+  <script>
+    let currentState = "ready"; // ready, listening, processing, speaking
+    let webSpeechRec = null;
+    let webSpeechSynth = window.speechSynthesis;
+
+    // Check if running inside Android WebView with Native Java Bridge
+    const hasAndroidBridge = typeof window.AndroidUltron !== "undefined";
+
+    // Set UI State
+    function setState(state, message) {
+      currentState = state;
+      const micBtn = document.getElementById("micBtn");
+      const capsule = document.getElementById("stadiumCapsule");
+      const statusLabel = document.getElementById("statusLabel");
+      const input = document.getElementById("cmdInput");
+
+      micBtn.className = "mic-button " + state;
+      capsule.className = "stadium-capsule " + (state === "processing" ? "processing" : "");
+
+      if (message) {
+        statusLabel.innerText = message;
+      } else {
+        if (state === "ready") statusLabel.innerText = "Ultron AI Assistant • Ready";
+        if (state === "listening") statusLabel.innerText = "Listening for command...";
+        if (state === "processing") statusLabel.innerText = "Thinking...";
+        if (state === "speaking") statusLabel.innerText = "Speaking...";
+      }
+
+      // Input lockout while speaking
+      input.disabled = (state === "speaking");
+    }
+
+    // Toggle Listening
+    function toggleListening() {
+      if (currentState === "listening") {
+        stopListening();
+      } else {
+        startListening();
+      }
+    }
+
+    function startListening() {
+      setState("listening", "Listening...");
+
+      if (hasAndroidBridge) {
+        window.AndroidUltron.startListening();
+      } else {
+        // Fallback to Web Speech API
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+          try {
+            webSpeechRec = new SpeechRec();
+            webSpeechRec.lang = "en-US";
+            webSpeechRec.interimResults = false;
+            webSpeechRec.maxAlternatives = 1;
+
+            webSpeechRec.onresult = (event) => {
+              const transcript = event.results[0][0].transcript;
+              processCommand(transcript);
+            };
+
+            webSpeechRec.onerror = (e) => {
+              setState("ready", "Error listening: " + e.error);
+            };
+
+            webSpeechRec.onend = () => {
+              if (currentState === "listening") setState("ready");
+            };
+
+            webSpeechRec.start();
+          } catch (e) {
+            setState("ready", "Microphone unavailable");
+          }
+        } else {
+          setState("ready", "Speech recognition not supported in this browser");
+        }
+      }
+    }
+
+    function stopListening() {
+      if (hasAndroidBridge) {
+        window.AndroidUltron.stopListening();
+      } else if (webSpeechRec) {
+        webSpeechRec.stop();
+      }
+      setState("ready");
+    }
+
+    // Submit Text Input
+    function submitTextInput() {
+      const input = document.getElementById("cmdInput");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      processCommand(text);
+    }
+
+    function onInputKey(event) {
+      if (event.key === "Enter") {
+        submitTextInput();
+      }
+    }
+
+    function quickCommand(cmd) {
+      processCommand(cmd);
+    }
+
+    function processCommand(text) {
+      setState("processing", "Processing command...");
+
+      showCard(text, "Thinking...");
+
+      if (hasAndroidBridge) {
+        window.AndroidUltron.processCommand(text);
+      } else {
+        // Local client-side evaluation for PWA/Browser demo
+        setTimeout(() => {
+          const reply = localEvaluate(text);
+          showCard(text, reply);
+          speakResponse(reply);
+        }, 350);
+      }
+    }
+
+    function showCard(query, reply) {
+      const card = document.getElementById("responseCard");
+      document.getElementById("queryText").innerText = `"${query}"`;
+      document.getElementById("replyText").innerText = reply;
+      card.classList.add("active");
+    }
+
+    function speakResponse(text) {
+      setState("speaking", "Speaking response...");
+      if (webSpeechSynth) {
+        webSpeechSynth.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.0;
+        utter.pitch = 0.95;
+        utter.onend = () => setState("ready");
+        webSpeechSynth.speak(utter);
+      } else {
+        setTimeout(() => setState("ready"), 1500);
+      }
+    }
+
+    // Local client-side evaluation fallback (mirrors Python logic)
+    function localEvaluate(raw) {
+      const lower = raw.toLowerCase().trim();
+      if (lower.includes("time")) {
+        const now = new Date();
+        return `The current time is ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}.`;
+      }
+      if (lower.includes("who are you") || lower.includes("what can you do") || lower.includes("capabilities")) {
+        return "I am Ultron, your offline AI assistant. I can open applications, launch websites, tell time, and search.";
+      }
+      if (lower.startsWith("open ") || lower.startsWith("launch ")) {
+        const target = lower.replace(/^(open|launch)\s+/, "").trim();
+        return `Opening ${target}...`;
+      }
+      if (lower.includes("search ") || lower.includes("google ")) {
+        const query = lower.replace(/^(search google for|search for|google|search)\s+/, "").trim();
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+        return `Searching Google for "${query}".`;
+      }
+      if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey")) {
+        return "Hello! Ultron is online and ready for your commands.";
+      }
+      return `Processed command: "${raw}".`;
+    }
+
+    function onBackdropClick() {
+      // Optional: dismiss HUD if in overlay mode
+      if (hasAndroidBridge) {
+        window.AndroidUltron.dismiss();
+      }
+    }
+
+    // Android Callbacks (Invoked by Android Java Native Layer)
+    window.onSpeechResult = function(transcript) {
+      processCommand(transcript);
+    };
+
+    window.onAssistantReply = function(query, reply) {
+      showCard(query, reply);
+    };
+
+    window.onStatusUpdate = function(state, message) {
+      setState(state, message);
+    };
+  </script>
+</body>
+</html>

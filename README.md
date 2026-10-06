@@ -138,4 +138,27 @@ Then run `python3 train_intent.py`.
 - `download_model.py` - Automatic Vosk offline model downloader.
 - `test_mic.py` - Microphone diagnostic & live audio VU meter.
 - `launch_floating.sh` - One-click launcher script.
-# ultron
+- `android/` - Native Android Assistant app (offline SpeechRecognizer, TTS, IntentEngine).
+- `.github/workflows/build-apk.yml` - Cloud APK builder pipeline (builds APK with zero local storage).
+- `pwa/` - Progressive Web App for instant 1-click WebAPK installation on Android.
+- `serve_pwa.py` - Zero-dependency local server for mobile testing.
+- `build_apk.sh` - Interactive APK packaging guide and script.
+
+---
+
+## 📱 Android APK & Mobile Installation
+
+You can convert and install Ultron Assistant on Android **without installing heavy SDKs, NDKs, or multi-gigabyte build tools**:
+
+### Option 1: Instant 1-Click Install (PWA / WebAPK)
+Zero build tools or downloads required:
+```bash
+python3 serve_pwa.py
+```
+Open `http://<your-device-ip>:8085` in Google Chrome on your Android phone or ChromeOS and tap **"Install App"** / **"Add to Home Screen"**. It installs as a real Android app with offline speech and HUD!
+
+### Option 2: Cloud GitHub Actions Build (Zero Local Disk Space)
+A complete native Android project is provided in `android/` with a pre-configured GitHub Actions workflow:
+1. Push your changes: `git push origin main`
+2. GitHub Actions will automatically compile `UltronAssistant.apk` in the cloud.
+3. Download the signed `.apk` from your repository's **Actions** tab and install it via `adb install` or your phone's file manager!
