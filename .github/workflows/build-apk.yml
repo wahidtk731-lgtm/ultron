@@ -3,6 +3,8 @@ name: Build Ultron Android APK
 on:
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -19,48 +21,96 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK Build Tools
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK Environment
+        run: |
+          echo "Setting up Android SDK environment..."
+          ANDROID_HOME="/usr/local/lib/android/sdk"
+          if [ ! -d "$ANDROID_HOME" ]; then
+            ANDROID_HOME="${ANDROID_SDK_ROOT:-$HOME/android-sdk}"
+          fi
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          
+          # Accept licenses
+          yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          
+          # Ensure platform 33 and build-tools 33.0.2 are available
+          ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2"
+          
+          BUILD_TOOLS="${ANDROID_HOME}/build-tools/33.0.2"
+          if [ ! -d "$BUILD_TOOLS" ]; then
+            BUILD_TOOLS=$(ls -d ${ANDROID_HOME}/build-tools/* | sort -V | tail -n 1)
+          fi
+          echo "Build tools directory: $BUILD_TOOLS"
+          echo "$BUILD_TOOLS" >> $GITHUB_PATH
 
       - name: Compile and Package Ultron APK
         run: |
+          set -e
           mkdir -p bin obj gen
+          
+          BUILD_TOOLS="${ANDROID_HOME}/build-tools/33.0.2"
+          if [ ! -d "$BUILD_TOOLS" ]; then
+            BUILD_TOOLS=$(ls -d ${ANDROID_HOME}/build-tools/* | sort -V | tail -n 1)
+          fi
+          export PATH="${BUILD_TOOLS}:${PATH}"
+          
           ANDROID_JAR="${ANDROID_HOME}/platforms/android-33/android.jar"
           if [ ! -f "$ANDROID_JAR" ]; then
-            ANDROID_JAR=$(find ${ANDROID_HOME}/platforms -name "android.jar" | head -n 1)
+            ANDROID_JAR=$(ls -v ${ANDROID_HOME}/platforms/*/android.jar | tail -n 1)
           fi
+          echo "Using Android Jar: $ANDROID_JAR"
           
           # 1. Generate R.java
-          aapt package -f -m -J gen \
+          echo "Step 1: Generating R.java..."
+          aapt package -f -m \
+            -J gen \
             -M android/app/src/main/AndroidManifest.xml \
             -S android/app/src/main/res \
             -I "$ANDROID_JAR"
 
-          # 2. Compile Java classes
-          javac -d obj -cp "$ANDROID_JAR:gen" \
+          # 2. Compile Java classes (Target Java 11 for Android D8 compatibility)
+          echo "Step 2: Compiling Java classes..."
+          javac -source 11 -target 11 -d obj -cp "$ANDROID_JAR:gen" \
             $(find android/app/src/main/java gen -name "*.java")
 
           # 3. Create DEX bytecode
+          echo "Step 3: Creating DEX bytecode..."
           d8 --output bin/ $(find obj -name "*.class")
 
-          # 4. Package APK
+          # 4. Package resources and assets into unaligned APK
+          echo "Step 4: Packaging APK resources & assets..."
           aapt package -f \
             -M android/app/src/main/AndroidManifest.xml \
             -S android/app/src/main/res \
             -A android/app/src/main/assets \
             -I "$ANDROID_JAR" \
-            -F bin/UltronAssistant-unaligned.apk \
-            bin/classes.dex
+            -F bin/UltronAssistant-unaligned.apk
 
-          # 5. Align APK
+          # 5. Add classes.dex into root of APK
+          echo "Step 5: Adding classes.dex to APK root..."
+          (cd bin && aapt add UltronAssistant-unaligned.apk classes.dex)
+
+          # 6. Align APK
+          echo "Step 6: Running zipalign..."
           zipalign -f -p 4 bin/UltronAssistant-unaligned.apk bin/UltronAssistant-unsigned.apk
 
-          # 6. Self-sign debug key
-          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Ultron,O=UltronAssistant,C=US" || true
+          # 7. Self-sign debug key
+          echo "Step 7: Signing APK with debug keystore..."
+          keytool -genkeypair -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Ultron,O=UltronAssistant,C=US"
           apksigner sign --ks debug.keystore --ks-pass pass:android --out bin/UltronAssistant.apk bin/UltronAssistant-unsigned.apk
+          
+          # 8. Verify APK
+          echo "Step 8: Verifying APK signature..."
+          apksigner verify bin/UltronAssistant.apk
+          
+          echo "=================================================="
+          echo "UltronAssistant.apk successfully compiled & signed!"
+          ls -lh bin/UltronAssistant.apk
+          echo "=================================================="
 
       - name: Upload Ultron APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: UltronAssistant-APK
           path: bin/UltronAssistant.apk
+          if-no-files-found: error
