@@ -347,6 +347,16 @@ def generate_full_dataset():
         for cv in create_verbs:
             add_sample(f"{cv} {f_generic}", "create_file")
 
+    # 11. FLOATING MODE
+    floating_phrases = [
+        "floating mode", "open floating mode", "turn on floating mode", "enable floating mode",
+        "floating bubble", "open floating bubble", "enable floating bubble", "bubble mode",
+        "floating overlay", "open floating overlay", "switch to floating mode", "start floating mode",
+        "hey ultron floating mode", "ultron floating mode", "collapse to bubble", "open floating widget"
+    ]
+    for p in floating_phrases:
+        add_sample(p, "floating_mode")
+
     # 6. QUERY_TIME: Enriched date and time inquiries
     for p in TIME_PHRASES:
         for prefix in CONVERSATIONAL_PREFIXES:

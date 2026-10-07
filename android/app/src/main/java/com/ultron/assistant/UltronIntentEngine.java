@@ -157,6 +157,11 @@ public class UltronIntentEngine {
             return new ActionCommand("recent_apps", "", c);
         }
 
+        // Floating Bubble Mode
+        if (c.matches(".*\\b(floating mode|floating bubble|bubble mode|floating overlay|open floating|start floating|enable floating|turn on floating)\\b.*")) {
+            return new ActionCommand("floating_mode", "", c);
+        }
+
         // 6. Greet
         if (c.matches(".*\\b(hello|hi|hey|good morning|good evening|good afternoon)\\b.*")) {
             return new ActionCommand("greet", "", c);

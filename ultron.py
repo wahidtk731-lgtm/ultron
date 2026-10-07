@@ -207,6 +207,12 @@ class UltronAssistant:
         elif intent == "recent_apps":
             return self.launcher.open_recent_app()
 
+        elif intent == "floating_mode":
+            import subprocess
+            widget_path = os.path.join(os.path.dirname(__file__), "floating_widget.py")
+            subprocess.Popen(["python3", widget_path])
+            return True, "Opened Ultron floating widget."
+
         elif intent == "open_app":
             app_name = self.extract_target_app(cmd)
             # If the app target is actually a file

@@ -237,6 +237,36 @@
       color: var(--text-white);
       border-color: var(--gemini-blue-active);
     }
+    .recent-apps-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      width: 100%;
+      padding: 2px 4px;
+      scrollbar-width: none;
+    }
+    .recent-apps-row::-webkit-scrollbar {
+      display: none;
+    }
+    .chip-recent {
+      background: rgba(26, 115, 232, 0.22) !important;
+      border: 1px solid rgba(66, 133, 244, 0.5) !important;
+      color: #8ab4f8 !important;
+      font-weight: 500;
+    }
+    .chip-recent:active {
+      background: rgba(26, 115, 232, 0.45) !important;
+      border-color: #4285f4 !important;
+    }
+    .chip-accent {
+      background: rgba(155, 81, 224, 0.2) !important;
+      border: 1px solid rgba(155, 81, 224, 0.5) !important;
+      color: #d7b4fc !important;
+      font-weight: 500;
+    }
+    .chip-accent:active {
+      background: rgba(155, 81, 224, 0.45) !important;
+    }
 
     /* Stadium Pill Container (Matches 54px Gemini Capsule) */
     .stadium-capsule {
@@ -601,16 +631,18 @@
 
   <div class="assistant-container">
     
-    <!-- Quick Suggestion Chips (Clean, Prioritized) -->
+    <!-- Recently Opened Apps Suggestions (Fast One-Tap Launch) -->
+    <div class="recent-apps-row" id="recentAppsRow"></div>
+
+    <!-- Clean Quick Actions -->
     <div class="chips-row">
-      <div class="chip chip-primary" onclick="openSettingsModal()">⚙️ Settings</div>
-      <div class="chip chip-recent" id="chipRecentApp" onclick="openRecentApp()">🕒 Recent App</div>
-      <div class="chip" onclick="quickCommand('Close app')">⏹️ Close App</div>
+      <div class="chip chip-accent" onclick="toggleFloating()">🫧 Floating Bubble</div>
       <div class="chip" onclick="quickCommand('Turn on Wi-Fi')">📶 Wi-Fi</div>
-      <div class="chip" onclick="quickCommand('Turn on Bluetooth')">ᛒ Bluetooth</div>
-      <div class="chip" onclick="quickCommand('Clear notifications')">🔔 Clear Notifications</div>
-      <div class="chip" id="chipDockPos" onclick="toggleDockPosition()" style="display: none;">📌 Move HUD</div>
-      <div class="chip" id="chipMinimize" onclick="minimizeToBubble()" style="display: none;">🫧 Collapse Bubble</div>
+      <div class="chip" onclick="quickCommand('Turn on Bluetooth')">Bluetooth</div>
+      <div class="chip" onclick="quickCommand('Clear notifications')">Clear Notifications</div>
+      <div class="chip" onclick="quickCommand('Close app')">Close App</div>
+      <div class="chip chip-primary" onclick="openSettingsModal()">Settings</div>
+      <div class="chip" id="chipDockPos" onclick="toggleDockPosition()" style="display: none;">Move HUD</div>
       <div class="chip" onclick="dismissAssistant()">Hide</div>
     </div>
 
@@ -674,6 +706,7 @@
         <div class="setting-item">
           <label>System Integration</label>
           <div class="shortcut-buttons">
+            <button class="btn-setting-action" onclick="toggleFloating()">🫧 Floating Bubble Mode (Over other apps)</button>
             <button class="btn-setting-action" onclick="setAsDefaultAssistant()">⚙️ Change Default Assistant (Center Button)</button>
             <button class="btn-setting-action" onclick="refreshAppsIndex()">🔄 Re-train Installed Apps</button>
             <button class="btn-setting-action" id="btnDockToggle" onclick="toggleDockPosition()" style="display: none;">📌 Move HUD to Top / Bottom</button>
@@ -711,25 +744,12 @@
           autocapitalize="off"
           spellcheck="false"
           onkeydown="onInputKey(event)"
+          oninput="onInputChanged()"
         />
       </div>
 
-      <!-- Minimize to Floating Bubble Button -->
-      <button class="action-btn" id="btnMinimizeCapsule" onclick="minimizeToBubble()" title="Collapse to Bubble" style="display: none;">
-        <svg viewBox="0 0 24 24">
-          <path d="M19 13H5v-2h14v2z"/>
-        </svg>
-      </button>
-
-      <!-- Settings Button -->
-      <button class="action-btn" id="settingsBtn" onclick="openSettingsModal()" title="Ultron Settings">
-        <svg viewBox="0 0 24 24">
-          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-        </svg>
-      </button>
-
-      <!-- Send Button -->
-      <button class="action-btn" id="sendBtn" onclick="submitTextInput()">
+      <!-- Send Button (Shown only when typing) -->
+      <button class="action-btn" id="sendBtn" onclick="submitTextInput()" style="display: none;">
         <svg viewBox="0 0 24 24">
           <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
         </svg>
@@ -1119,7 +1139,17 @@
       } else {
         setVoiceSpeed(1.05);
       }
+
+      setTimeout(updateRecentApps, 150);
     });
+
+    function onInputChanged() {
+      const input = document.getElementById("cmdInput");
+      const sendBtn = document.getElementById("sendBtn");
+      if (sendBtn && input) {
+        sendBtn.style.display = input.value.trim().length > 0 ? "flex" : "none";
+      }
+    }
 
     function openRecentApp() {
       if (hasAndroidBridge && window.AndroidUltron.openRecentApp) {
@@ -1129,16 +1159,51 @@
       }
     }
 
-    function updateRecentAppChip() {
-      if (hasAndroidBridge && window.AndroidUltron.getRecentAppName) {
+    function updateRecentApps() {
+      const container = document.getElementById("recentAppsRow");
+      if (!container) return;
+
+      let apps = [];
+      if (hasAndroidBridge && window.AndroidUltron.getRecentAppsJson) {
         try {
-          const recent = window.AndroidUltron.getRecentAppName();
-          const chip = document.getElementById("chipRecentApp");
-          if (chip && recent && recent !== "Recent App") {
-            chip.textContent = "🕒 Recent: " + recent;
-          }
+          const raw = window.AndroidUltron.getRecentAppsJson();
+          if (raw) apps = JSON.parse(raw);
         } catch (ignored) {}
       }
+
+      if (!apps || apps.length === 0) {
+        if (hasAndroidBridge && window.AndroidUltron.getRecentAppName) {
+          const single = window.AndroidUltron.getRecentAppName();
+          if (single && single !== "Recent App") {
+            apps = [{name: single, cleanName: single}];
+          }
+        }
+      }
+
+      if (!apps || apps.length === 0) {
+        apps = [
+          {name: "Chrome", cleanName: "chrome"},
+          {name: "Files", cleanName: "files"},
+          {name: "Settings", cleanName: "settings"},
+          {name: "Camera", cleanName: "camera"}
+        ];
+      }
+
+      container.innerHTML = "";
+      apps.forEach(app => {
+        const chip = document.createElement("div");
+        chip.className = "chip chip-recent";
+        chip.textContent = app.name || app.cleanName;
+        chip.onclick = () => {
+          if (app.packageName && hasAndroidBridge && window.AndroidUltron.launchAppByPackage) {
+            window.AndroidUltron.launchAppByPackage(app.packageName);
+          } else {
+            quickCommand("open " + (app.cleanName || app.name));
+          }
+        };
+        container.appendChild(chip);
+      });
+      container.style.display = "flex";
     }
 
     function minimizeToBubble() {
@@ -1168,7 +1233,7 @@
         if (miniBubble) miniBubble.style.display = "none";
         if (container) container.style.display = "flex";
         document.body.classList.remove("mini-bubble-active");
-        updateRecentAppChip();
+        updateRecentApps();
       }
     };
 
@@ -1185,7 +1250,7 @@
         if (chipMin) chipMin.style.display = "inline-flex";
         const btnMin = document.getElementById("btnMinimizeCapsule");
         if (btnMin) btnMin.style.display = "inline-flex";
-        updateRecentAppChip();
+        updateRecentApps();
       } else {
         document.body.classList.remove("overlay-mode");
         const overlayCloseBtn = document.getElementById("btnOverlayClose");

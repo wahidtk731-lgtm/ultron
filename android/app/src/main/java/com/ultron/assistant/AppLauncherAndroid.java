@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -13,6 +14,9 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -199,7 +203,8 @@ public class AppLauncherAndroid {
             }
 
             isTrained = true;
-            Log.i(TAG, "Successfully trained " + trainedApps.size() + " installed apps on device.");
+            loadRecentApps();
+            Log.i(TAG, "Successfully trained " + trainedApps.size() + " installed apps. Recent: " + recentApps.size());
         } catch (Exception e) {
             Log.e(TAG, "Error training installed apps: " + e.getMessage());
         }
@@ -369,7 +374,75 @@ public class AppLauncherAndroid {
         }
     }
 
-    private void recordRecentApp(AppEntry app) {
+    private static final String PREF_NAME = "ultron_recent_apps";
+    private static final String KEY_RECENT = "recent_packages";
+
+    public void loadRecentApps() {
+        synchronized (recentApps) {
+            recentApps.clear();
+            SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            String saved = prefs.getString(KEY_RECENT, "");
+            if (saved != null && !saved.trim().isEmpty()) {
+                String[] pkgs = saved.split(",");
+                for (String pkg : pkgs) {
+                    pkg = pkg.trim();
+                    if (pkg.isEmpty()) continue;
+                    AppEntry entry = findAppByPackage(pkg);
+                    if (entry != null && !recentApps.contains(entry)) {
+                        recentApps.add(entry);
+                    }
+                }
+            }
+
+            // Seed with top essential everyday apps if fewer than 4 recent apps
+            if (recentApps.size() < 4) {
+                String[] commonKeywords = {"chrome", "browser", "youtube", "camera", "files", "documents", "gallery", "settings", "messages", "whatsapp"};
+                for (String kw : commonKeywords) {
+                    for (AppEntry app : trainedApps) {
+                        if ((app.cleanLabel.contains(kw) || app.packageName.contains(kw)) && !recentApps.contains(app)) {
+                            recentApps.add(app);
+                            if (recentApps.size() >= 5) break;
+                        }
+                    }
+                    if (recentApps.size() >= 5) break;
+                }
+            }
+
+            // Still fewer than 4? Add first available user applications
+            if (recentApps.size() < 4) {
+                for (AppEntry app : trainedApps) {
+                    if (!recentApps.contains(app)) {
+                        recentApps.add(app);
+                        if (recentApps.size() >= 4) break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void saveRecentApps() {
+        synchronized (recentApps) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < recentApps.size() && i < 10; i++) {
+                if (sb.length() > 0) sb.append(",");
+                sb.append(recentApps.get(i).packageName);
+            }
+            SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putString(KEY_RECENT, sb.toString()).apply();
+        }
+    }
+
+    public AppEntry findAppByPackage(String packageName) {
+        if (packageName == null) return null;
+        for (AppEntry app : trainedApps) {
+            if (app.packageName.equalsIgnoreCase(packageName)) {
+                return app;
+            }
+        }
+        return null;
+    }
+
+    public void recordRecentApp(AppEntry app) {
         if (app == null) return;
         synchronized (recentApps) {
             recentApps.removeIf(a -> a.packageName.equalsIgnoreCase(app.packageName));
@@ -377,11 +450,58 @@ public class AppLauncherAndroid {
             if (recentApps.size() > 10) {
                 recentApps.remove(recentApps.size() - 1);
             }
+            saveRecentApps();
+        }
+    }
+
+    public boolean launchPackage(String packageName) {
+        if (packageName == null || packageName.trim().isEmpty()) return false;
+        try {
+            Intent launch = pm.getLaunchIntentForPackage(packageName.trim());
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(launch);
+                AppEntry entry = findAppByPackage(packageName.trim());
+                if (entry != null) {
+                    recordRecentApp(entry);
+                } else {
+                    recordRecentApp(new AppEntry(packageName, packageName, launch));
+                }
+                return true;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Launch package failed: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public String getRecentAppsJson() {
+        synchronized (recentApps) {
+            if (recentApps.isEmpty()) {
+                loadRecentApps();
+            }
+            JSONArray arr = new JSONArray();
+            int count = 0;
+            for (AppEntry app : recentApps) {
+                if (count >= 6) break;
+                try {
+                    JSONObject obj = new JSONObject();
+                    obj.put("name", app.label);
+                    obj.put("cleanName", app.primaryName);
+                    obj.put("packageName", app.packageName);
+                    arr.put(obj);
+                    count++;
+                } catch (Exception ignored) {}
+            }
+            return arr.toString();
         }
     }
 
     public boolean openRecentApp() {
         synchronized (recentApps) {
+            if (recentApps.isEmpty()) {
+                loadRecentApps();
+            }
             if (!recentApps.isEmpty()) {
                 AppEntry recent = recentApps.get(0);
                 if (isPackageInstalledAndValid(recent.packageName)) {
@@ -405,6 +525,9 @@ public class AppLauncherAndroid {
 
     public String getMostRecentAppName() {
         synchronized (recentApps) {
+            if (recentApps.isEmpty()) {
+                loadRecentApps();
+            }
             if (!recentApps.isEmpty()) {
                 return recentApps.get(0).label;
             }
@@ -456,26 +579,43 @@ public class AppLauncherAndroid {
     }
 
     public boolean setWifi(boolean enable) {
+        // 1. Direct WifiManager call
+        try {
+            WifiManager wm = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (wm != null) {
+                boolean ok = wm.setWifiEnabled(enable);
+                if (ok) return true;
+            }
+        } catch (Exception ignored) {}
+
+        // 2. Shell/CMD fallback
+        try {
+            Process p1 = Runtime.getRuntime().exec(new String[]{"cmd", "wifi", "set-wifi-enabled", enable ? "enabled" : "disabled"});
+            if (p1.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
+        try {
+            Process p2 = Runtime.getRuntime().exec(new String[]{"svc", "wifi", enable ? "enable" : "disable"});
+            if (p2.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
+        // 3. System UI Panel / Settings fallback
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 Intent panelIntent = new Intent(Settings.Panel.ACTION_WIFI);
                 panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(panelIntent);
                 return true;
-            } else {
-                WifiManager wm = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                if (wm != null) {
-                    return wm.setWifiEnabled(enable);
-                }
             }
-        } catch (Exception e) {
-            try {
-                Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-                return true;
-            } catch (Exception ignored) {}
-        }
+        } catch (Exception ignored) {}
+
+        try {
+            Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            return true;
+        } catch (Exception ignored) {}
+
         return false;
     }
 
@@ -494,6 +634,16 @@ public class AppLauncherAndroid {
         } catch (Exception ignored) {}
 
         try {
+            Process p = Runtime.getRuntime().exec(new String[]{"cmd", "bluetooth_manager", enable ? "enable" : "disable"});
+            if (p.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
+        try {
+            Process p2 = Runtime.getRuntime().exec(new String[]{"svc", "bluetooth", enable ? "enable" : "disable"});
+            if (p2.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
+        try {
             Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
@@ -504,14 +654,30 @@ public class AppLauncherAndroid {
     }
 
     public boolean clearNotifications() {
+        boolean cleared = UltronNotificationService.clearAll();
+        if (cleared) return true;
+
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"cmd", "notification", "cancel_all"});
+            if (p.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
         try {
             NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) {
                 nm.cancelAll();
-                return true;
             }
         } catch (Exception ignored) {}
-        return false;
+
+        if (!UltronNotificationService.isPermissionGranted(context)) {
+            try {
+                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                return true;
+            } catch (Exception ignored) {}
+        }
+        return cleared;
     }
 
     public boolean openStatusBar() {

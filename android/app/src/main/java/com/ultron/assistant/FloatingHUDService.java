@@ -263,10 +263,16 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
 
         try {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && SpeechRecognizer.isOnDeviceRecognitionAvailable(this)) {
+                speechRecognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(this);
+            } else {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+            }
             recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toString());
+            recognizerIntent.putExtra("android.speech.extra.PREFER_OFFLINE", true);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
 
@@ -444,6 +450,10 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             case "quick_settings":
                 appLauncher.openQuickSettings();
                 return "Opening quick settings";
+
+            case "floating_mode":
+                mainHandler.post(() -> setMiniBubbleMode(!isMiniBubble));
+                return "Toggled floating bubble mode";
 
             case "recent_apps":
                 boolean recOk = appLauncher.openRecentApp();
@@ -672,6 +682,39 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         public void closeActiveApp() {
             if (appLauncher != null) {
                 appLauncher.closeApp("");
+            }
+        }
+
+        @JavascriptInterface
+        public String getRecentAppsJson() {
+            return appLauncher != null ? appLauncher.getRecentAppsJson() : "[]";
+        }
+
+        @JavascriptInterface
+        public void launchAppByPackage(String packageName) {
+            if (appLauncher != null) {
+                appLauncher.launchPackage(packageName);
+            }
+        }
+
+        @JavascriptInterface
+        public void toggleWifi(boolean enable) {
+            if (appLauncher != null) {
+                appLauncher.setWifi(enable);
+            }
+        }
+
+        @JavascriptInterface
+        public void toggleBluetooth(boolean enable) {
+            if (appLauncher != null) {
+                appLauncher.setBluetooth(enable);
+            }
+        }
+
+        @JavascriptInterface
+        public void clearNotifications() {
+            if (appLauncher != null) {
+                appLauncher.clearNotifications();
             }
         }
 

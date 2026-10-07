@@ -135728,6 +135728,70 @@
     "intent": "create_file"
   },
   {
+    "text": "floating mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "open floating mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "turn on floating mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "enable floating mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "floating bubble",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "open floating bubble",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "enable floating bubble",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "bubble mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "floating overlay",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "open floating overlay",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "switch to floating mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "start floating mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "hey ultron floating mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "ultron floating mode",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "collapse to bubble",
+    "intent": "floating_mode"
+  },
+  {
+    "text": "open floating widget",
+    "intent": "floating_mode"
+  },
+  {
     "text": "what time is it",
     "intent": "query_time"
   },
