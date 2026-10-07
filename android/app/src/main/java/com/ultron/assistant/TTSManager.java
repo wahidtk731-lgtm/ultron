@@ -78,6 +78,18 @@ public class TTSManager {
         }
     }
 
+    public void setPitch(float pitch) {
+        if (tts != null && isReady) {
+            tts.setPitch(pitch);
+        }
+    }
+
+    public void setSpeechRate(float rate) {
+        if (tts != null && isReady) {
+            tts.setSpeechRate(rate);
+        }
+    }
+
     public void shutdown() {
         if (tts != null) {
             tts.stop();

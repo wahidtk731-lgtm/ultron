@@ -333,6 +333,127 @@
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Default Assistant Prompt Banner */
+    .assistant-prompt-banner {
+      width: 100%;
+      background: rgba(26, 115, 232, 0.2);
+      border: 1px solid var(--gemini-blue);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 12px 16px;
+      color: var(--text-white);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    .prompt-text {
+      line-height: 1.4;
+    }
+    .prompt-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-prompt-primary {
+      background: var(--gemini-blue);
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-prompt-secondary {
+      background: var(--gemini-pill-btn);
+      border: 1px solid var(--gemini-border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Settings Modal */
+    .settings-modal {
+      width: 100%;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: var(--gemini-bg);
+      border: 1px solid var(--gemini-border);
+      backdrop-filter: blur(25px);
+      border-radius: 20px;
+      padding: 16px;
+      color: var(--text-white);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: slideUp 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--gemini-border);
+      padding-bottom: 8px;
+    }
+    .btn-close-settings {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .setting-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .setting-item label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .theme-options, .voice-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .theme-btn, .voice-btn {
+      background: var(--gemini-pill-btn);
+      border: 1px solid var(--gemini-border);
+      color: var(--text-white);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .theme-btn.active, .voice-btn.active {
+      border-color: var(--gemini-blue-active);
+      background: rgba(26, 115, 232, 0.35);
+      color: var(--text-white);
+    }
+    .shortcut-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn-setting-action {
+      background: var(--gemini-pill-btn);
+      border: 1px solid var(--gemini-border);
+      color: var(--text-white);
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      text-align: left;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -341,14 +462,76 @@
 
   <div class="assistant-container">
     
-    <!-- Quick Suggestion Chips -->
+    <!-- Quick Suggestion Chips (Clean, No Icons) -->
     <div class="chips-row">
-      <div class="chip" onclick="quickCommand('Open Ajio')">🛍️ Ajio</div>
-      <div class="chip" onclick="quickCommand('Open YouTube')">▶️ YouTube</div>
-      <div class="chip" onclick="quickCommand('Open Chrome')">🌐 Chrome</div>
-      <div class="chip" onclick="quickCommand('What time is it?')">🕒 Time</div>
-      <div class="chip" onclick="toggleFloating()">📌 Floating Mode</div>
-      <div class="chip" onclick="dismissAssistant()">✕ Hide</div>
+      <div class="chip" onclick="quickCommand('Open Ajio')">Open Ajio</div>
+      <div class="chip" onclick="quickCommand('Open YouTube')">Open YouTube</div>
+      <div class="chip" onclick="quickCommand('Open Chrome')">Open Chrome</div>
+      <div class="chip" onclick="quickCommand('What time is it?')">Current Time</div>
+      <div class="chip" onclick="openSettingsModal()">Settings</div>
+      <div class="chip" onclick="toggleFloating()">Floating Mode</div>
+      <div class="chip" onclick="dismissAssistant()">Hide</div>
+    </div>
+
+    <!-- First Launch Default Assistant Banner -->
+    <div class="assistant-prompt-banner" id="assistantPromptBanner" style="display: none;">
+      <div class="prompt-text">
+        <strong>Set Ultron as Default Assistant</strong><br>
+        Open Ultron whenever you press the center Home button.
+      </div>
+      <div class="prompt-actions">
+        <button class="btn-prompt-primary" onclick="setAsDefaultAssistant()">Set Default Assistant</button>
+        <button class="btn-prompt-secondary" onclick="dismissPrompt()">Later</button>
+      </div>
+    </div>
+
+    <!-- Ultron Settings Modal -->
+    <div class="settings-modal" id="settingsModal" style="display: none;">
+      <div class="settings-header">
+        <span>Ultron Settings</span>
+        <button class="btn-close-settings" onclick="closeSettingsModal()">✕</button>
+      </div>
+      <div class="settings-body">
+        <!-- Theme selection -->
+        <div class="setting-item">
+          <label>Theme Style</label>
+          <div class="theme-options">
+            <button class="theme-btn active" id="themeDefault" onclick="setTheme('default')">Dark Slate</button>
+            <button class="theme-btn" id="themeCyberpunk" onclick="setTheme('cyberpunk')">Cyberpunk</button>
+            <button class="theme-btn" id="themeOled" onclick="setTheme('oled')">OLED Black</button>
+            <button class="theme-btn" id="themeTitanium" onclick="setTheme('titanium')">Titanium</button>
+          </div>
+        </div>
+
+        <!-- Voice Sound & Pitch -->
+        <div class="setting-item">
+          <label>Voice Pitch</label>
+          <div class="voice-options">
+            <button class="voice-btn" id="pitchDeep" onclick="setVoicePitch(0.8)">Deep</button>
+            <button class="voice-btn active" id="pitchNatural" onclick="setVoicePitch(0.95)">Natural</button>
+            <button class="voice-btn" id="pitchHigher" onclick="setVoicePitch(1.2)">Higher</button>
+          </div>
+        </div>
+
+        <!-- Speech Speed -->
+        <div class="setting-item">
+          <label>Speech Pacing</label>
+          <div class="voice-options">
+            <button class="voice-btn" id="speedSlow" onclick="setVoiceSpeed(0.85)">Slow</button>
+            <button class="voice-btn active" id="speedNormal" onclick="setVoiceSpeed(1.05)">Normal</button>
+            <button class="voice-btn" id="speedFast" onclick="setVoiceSpeed(1.25)">Fast</button>
+          </div>
+        </div>
+
+        <!-- System Shortcuts -->
+        <div class="setting-item">
+          <label>System Integration</label>
+          <div class="shortcut-buttons">
+            <button class="btn-setting-action" onclick="setAsDefaultAssistant()">⚙️ Change Default Assistant (Center Button)</button>
+            <button class="btn-setting-action" onclick="refreshAppsIndex()">🔄 Re-train Installed Apps</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Response / Feedback Card -->
@@ -583,6 +766,111 @@
         window.AndroidUltron.dismiss();
       }
     }
+
+    function openSettingsModal() {
+      const modal = document.getElementById("settingsModal");
+      modal.style.display = (modal.style.display === "flex") ? "none" : "flex";
+      document.getElementById("responseCard").classList.remove("active");
+    }
+
+    function closeSettingsModal() {
+      document.getElementById("settingsModal").style.display = "none";
+    }
+
+    function setAsDefaultAssistant() {
+      if (hasAndroidBridge && window.AndroidUltron.openDefaultAssistantSettings) {
+        window.AndroidUltron.openDefaultAssistantSettings();
+      }
+    }
+
+    function dismissPrompt() {
+      document.getElementById("assistantPromptBanner").style.display = "none";
+      localStorage.setItem("dismissed_assistant_prompt", "true");
+    }
+
+    function setTheme(theme) {
+      document.querySelectorAll(".theme-btn").forEach(b => b.classList.remove("active"));
+      const btn = document.getElementById("theme" + theme.charAt(0).toUpperCase() + theme.slice(1));
+      if (btn) btn.classList.add("active");
+
+      const root = document.documentElement;
+      if (theme === "cyberpunk") {
+        root.style.setProperty("--gemini-bg", "#0E0B16");
+        root.style.setProperty("--gemini-border", "#4717F6");
+        root.style.setProperty("--gemini-pill-btn", "#1D1536");
+        root.style.setProperty("--gemini-blue-active", "#00E5FF");
+      } else if (theme === "oled") {
+        root.style.setProperty("--gemini-bg", "#000000");
+        root.style.setProperty("--gemini-border", "#222222");
+        root.style.setProperty("--gemini-pill-btn", "#111111");
+        root.style.setProperty("--gemini-blue-active", "#FFFFFF");
+      } else if (theme === "titanium") {
+        root.style.setProperty("--gemini-bg", "#111827");
+        root.style.setProperty("--gemini-border", "#1F2937");
+        root.style.setProperty("--gemini-pill-btn", "#1F2937");
+        root.style.setProperty("--gemini-blue-active", "#3B82F6");
+      } else {
+        root.style.setProperty("--gemini-bg", "#1E1F22");
+        root.style.setProperty("--gemini-border", "#303238");
+        root.style.setProperty("--gemini-pill-btn", "#282A2E");
+        root.style.setProperty("--gemini-blue-active", "#4285F4");
+      }
+      localStorage.setItem("ultron_theme", theme);
+    }
+
+    let currentPitch = 0.95;
+    let currentSpeed = 1.05;
+
+    function setVoicePitch(pitch) {
+      currentPitch = pitch;
+      document.querySelectorAll(".voice-btn").forEach(b => {
+        if (b.id && b.id.startsWith("pitch")) b.classList.remove("active");
+      });
+      if (hasAndroidBridge && window.AndroidUltron.saveVoiceSettings) {
+        window.AndroidUltron.saveVoiceSettings(currentPitch, currentSpeed);
+      }
+      localStorage.setItem("ultron_pitch", pitch);
+    }
+
+    function setVoiceSpeed(speed) {
+      currentSpeed = speed;
+      document.querySelectorAll(".voice-btn").forEach(b => {
+        if (b.id && b.id.startsWith("speed")) b.classList.remove("active");
+      });
+      if (hasAndroidBridge && window.AndroidUltron.saveVoiceSettings) {
+        window.AndroidUltron.saveVoiceSettings(currentPitch, currentSpeed);
+      }
+      localStorage.setItem("ultron_speed", speed);
+    }
+
+    function refreshAppsIndex() {
+      if (hasAndroidBridge && window.AndroidUltron.refreshInstalledApps) {
+        window.AndroidUltron.refreshInstalledApps();
+        alert("Installed apps index refreshed!");
+      }
+    }
+
+    window.onAssistantCheck = function(isDefault) {
+      if (!isDefault && localStorage.getItem("dismissed_assistant_prompt") !== "true") {
+        document.getElementById("assistantPromptBanner").style.display = "flex";
+      }
+    };
+
+    // Load saved preferences on init
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedTheme = localStorage.getItem("ultron_theme");
+      if (savedTheme) setTheme(savedTheme);
+
+      const savedPitch = parseFloat(localStorage.getItem("ultron_pitch"));
+      if (!isNaN(savedPitch)) currentPitch = savedPitch;
+
+      const savedSpeed = parseFloat(localStorage.getItem("ultron_speed"));
+      if (!isNaN(savedSpeed)) currentSpeed = savedSpeed;
+
+      if (hasAndroidBridge && window.AndroidUltron.saveVoiceSettings) {
+        window.AndroidUltron.saveVoiceSettings(currentPitch, currentSpeed);
+      }
+    });
 
     window.setOverlayMode = function(enabled) {
       if (enabled) {

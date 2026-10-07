@@ -2,6 +2,7 @@ package com.ultron.assistant;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -115,6 +116,9 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 mainHandler.postDelayed(() -> {
+                    boolean isDefault = isDefaultAssistant();
+                    webView.evaluateJavascript(String.format("if(window.onAssistantCheck) window.onAssistantCheck(%b);", isDefault), null);
+
                     if (hasAudioPermission()) {
                         startListening();
                     }
@@ -124,6 +128,38 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
         webView.loadUrl("file:///android_asset/hud.html");
         setContentView(webView);
+    }
+
+    public boolean isDefaultAssistant() {
+        try {
+            String defaultAssist = Settings.Secure.getString(getContentResolver(), "voice_interaction_service");
+            if (defaultAssist != null && defaultAssist.contains(getPackageName())) {
+                return true;
+            }
+            String assist = Settings.Secure.getString(getContentResolver(), "assistant");
+            if (assist != null && assist.contains(getPackageName())) {
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public void openDefaultAssistantSettings() {
+        Intent intent = new Intent(Settings.ACTION_VOICE_INPUT_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            try {
+                Intent fallback = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
+                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(fallback);
+            } catch (Exception ex) {
+                Intent appSettings = new Intent(Settings.ACTION_SETTINGS);
+                appSettings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(appSettings);
+            }
+        }
     }
 
     private boolean hasAudioPermission() {
@@ -210,7 +246,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                             message = "Audio recording error. Tap mic to retry.";
                             break;
                         case SpeechRecognizer.ERROR_CLIENT:
-                            // Fallback directly to native Google Voice typing dialog
                             startVoiceRecognitionFallback();
                             return;
                         case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
@@ -249,7 +284,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
                 @Override
                 public void onPartialResults(Bundle partialResults) {
-                    ArrayList<String> partial = partialResults != null ? partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) : null;
+                    ArrayList<String> partial = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                     if (partial != null && !partial.isEmpty()) {
                         updateWebStatus("listening", "\"" + partial.get(0) + "...\"");
                     }
@@ -467,6 +502,26 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         @JavascriptInterface
         public void dismiss() {
             mainHandler.post(() -> finish());
+        }
+
+        @JavascriptInterface
+        public void openDefaultAssistantSettings() {
+            MainActivity.this.openDefaultAssistantSettings();
+        }
+
+        @JavascriptInterface
+        public void saveVoiceSettings(float pitch, float rate) {
+            if (ttsManager != null) {
+                ttsManager.setPitch(pitch);
+                ttsManager.setSpeechRate(rate);
+            }
+        }
+
+        @JavascriptInterface
+        public void refreshInstalledApps() {
+            if (appLauncher != null) {
+                appLauncher.trainInstalledApps();
+            }
         }
 
         @JavascriptInterface

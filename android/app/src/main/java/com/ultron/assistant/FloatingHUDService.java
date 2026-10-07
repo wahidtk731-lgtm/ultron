@@ -142,16 +142,17 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
         }
 
-        // Use guaranteed explicit height so WebView is never 0 height
+        // Use guaranteed explicit height and 70dp offset above navigation bar
         windowParams = new WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             dpToPx(82),
             layoutFlag,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         );
 
         windowParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        windowParams.y = dpToPx(70); // Sit 70dp above bottom navigation buttons
 
         webView = new WebView(this);
         webView.setBackgroundColor(0);
@@ -188,6 +189,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             if (floatingView != null && windowManager != null) {
                 isExpanded = expand;
                 windowParams.height = dpToPx(expand ? 240 : 82);
+                windowParams.y = dpToPx(70);
                 try {
                     windowManager.updateViewLayout(floatingView, windowParams);
                 } catch (Exception ignored) {}
@@ -466,6 +468,40 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         @JavascriptInterface
         public void requestInputFocus(boolean focus) {
             setFocusable(focus);
+        }
+
+        @JavascriptInterface
+        public void openDefaultAssistantSettings() {
+            Intent intent = new Intent(Settings.ACTION_VOICE_INPUT_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                startActivity(intent);
+            } catch (Exception e) {
+                try {
+                    Intent fallback = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
+                    fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(fallback);
+                } catch (Exception ex) {
+                    Intent appSettings = new Intent(Settings.ACTION_SETTINGS);
+                    appSettings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(appSettings);
+                }
+            }
+        }
+
+        @JavascriptInterface
+        public void saveVoiceSettings(float pitch, float rate) {
+            if (ttsManager != null) {
+                ttsManager.setPitch(pitch);
+                ttsManager.setSpeechRate(rate);
+            }
+        }
+
+        @JavascriptInterface
+        public void refreshInstalledApps() {
+            if (appLauncher != null) {
+                appLauncher.trainInstalledApps();
+            }
         }
     }
 }

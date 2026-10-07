@@ -198,6 +198,16 @@ public class AppLauncherAndroid {
         }
     }
 
+    private boolean isPackageInstalledAndValid(String packageName) {
+        if (packageName == null || packageName.isEmpty()) return false;
+        try {
+            ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
+            return ai.enabled && pm.getLaunchIntentForPackage(packageName) != null;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
     /**
      * Finds and launches an installed Android app by friendly voice target.
      * Guaranteed NEVER to fall back to Google Search when user asks to open an app.
@@ -214,7 +224,15 @@ public class AppLauncherAndroid {
         AppEntry bestMatch = null;
         int bestScore = 0;
 
-        for (AppEntry app : trainedApps) {
+        // Iterate through trained apps and purge any that were uninstalled
+        Iterator<AppEntry> iterator = trainedApps.iterator();
+        while (iterator.hasNext()) {
+            AppEntry app = iterator.next();
+            if (!isPackageInstalledAndValid(app.packageName)) {
+                iterator.remove(); // REMOVE uninstalled app!
+                continue;
+            }
+
             int score = calculateMatchScore(app, query, queryNoSpace);
             if (score > bestScore) {
                 bestScore = score;
@@ -225,12 +243,17 @@ public class AppLauncherAndroid {
 
         // If match found with high confidence
         if (bestMatch != null && bestScore >= 55) {
+            if (!isPackageInstalledAndValid(bestMatch.packageName)) {
+                trainedApps.remove(bestMatch);
+                return false;
+            }
             try {
                 Log.i(TAG, "Launching trained app: " + bestMatch.label + " (" + bestMatch.packageName + ") score: " + bestScore);
                 context.startActivity(bestMatch.launchIntent);
                 return true;
             } catch (Exception e) {
                 Log.e(TAG, "Failed to launch " + bestMatch.packageName + ": " + e.getMessage());
+                trainedApps.remove(bestMatch);
             }
         }
 
