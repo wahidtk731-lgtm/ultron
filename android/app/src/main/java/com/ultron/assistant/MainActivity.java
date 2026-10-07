@@ -151,7 +151,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             Intent intent = getIntent();
             if (intent != null) {
                 String action = intent.getAction();
-                if (Intent.ACTION_ASSIST.equals(action) || Intent.ACTION_VOICE_ASSIST.equals(action)) {
+                if (Intent.ACTION_ASSIST.equals(action) || "android.intent.action.VOICE_ASSIST".equals(action)) {
                     prefs.edit().putBoolean("is_default_assistant", true).apply();
                     return true;
                 }
