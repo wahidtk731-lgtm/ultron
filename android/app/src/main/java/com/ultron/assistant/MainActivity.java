@@ -79,9 +79,21 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     @Override
     protected void onResume() {
         super.onResume();
+        if (FloatingHUDService.getInstance() != null) {
+            FloatingHUDService.getInstance().setOverlayVisible(false);
+        }
         if (webView != null) {
             boolean isDefault = isDefaultAssistant();
             webView.evaluateJavascript(String.format("if(window.onAssistantCheck) window.onAssistantCheck(%b);", isDefault), null);
+            webView.evaluateJavascript("if(window.updateRecentApps) window.updateRecentApps();", null);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (FloatingHUDService.getInstance() != null) {
+            FloatingHUDService.getInstance().setOverlayVisible(true);
         }
     }
 
@@ -127,6 +139,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 mainHandler.postDelayed(() -> {
                     boolean isDefault = isDefaultAssistant();
                     webView.evaluateJavascript(String.format("if(window.onAssistantCheck) window.onAssistantCheck(%b);", isDefault), null);
+                    webView.evaluateJavascript("if(window.updateRecentApps) window.updateRecentApps();", null);
 
                     if (hasAudioPermission()) {
                         startListening();
@@ -241,21 +254,17 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             try {
                 speechRecognizer.destroy();
             } catch (Exception ignored) {}
+            speechRecognizer = null;
         }
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && SpeechRecognizer.isOnDeviceRecognitionAvailable(this)) {
-                speechRecognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(this);
-            } else {
-                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-            }
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
             recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toString());
-            recognizerIntent.putExtra("android.speech.extra.PREFER_OFFLINE", true);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toString());
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
 
             speechRecognizer.setRecognitionListener(new RecognitionListener() {
                 @Override
@@ -289,8 +298,10 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                             message = "Audio recording error. Tap mic to retry.";
                             break;
                         case SpeechRecognizer.ERROR_CLIENT:
+                        case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+                        case SpeechRecognizer.ERROR_SERVER_DISCONNECTED:
                             initSpeechRecognizer();
-                            message = "Tap mic to speak";
+                            message = "Ready • Tap mic to speak";
                             break;
                         case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
                             message = "Microphone permission needed";
@@ -298,14 +309,10 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                             break;
                         case SpeechRecognizer.ERROR_NETWORK:
                         case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                            message = "Offline mode ready. Tap mic to retry.";
+                            message = "Network error. Tap mic to retry.";
                             break;
                         case SpeechRecognizer.ERROR_NO_MATCH:
                             message = "Didn't hear that. Tap mic to retry.";
-                            break;
-                        case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                            initSpeechRecognizer();
-                            message = "Ready";
                             break;
                         case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
                             message = "Listening timed out. Tap mic to speak.";
@@ -328,7 +335,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
                 @Override
                 public void onPartialResults(Bundle partialResults) {
-                    ArrayList<String> partial = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    ArrayList<String> partial = partialResults != null ? partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) : null;
                     if (partial != null && !partial.isEmpty()) {
                         updateWebStatus("listening", "\"" + partial.get(0) + "...\"");
                     }
@@ -359,7 +366,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                     speechRecognizer.startListening(recognizerIntent);
                 } catch (Exception e) {
                     initSpeechRecognizer();
-                    updateWebStatus("ready", "Mic reset. Tap to speak.");
+                    try {
+                        speechRecognizer.startListening(recognizerIntent);
+                    } catch (Exception ex) {
+                        updateWebStatus("ready", "Mic reset. Tap to speak.");
+                    }
                 }
             } else {
                 updateWebStatus("ready", "Ultron mic ready. Tap to speak.");
@@ -389,6 +400,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             if (canDrawOverlays()) {
                 startFloatingService();
                 Toast.makeText(this, "Ultron Floating Mode activated!", Toast.LENGTH_SHORT).show();
+                finish(); // Close MainActivity so two layouts never appear simultaneously
             }
         }
     }
@@ -403,18 +415,49 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         }
 
         List<String> subCommands = intentEngine.splitCompoundCommands(normalized);
-        StringBuilder fullReply = new StringBuilder();
-
-        for (String sub : subCommands) {
-            UltronIntentEngine.ActionCommand action = intentEngine.classifyCommand(sub);
+        if (subCommands.size() <= 1) {
+            UltronIntentEngine.ActionCommand action = intentEngine.classifyCommand(commandBody);
             String reply = executeAction(action);
-            if (fullReply.length() > 0) fullReply.append(" and ");
-            fullReply.append(reply);
+            sendWebReply(rawText, reply);
+            speakReply(reply, rawText);
+        } else {
+            executeCompoundCommandsStepByStep(subCommands, rawText);
+        }
+    }
+
+    private void executeCompoundCommandsStepByStep(List<String> subCommands, String rawText) {
+        List<UltronIntentEngine.ActionCommand> actions = new ArrayList<>();
+        for (String sub : subCommands) {
+            actions.add(intentEngine.classifyCommand(sub));
         }
 
-        String finalReply = fullReply.toString();
-        sendWebReply(rawText, finalReply);
-        speakReply(finalReply, rawText);
+        // Step 1: Execute first action immediately
+        UltronIntentEngine.ActionCommand action1 = actions.get(0);
+        String reply1 = executeAction(action1);
+
+        String preview = "Step 1: " + reply1 + " • Next: " + subCommands.get(1);
+        sendWebReply(rawText, preview);
+        updateWebStatus("processing", preview);
+
+        // Step 2: Execute second action after 1.3 seconds delay for genuine multitasking
+        mainHandler.postDelayed(() -> {
+            UltronIntentEngine.ActionCommand action2 = actions.get(1);
+            String reply2 = executeAction(action2);
+
+            if (actions.size() > 2) {
+                mainHandler.postDelayed(() -> {
+                    UltronIntentEngine.ActionCommand action3 = actions.get(2);
+                    String reply3 = executeAction(action3);
+                    String finalCombined = "Step 1: " + reply1 + ", then " + reply2 + ", and " + reply3;
+                    sendWebReply(rawText, finalCombined);
+                    speakReply(finalCombined, rawText);
+                }, 1300);
+            } else {
+                String finalCombined = reply1 + ", then " + reply2;
+                sendWebReply(rawText, finalCombined);
+                speakReply(finalCombined, rawText);
+            }
+        }, 1300);
     }
 
     private String executeAction(UltronIntentEngine.ActionCommand action) {
@@ -480,7 +523,16 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
             case "recent_apps":
                 boolean recOk = appLauncher.openRecentApp();
-                return recOk ? "Opening recent app" : "No recent app found";
+                return recOk ? "Opening recent apps" : "Showing recent apps";
+
+            case "app_section":
+                boolean secOk = appLauncher.openAppSection(action.entity);
+                if (action.entity.contains("reels")) {
+                    return secOk ? "Going to Reels section" : "Opening Instagram";
+                } else if (action.entity.contains("shorts")) {
+                    return secOk ? "Going to YouTube Shorts" : "Opening YouTube";
+                }
+                return secOk ? ("Navigating to " + action.entity) : ("Could not open " + action.entity);
 
             case "create_file":
                 boolean crOk = appLauncher.createFile(action.entity);

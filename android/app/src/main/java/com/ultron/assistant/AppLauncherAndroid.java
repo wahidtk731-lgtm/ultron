@@ -498,28 +498,104 @@ public class AppLauncherAndroid {
     }
 
     public boolean openRecentApp() {
+        // 1. Try launching Android System Recent Apps / Overview screen
+        try {
+            Process p1 = Runtime.getRuntime().exec(new String[]{"input", "keyevent", "187"});
+            if (p1.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
+        try {
+            Process p2 = Runtime.getRuntime().exec(new String[]{"cmd", "statusbar", "show-recents"});
+            if (p2.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
+        try {
+            Object sbservice = context.getSystemService("statusbar");
+            Class<?> statusbarManager = Class.forName("android.app.StatusBarManager");
+            try {
+                Method m = statusbarManager.getMethod("toggleRecentApps");
+                m.invoke(sbservice);
+                return true;
+            } catch (Exception ignored) {}
+            try {
+                Method m = statusbarManager.getMethod("showRecentApps");
+                m.invoke(sbservice);
+                return true;
+            } catch (Exception ignored) {}
+        } catch (Exception ignored) {}
+
+        // 2. Fallback: launch the most recent user app from list
         synchronized (recentApps) {
             if (recentApps.isEmpty()) {
                 loadRecentApps();
             }
-            if (!recentApps.isEmpty()) {
-                AppEntry recent = recentApps.get(0);
-                if (isPackageInstalledAndValid(recent.packageName)) {
+            for (AppEntry entry : recentApps) {
+                if (isPackageInstalledAndValid(entry.packageName)) {
                     try {
-                        context.startActivity(recent.launchIntent);
+                        context.startActivity(entry.launchIntent);
                         return true;
                     } catch (Exception ignored) {}
                 }
             }
         }
+        return false;
+    }
+
+    public boolean openAppSection(String entity) {
+        if (entity == null || entity.trim().isEmpty()) return false;
+        String clean = entity.toLowerCase().trim();
+        if (clean.contains("reels") || clean.contains("reel") || clean.contains("clips") || clean.contains("instagram")) {
+            return launchInstagramSection(clean);
+        }
+        if (clean.contains("shorts") || clean.contains("short") || clean.contains("youtube")) {
+            return launchYouTubeSection(clean);
+        }
+        return launchApp(entity);
+    }
+
+    public boolean launchInstagramSection(String section) {
         try {
-            Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-            homeIntent.addCategory(Intent.CATEGORY_HOME);
-            homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(homeIntent);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            if (section.contains("camera") || section.contains("story")) {
+                intent.setData(Uri.parse("instagram://camera"));
+            } else if (section.contains("direct") || section.contains("dm") || section.contains("messages")) {
+                intent.setData(Uri.parse("https://www.instagram.com/direct/inbox/"));
+            } else {
+                // Default: reels
+                intent.setData(Uri.parse("https://www.instagram.com/reels/"));
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (isPackageInstalledAndValid("com.instagram.android")) {
+                intent.setPackage("com.instagram.android");
+            }
+            context.startActivity(intent);
+            recordRecentApp(findAppByPackage("com.instagram.android"));
             return true;
         } catch (Exception e) {
-            return false;
+            // Fallback: try opening instagram app directly
+            return launchApp("instagram");
+        }
+    }
+
+    public boolean launchYouTubeSection(String section) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            if (section.contains("subscription")) {
+                intent.setData(Uri.parse("https://www.youtube.com/feed/subscriptions"));
+            } else if (section.contains("trending")) {
+                intent.setData(Uri.parse("https://www.youtube.com/feed/trending"));
+            } else {
+                intent.setData(Uri.parse("https://www.youtube.com/shorts"));
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (isPackageInstalledAndValid("com.google.android.youtube")) {
+                intent.setPackage("com.google.android.youtube");
+            }
+            context.startActivity(intent);
+            recordRecentApp(findAppByPackage("com.google.android.youtube"));
+            return true;
+        } catch (Exception e) {
+            return launchApp("youtube");
         }
     }
 
@@ -579,7 +655,18 @@ public class AppLauncherAndroid {
     }
 
     public boolean setWifi(boolean enable) {
-        // 1. Direct WifiManager call
+        // 1. Root / Privileged shell commands
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", enable ? "svc wifi enable" : "svc wifi disable"});
+            if (p.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", enable ? "cmd wifi set-wifi-enabled enabled" : "cmd wifi set-wifi-enabled disabled"});
+            if (p.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+
+        // 2. Direct WifiManager call (works on Android <= 9, ChromeOS ARC, rooted, system apps)
         try {
             WifiManager wm = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wm != null) {
@@ -588,7 +675,7 @@ public class AppLauncherAndroid {
             }
         } catch (Exception ignored) {}
 
-        // 2. Shell/CMD fallback
+        // 3. Unrooted shell commands fallback
         try {
             Process p1 = Runtime.getRuntime().exec(new String[]{"cmd", "wifi", "set-wifi-enabled", enable ? "enabled" : "disabled"});
             if (p1.waitFor() == 0) return true;
@@ -599,16 +686,27 @@ public class AppLauncherAndroid {
             if (p2.waitFor() == 0) return true;
         } catch (Exception ignored) {}
 
-        // 3. System UI Panel / Settings fallback
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        // 4. System Internet Connectivity Panel (Android 12+ API 31+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                Intent panelIntent = new Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY);
+                panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(panelIntent);
+                return true;
+            } catch (Exception ignored) {}
+        }
+
+        // 5. System Wi-Fi Panel (Android 10-11 API 29-30)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
                 Intent panelIntent = new Intent(Settings.Panel.ACTION_WIFI);
                 panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(panelIntent);
                 return true;
-            }
-        } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        }
 
+        // 6. Wi-Fi Settings Intent fallback
         try {
             Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

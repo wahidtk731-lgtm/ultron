@@ -870,6 +870,12 @@
     }
 
     function toggleFloating() {
+      if (document.body.classList.contains("overlay-mode")) {
+        if (hasAndroidBridge && window.AndroidUltron.toggleBubbleMode) {
+          window.AndroidUltron.toggleBubbleMode();
+          return;
+        }
+      }
       if (hasAndroidBridge && window.AndroidUltron.toggleFloatingOverlay) {
         window.AndroidUltron.toggleFloatingOverlay();
       }

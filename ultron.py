@@ -116,7 +116,7 @@ class UltronAssistant:
         body = strip_wake_words(norm)
 
         # Split on conjunctions followed by action verbs
-        pattern = r"\s+(?:and\s+then|then|after\s+that|and)\s+(?=(?:open|launch|run|start|close|kill|terminate|exit|write|add|type|insert|create|search|google|what|tell|how|play)\b)"
+        pattern = r"\s+(?:and\s+then|then|after\s+that|and\s+(?=(?:open|launch|run|start|go|navigate|show|switch|close|kill|terminate|exit|write|add|type|insert|create|search|google|what|tell|how|play|turn|enable|disable|clear)\b))\s*"
         parts = re.split(pattern, body, flags=re.IGNORECASE)
         return [p.strip() for p in parts if p.strip()]
 
@@ -176,6 +176,12 @@ class UltronAssistant:
         # Check for direct file opening pattern
         if re.search(r"\b(open|edit|view)\b.*\b([\w\.\-]+\.(?:py|cpp|js|html|css|txt|json|md))\b", cmd, re.IGNORECASE):
             return self._handle_open_file(cmd)
+
+        # Check for deep section navigation (e.g. reels, shorts)
+        if re.search(r"\b(reels?|reel\s+section|reels\s+section|clips)\b", cmd, re.IGNORECASE):
+            return self.launcher.launch("https://www.instagram.com/reels/")
+        if re.search(r"\b(shorts?|short\s+section)\b", cmd, re.IGNORECASE):
+            return self.launcher.launch("https://www.youtube.com/shorts")
 
         intent = self.intent_model.predict([cmd])[0]
 

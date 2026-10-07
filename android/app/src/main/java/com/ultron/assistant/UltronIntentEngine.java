@@ -53,7 +53,14 @@ public class UltronIntentEngine {
         // 1. Normalize Ultron variants
         cleaned = PHONETIC_ULTRON_PATTERN.matcher(cleaned).replaceAll("ultron");
 
-        // 2. Common acoustic fixes
+        // 2. Hardware toggles phonetic fixes
+        cleaned = cleaned.replaceAll("\\b(wi[- ]?fi|why[- ]?fi|wai[- ]?fai|wee[- ]?fee)\\b", "wifi");
+        cleaned = cleaned.replaceAll("\\b(blue[- ]?tooth|bluetooths|blue\\s+tooths)\\b", "bluetooth");
+        cleaned = cleaned.replaceAll("\\b(insta|ig)\\b", "instagram");
+        cleaned = cleaned.replaceAll("\\b(reel\\s+section|reels\\s+section|reels|reel)\\b", "reels");
+        cleaned = cleaned.replaceAll("\\b(short\\s+section|shorts\\s+section)\\b", "shorts");
+
+        // 3. Common acoustic fixes
         cleaned = cleaned.replaceAll("\\b(set\\s+things|sat\\s+things|sad\\s+things|setting's)\\b", "settings");
         cleaned = cleaned.replaceAll("\\b(google\\s+crown|google\\s+crome|google\\s+chrom)\\b", "chrome");
         cleaned = cleaned.replaceAll("\\b(you\\s+tube|u\\s+tube|u-tube)\\b", "youtube");
@@ -92,14 +99,17 @@ public class UltronIntentEngine {
     }
 
     /**
-     * Splits compound instructions like 'open chrome and tell me the time'.
+     * Splits compound instructions like 'open instagram and go to reel section' or 'turn on wifi and open chrome'.
      */
     public List<String> splitCompoundCommands(String text) {
         List<String> result = new ArrayList<>();
         if (text == null || text.trim().isEmpty()) return result;
 
         String body = stripWakeWords(text);
-        String splitRegex = "\\s+(?:and\\s+then|then|after\\s+that|and)\\s+(?=(?:open|launch|run|start|close|kill|write|create|search|google|what|tell|how|play)\\b)";
+        // Split on:
+        // "and then", "then", "after that"
+        // OR "and" followed by an action verb (open, launch, start, run, go, navigate, switch, show, close, kill, exit, turn, enable, disable, write, search, play, clear, take, etc.)
+        String splitRegex = "\\s+(?:and\\s+then|then|after\\s+that|and\\s+(?=(?:open|launch|run|start|go|navigate|switch|show|close|kill|exit|write|create|search|google|what|tell|how|play|turn|enable|disable|clear|take)\\b))\\s*";
         String[] parts = body.split(splitRegex);
 
         for (String p : parts) {
@@ -125,19 +135,19 @@ public class UltronIntentEngine {
             return new ActionCommand("open_settings", "", c);
         }
 
-        // 2. Hardware Toggles: Wi-Fi
-        if (c.matches(".*\\b(turn on wifi|enable wifi|start wifi|switch on wifi|wifi on)\\b.*")) {
+        // 2. Hardware Toggles: Wi-Fi (Robust multi-variant regex)
+        if (c.matches(".*\\b(turn on wifi|turn wifi on|turn on the wifi|turn the wifi on|switch on wifi|switch wifi on|enable wifi|enable the wifi|start wifi|wifi on|connect wifi|connect to wifi|open wifi)\\b.*")) {
             return new ActionCommand("wifi_on", "", c);
         }
-        if (c.matches(".*\\b(turn off wifi|disable wifi|stop wifi|switch off wifi|wifi off)\\b.*")) {
+        if (c.matches(".*\\b(turn off wifi|turn wifi off|turn off the wifi|turn the wifi off|switch off wifi|switch wifi off|disable wifi|disable the wifi|stop wifi|wifi off|disconnect wifi|disconnect from wifi)\\b.*")) {
             return new ActionCommand("wifi_off", "", c);
         }
 
-        // 3. Hardware Toggles: Bluetooth
-        if (c.matches(".*\\b(turn on bluetooth|enable bluetooth|start bluetooth|switch on bluetooth|bluetooth on)\\b.*")) {
+        // 3. Hardware Toggles: Bluetooth (Robust multi-variant regex)
+        if (c.matches(".*\\b(turn on bluetooth|turn bluetooth on|turn on the bluetooth|turn the bluetooth on|switch on bluetooth|switch bluetooth on|enable bluetooth|enable the bluetooth|start bluetooth|bluetooth on)\\b.*")) {
             return new ActionCommand("bluetooth_on", "", c);
         }
-        if (c.matches(".*\\b(turn off bluetooth|disable bluetooth|stop bluetooth|switch off bluetooth|bluetooth off)\\b.*")) {
+        if (c.matches(".*\\b(turn off bluetooth|turn bluetooth off|turn off the bluetooth|turn the bluetooth off|switch off bluetooth|switch bluetooth off|disable bluetooth|disable the bluetooth|stop bluetooth|bluetooth off)\\b.*")) {
             return new ActionCommand("bluetooth_off", "", c);
         }
 
@@ -153,8 +163,23 @@ public class UltronIntentEngine {
         }
 
         // 5. Recent Apps (replacing static ajio/chrome)
-        if (c.matches(".*\\b(recent apps?|recently opened apps?|open recent apps?|switch to recent|previous app|last app)\\b.*")) {
+        if (c.matches(".*\\b(recent apps?|recently opened apps?|open recent apps?|show recent apps?|switch to recent|previous app|last app|recents|overview)\\b.*")) {
             return new ActionCommand("recent_apps", "", c);
+        }
+
+        // App Sections & Deep Navigation (e.g. "go to reel section", "open reels", "shorts", "direct")
+        if (c.matches(".*\\b(go to|open|show|navigate to)\\s+(reels?|reel section|reels section|clips)\\b.*") || 
+            c.matches(".*\\b(reels?|reel section|reels section)\\b.*")) {
+            return new ActionCommand("app_section", "instagram:reels", c);
+        }
+        if (c.matches(".*\\b(instagram|insta)\\b.*\\b(story|camera)\\b.*")) {
+            return new ActionCommand("app_section", "instagram:camera", c);
+        }
+        if (c.matches(".*\\b(instagram|insta)\\b.*\\b(direct|dm|messages?)\\b.*")) {
+            return new ActionCommand("app_section", "instagram:direct", c);
+        }
+        if (c.matches(".*\\b(youtube|yt)?\\s*(shorts?|short section)\\b.*")) {
+            return new ActionCommand("app_section", "youtube:shorts", c);
         }
 
         // Floating Bubble Mode

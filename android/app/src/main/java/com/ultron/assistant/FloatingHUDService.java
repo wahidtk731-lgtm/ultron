@@ -134,6 +134,16 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         startForeground(NOTIFICATION_ID, notification);
     }
 
+    private boolean isViewAttached = false;
+
+    public void setOverlayVisible(boolean visible) {
+        mainHandler.post(() -> {
+            if (floatingView != null) {
+                floatingView.setVisibility(visible ? View.VISIBLE : View.GONE);
+            }
+        });
+    }
+
     private void initFloatingHUDView() {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
@@ -173,6 +183,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 webView.evaluateJavascript("if(window.setOverlayMode) window.setOverlayMode(true);", null);
+                webView.evaluateJavascript("if(window.updateRecentApps) window.updateRecentApps();", null);
                 updateWebStatus("ready", "Ultron Ready • Tap mic to speak");
             }
         });
@@ -180,10 +191,13 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         webView.loadUrl("file:///android_asset/hud.html");
         floatingView = webView;
 
-        try {
-            windowManager.addView(floatingView, windowParams);
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to add floating view: " + e.getMessage());
+        if (!isViewAttached) {
+            try {
+                windowManager.addView(floatingView, windowParams);
+                isViewAttached = true;
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to add floating view: " + e.getMessage());
+            }
         }
     }
 
@@ -260,21 +274,17 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             try {
                 speechRecognizer.destroy();
             } catch (Exception ignored) {}
+            speechRecognizer = null;
         }
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && SpeechRecognizer.isOnDeviceRecognitionAvailable(this)) {
-                speechRecognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(this);
-            } else {
-                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-            }
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
             recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toString());
-            recognizerIntent.putExtra("android.speech.extra.PREFER_OFFLINE", true);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toString());
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
 
             speechRecognizer.setRecognitionListener(new RecognitionListener() {
                 @Override
@@ -302,6 +312,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 @Override
                 public void onError(int error) {
                     isListening = false;
+                    if (error == SpeechRecognizer.ERROR_CLIENT || 
+                        error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
+                        error == SpeechRecognizer.ERROR_SERVER_DISCONNECTED) {
+                        initSpeechRecognizer();
+                    }
                     updateWebStatus("ready", "Tap mic or type command");
                     mainHandler.postDelayed(() -> expandOverlay(false), 2000);
                 }
@@ -337,6 +352,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
     public void startListening() {
         mainHandler.post(() -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                updateWebStatus("ready", "Mic permission required");
+                expandOverlay(true);
+                return;
+            }
             expandOverlay(true);
             if (speechRecognizer == null) {
                 initSpeechRecognizer();
@@ -346,7 +367,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                     speechRecognizer.cancel();
                     speechRecognizer.startListening(recognizerIntent);
                 } catch (Exception e) {
-                    Log.e(TAG, "Error starting speech: " + e.getMessage());
+                    initSpeechRecognizer();
+                    try {
+                        speechRecognizer.startListening(recognizerIntent);
+                    } catch (Exception ex) {
+                        Log.e(TAG, "Error starting speech: " + ex.getMessage());
+                    }
                 }
             }
         });
@@ -379,18 +405,49 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
 
         List<String> subCommands = intentEngine.splitCompoundCommands(normalized);
-        StringBuilder fullReply = new StringBuilder();
-
-        for (String sub : subCommands) {
-            UltronIntentEngine.ActionCommand action = intentEngine.classifyCommand(sub);
+        if (subCommands.size() <= 1) {
+            UltronIntentEngine.ActionCommand action = intentEngine.classifyCommand(commandBody);
             String reply = executeAction(action);
-            if (fullReply.length() > 0) fullReply.append(" and ");
-            fullReply.append(reply);
+            sendWebReply(rawText, reply);
+            speakReply(reply, rawText);
+        } else {
+            executeCompoundCommandsStepByStep(subCommands, rawText);
+        }
+    }
+
+    private void executeCompoundCommandsStepByStep(List<String> subCommands, String rawText) {
+        List<UltronIntentEngine.ActionCommand> actions = new ArrayList<>();
+        for (String sub : subCommands) {
+            actions.add(intentEngine.classifyCommand(sub));
         }
 
-        String finalReply = fullReply.toString();
-        sendWebReply(rawText, finalReply);
-        speakReply(finalReply, rawText);
+        // Step 1: Execute first action immediately
+        UltronIntentEngine.ActionCommand action1 = actions.get(0);
+        String reply1 = executeAction(action1);
+
+        String preview = "Step 1: " + reply1 + " • Next: " + subCommands.get(1);
+        sendWebReply(rawText, preview);
+        updateWebStatus("processing", preview);
+
+        // Step 2: Execute second action after 1.3 seconds delay for genuine multitasking
+        mainHandler.postDelayed(() -> {
+            UltronIntentEngine.ActionCommand action2 = actions.get(1);
+            String reply2 = executeAction(action2);
+
+            if (actions.size() > 2) {
+                mainHandler.postDelayed(() -> {
+                    UltronIntentEngine.ActionCommand action3 = actions.get(2);
+                    String reply3 = executeAction(action3);
+                    String finalCombined = "Step 1: " + reply1 + ", then " + reply2 + ", and " + reply3;
+                    sendWebReply(rawText, finalCombined);
+                    speakReply(finalCombined, rawText);
+                }, 1300);
+            } else {
+                String finalCombined = reply1 + ", then " + reply2;
+                sendWebReply(rawText, finalCombined);
+                speakReply(finalCombined, rawText);
+            }
+        }, 1300);
     }
 
     private String executeAction(UltronIntentEngine.ActionCommand action) {
@@ -457,7 +514,16 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
             case "recent_apps":
                 boolean recOk = appLauncher.openRecentApp();
-                return recOk ? "Opening recent app" : "No recent app found";
+                return recOk ? "Opening recent apps" : "Showing recent apps";
+
+            case "app_section":
+                boolean secOk = appLauncher.openAppSection(action.entity);
+                if (action.entity.contains("reels")) {
+                    return secOk ? "Going to Reels section" : "Opening Instagram";
+                } else if (action.entity.contains("shorts")) {
+                    return secOk ? "Going to YouTube Shorts" : "Opening YouTube";
+                }
+                return secOk ? ("Navigating to " + action.entity) : ("Could not open " + action.entity);
 
             case "create_file":
                 boolean crOk = appLauncher.createFile(action.entity);
@@ -540,10 +606,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         super.onDestroy();
         instance = null;
 
-        if (floatingView != null && windowManager != null) {
+        if (floatingView != null && windowManager != null && isViewAttached) {
             try {
                 windowManager.removeView(floatingView);
             } catch (Exception ignored) {}
+            isViewAttached = false;
         }
         if (speechRecognizer != null) {
             try {
@@ -578,7 +645,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
         @JavascriptInterface
         public void toggleFloatingOverlay() {
-            mainHandler.post(() -> stopSelf());
+            mainHandler.post(() -> setMiniBubbleMode(!isMiniBubble));
         }
 
         @JavascriptInterface
