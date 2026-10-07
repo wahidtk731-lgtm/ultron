@@ -94,6 +94,52 @@
       font-size: 11px !important;
     }
 
+    /* Collapsible Mini Floating Bubble Mode (Never covers other apps) */
+    .mini-bubble {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #1e1f22;
+      border: 2px solid #4285f4;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      animation: pulseGlow 2.5s infinite ease-in-out;
+    }
+    .mini-bubble-inner {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a73e8, #9b51e0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mini-bubble-mic {
+      width: 20px;
+      height: 20px;
+      fill: #ffffff;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 10px rgba(66, 133, 244, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(155, 81, 224, 0.8); }
+    }
+    body.mini-bubble-active {
+      background: transparent !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 100% !important;
+    }
+
     /* Backdrop dim */
     .backdrop {
       position: fixed;
@@ -543,17 +589,28 @@
 
   <div class="backdrop" id="backdrop" onclick="onBackdropClick()"></div>
 
+  <!-- Floating Mini Bubble View (52x52 Clickable Orb - Never covers screen) -->
+  <div class="mini-bubble" id="miniBubble" onclick="expandFromBubble()" title="Tap to Open Ultron">
+    <div class="mini-bubble-inner">
+      <svg viewBox="0 0 24 24" class="mini-bubble-mic">
+        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+      </svg>
+    </div>
+  </div>
+
   <div class="assistant-container">
     
     <!-- Quick Suggestion Chips (Clean, Prioritized) -->
     <div class="chips-row">
       <div class="chip chip-primary" onclick="openSettingsModal()">⚙️ Settings</div>
-      <div class="chip" id="chipDockPos" onclick="toggleDockPosition()" style="display: none;">📌 Dock Top/Bottom</div>
-      <div class="chip" onclick="toggleFloating()">🗂️ Floating Mode</div>
-      <div class="chip" onclick="quickCommand('Open Ajio')">Open Ajio</div>
-      <div class="chip" onclick="quickCommand('Open YouTube')">Open YouTube</div>
-      <div class="chip" onclick="quickCommand('Open Chrome')">Open Chrome</div>
-      <div class="chip" onclick="quickCommand('What time is it?')">Current Time</div>
+      <div class="chip chip-recent" id="chipRecentApp" onclick="openRecentApp()">🕒 Recent App</div>
+      <div class="chip" onclick="quickCommand('Close app')">⏹️ Close App</div>
+      <div class="chip" onclick="quickCommand('Turn on Wi-Fi')">📶 Wi-Fi</div>
+      <div class="chip" onclick="quickCommand('Turn on Bluetooth')">ᛒ Bluetooth</div>
+      <div class="chip" onclick="quickCommand('Clear notifications')">🔔 Clear Notifications</div>
+      <div class="chip" id="chipDockPos" onclick="toggleDockPosition()" style="display: none;">📌 Move HUD</div>
+      <div class="chip" id="chipMinimize" onclick="minimizeToBubble()" style="display: none;">🫧 Collapse Bubble</div>
       <div class="chip" onclick="dismissAssistant()">Hide</div>
     </div>
 
@@ -656,6 +713,13 @@
           onkeydown="onInputKey(event)"
         />
       </div>
+
+      <!-- Minimize to Floating Bubble Button -->
+      <button class="action-btn" id="btnMinimizeCapsule" onclick="minimizeToBubble()" title="Collapse to Bubble" style="display: none;">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 13H5v-2h14v2z"/>
+        </svg>
+      </button>
 
       <!-- Settings Button -->
       <button class="action-btn" id="settingsBtn" onclick="openSettingsModal()" title="Ultron Settings">
@@ -1057,6 +1121,57 @@
       }
     });
 
+    function openRecentApp() {
+      if (hasAndroidBridge && window.AndroidUltron.openRecentApp) {
+        window.AndroidUltron.openRecentApp();
+      } else {
+        quickCommand("open recent app");
+      }
+    }
+
+    function updateRecentAppChip() {
+      if (hasAndroidBridge && window.AndroidUltron.getRecentAppName) {
+        try {
+          const recent = window.AndroidUltron.getRecentAppName();
+          const chip = document.getElementById("chipRecentApp");
+          if (chip && recent && recent !== "Recent App") {
+            chip.textContent = "🕒 Recent: " + recent;
+          }
+        } catch (ignored) {}
+      }
+    }
+
+    function minimizeToBubble() {
+      if (hasAndroidBridge && window.AndroidUltron.minimizeToBubble) {
+        window.AndroidUltron.minimizeToBubble();
+      } else {
+        setMiniBubbleView(true);
+      }
+    }
+
+    function expandFromBubble() {
+      if (hasAndroidBridge && window.AndroidUltron.expandFromBubble) {
+        window.AndroidUltron.expandFromBubble();
+      } else {
+        setMiniBubbleView(false);
+      }
+    }
+
+    window.setMiniBubbleView = function(isMini) {
+      const miniBubble = document.getElementById("miniBubble");
+      const container = document.querySelector(".assistant-container");
+      if (isMini) {
+        if (miniBubble) miniBubble.style.display = "flex";
+        if (container) container.style.display = "none";
+        document.body.classList.add("mini-bubble-active");
+      } else {
+        if (miniBubble) miniBubble.style.display = "none";
+        if (container) container.style.display = "flex";
+        document.body.classList.remove("mini-bubble-active");
+        updateRecentAppChip();
+      }
+    };
+
     window.setOverlayMode = function(enabled) {
       if (enabled) {
         document.body.classList.add("overlay-mode");
@@ -1066,6 +1181,11 @@
         if (dockChip) dockChip.style.display = "inline-flex";
         const dockBtn = document.getElementById("btnDockToggle");
         if (dockBtn) dockBtn.style.display = "block";
+        const chipMin = document.getElementById("chipMinimize");
+        if (chipMin) chipMin.style.display = "inline-flex";
+        const btnMin = document.getElementById("btnMinimizeCapsule");
+        if (btnMin) btnMin.style.display = "inline-flex";
+        updateRecentAppChip();
       } else {
         document.body.classList.remove("overlay-mode");
         const overlayCloseBtn = document.getElementById("btnOverlayClose");
@@ -1074,6 +1194,10 @@
         if (dockChip) dockChip.style.display = "none";
         const dockBtn = document.getElementById("btnDockToggle");
         if (dockBtn) dockBtn.style.display = "none";
+        const chipMin = document.getElementById("chipMinimize");
+        if (chipMin) chipMin.style.display = "none";
+        const btnMin = document.getElementById("btnMinimizeCapsule");
+        if (btnMin) btnMin.style.display = "none";
       }
     };
 
@@ -1099,6 +1223,13 @@
 
     window.onAssistantReply = function(query, reply) {
       showCard(query, reply);
+      if (document.body.classList.contains("overlay-mode")) {
+        setTimeout(() => {
+          if (currentState === "ready") {
+            minimizeToBubble();
+          }
+        }, 3500);
+      }
     };
 
     window.onStatusUpdate = function(state, message) {

@@ -28,21 +28,24 @@ from sklearn.metrics import classification_report
 from speech_normalizer import normalize_speech, strip_wake_words
 from generate_training_data import generate_full_dataset
 
-def load_or_generate_dataset():
-    """Loads dataset from expanded_training_data.json or generates it fresh."""
+def load_or_generate_dataset(force_refresh=True):
+    """Generates dataset fresh from user's installed device apps and actions."""
     json_path = os.path.join(os.path.dirname(__file__), "expanded_training_data.json")
-    if os.path.exists(json_path):
+    if not force_refresh and os.path.exists(json_path):
         try:
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 return [(item["text"], item["intent"]) for item in data]
         except Exception:
             pass
-    return generate_full_dataset()
+    dataset = generate_full_dataset()
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump([{"text": s[0], "intent": s[1]} for s in dataset], f, indent=2)
+    return dataset
 
 def train_and_save_model(output_file="intent_model.pkl"):
     """Trains a high-accuracy TF-IDF + Logistic Regression model from scratch."""
-    dataset = load_or_generate_dataset()
+    dataset = load_or_generate_dataset(force_refresh=True)
     print(f"[*] Training on {len(dataset)} examples...")
 
     X = []
@@ -62,8 +65,8 @@ def train_and_save_model(output_file="intent_model.pkl"):
             strip_accents="unicode"
         )),
         ("clf", LogisticRegression(
-            C=15.0,
-            max_iter=1000,
+            C=25.0,
+            max_iter=5000,
             class_weight="balanced",
             solver="lbfgs"
         ))

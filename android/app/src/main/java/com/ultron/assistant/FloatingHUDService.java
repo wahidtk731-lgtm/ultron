@@ -218,6 +218,38 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         });
     }
 
+    private boolean isMiniBubble = false;
+
+    public void setMiniBubbleMode(boolean mini) {
+        mainHandler.post(() -> {
+            if (floatingView != null && windowManager != null) {
+                isMiniBubble = mini;
+                if (mini) {
+                    windowParams.width = dpToPx(56);
+                    windowParams.height = dpToPx(56);
+                    windowParams.gravity = Gravity.TOP | Gravity.START;
+                    windowParams.x = dpToPx(16);
+                    windowParams.y = dpToPx(240);
+                    if (webView != null) {
+                        webView.evaluateJavascript("if(window.setMiniBubbleView) window.setMiniBubbleView(true);", null);
+                    }
+                } else {
+                    windowParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+                    windowParams.height = dpToPx(140);
+                    windowParams.gravity = isDockedTop ? (Gravity.TOP | Gravity.CENTER_HORIZONTAL) : (Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+                    windowParams.x = 0;
+                    windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
+                    if (webView != null) {
+                        webView.evaluateJavascript("if(window.setMiniBubbleView) window.setMiniBubbleView(false);", null);
+                    }
+                }
+                try {
+                    windowManager.updateViewLayout(floatingView, windowParams);
+                } catch (Exception ignored) {}
+            }
+        });
+    }
+
     private void initSpeechRecognizer() {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
             Log.w(TAG, "SpeechRecognizer not available.");
@@ -381,10 +413,54 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 boolean launched = appLauncher.launchApp(action.entity);
                 return launched ? "Opening " + action.entity : "I could not find " + action.entity + " installed on your device.";
 
+            case "close_app":
+                boolean closed = appLauncher.closeApp(action.entity);
+                return closed ? ("Closed " + (action.entity.isEmpty() ? "app" : action.entity)) : "Returning to home screen";
+
+            case "wifi_on":
+                appLauncher.setWifi(true);
+                return "Turning on Wi-Fi";
+
+            case "wifi_off":
+                appLauncher.setWifi(false);
+                return "Turning off Wi-Fi";
+
+            case "bluetooth_on":
+                appLauncher.setBluetooth(true);
+                return "Turning on Bluetooth";
+
+            case "bluetooth_off":
+                appLauncher.setBluetooth(false);
+                return "Turning off Bluetooth";
+
+            case "clear_notifications":
+                appLauncher.clearNotifications();
+                return "Cleared all notifications";
+
+            case "status_bar":
+                appLauncher.openStatusBar();
+                return "Opening status bar notifications";
+
+            case "quick_settings":
+                appLauncher.openQuickSettings();
+                return "Opening quick settings";
+
+            case "recent_apps":
+                boolean recOk = appLauncher.openRecentApp();
+                return recOk ? "Opening recent app" : "No recent app found";
+
+            case "create_file":
+                boolean crOk = appLauncher.createFile(action.entity);
+                return crOk ? ("Created file " + action.entity) : "Could not create file";
+
+            case "edit_file":
+                boolean edOk = appLauncher.openFile(action.entity);
+                return edOk ? ("Opening file " + action.entity) : "Could not open file";
+
             case "search_web":
                 if (action.entity.isEmpty()) return "What would you like me to search for?";
                 appLauncher.searchWeb(action.entity);
-                return "Searching Google for " + action.entity;
+                return "Searching web for " + action.entity;
 
             case "write_file":
                 if (action.entity.isEmpty()) return "What should I write down?";
@@ -563,6 +639,40 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         @JavascriptInterface
         public void toggleDockPosition() {
             FloatingHUDService.this.toggleDockPosition();
+        }
+
+        @JavascriptInterface
+        public void minimizeToBubble() {
+            setMiniBubbleMode(true);
+        }
+
+        @JavascriptInterface
+        public void expandFromBubble() {
+            setMiniBubbleMode(false);
+        }
+
+        @JavascriptInterface
+        public void toggleBubbleMode() {
+            setMiniBubbleMode(!isMiniBubble);
+        }
+
+        @JavascriptInterface
+        public String getRecentAppName() {
+            return appLauncher != null ? appLauncher.getMostRecentAppName() : "Recent App";
+        }
+
+        @JavascriptInterface
+        public void openRecentApp() {
+            if (appLauncher != null) {
+                appLauncher.openRecentApp();
+            }
+        }
+
+        @JavascriptInterface
+        public void closeActiveApp() {
+            if (appLauncher != null) {
+                appLauncher.closeApp("");
+            }
         }
 
         @JavascriptInterface

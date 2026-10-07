@@ -83,7 +83,14 @@ APP_PHONETIC_REPLACEMENTS = [
     
     # Action verbs
     (r"\b(right|ride)\s+(hi|hello|text|code|print|something|notes)\b", r"write \2"),
-    (r"\b(claws|clothes)\s+(chrome|sublime|browser|terminal|geany)\b", r"close \2"),
+    (r"\b(claws|clothes|closed)\s+(chrome|sublime|browser|terminal|geany|app)\b", r"close \2"),
+    (r"\b(blue\s*tooth|blue\s*tooths|bluetooths)\b", "bluetooth"),
+    (r"\b(why\s*fi|wi\s*fi|wai\s*fai|wifi|wee\s*fee)\b", "wifi"),
+    (r"\b(notes|notification|notifications|notif|notifs)\b", "notifications"),
+    (r"\b(clear|clean|dismiss|wipe|cancel)\s+(the\s+)?(notifications|notification|notifs)\b", "clear notifications"),
+    (r"\b(recent\s+apps?|recently\s+opened\s+apps?|last\s+apps?|switch\s+apps?)\b", "recent apps"),
+    (r"\b(make\s+file|create\s+file|new\s+file)\b", "create file"),
+    (r"\b(edit\s+file|open\s+file|modify\s+file)\b", "edit file"),
 ]
 
 def normalize_speech(text: str) -> str:

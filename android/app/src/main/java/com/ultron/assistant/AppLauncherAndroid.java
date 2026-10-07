@@ -1,21 +1,27 @@
 package com.ultron.assistant;
 
+import android.app.ActivityManager;
+import android.app.NotificationManager;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.os.Build;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
  * Intelligent Installed App Training & Launch Engine for Ultron Android.
- * Trains itself on every installed app on the user's phone at startup
- * (e.g. AJIO, WhatsApp, Flipkart, YouTube, PhonePe, Zomato, etc.),
+ * Trains itself on every installed app on the user's phone at startup,
  * learning phonetic sound-alikes, aliases, and package identifiers.
  */
 public class AppLauncherAndroid {
@@ -23,6 +29,7 @@ public class AppLauncherAndroid {
     private static final String TAG = "UltronAppLauncher";
     private final Context context;
     private final PackageManager pm;
+    private final List<AppEntry> recentApps = new ArrayList<>();
 
     public static class AppEntry {
         public String label;             // e.g. "AJIO"
@@ -250,6 +257,7 @@ public class AppLauncherAndroid {
             try {
                 Log.i(TAG, "Launching trained app: " + bestMatch.label + " (" + bestMatch.packageName + ") score: " + bestScore);
                 context.startActivity(bestMatch.launchIntent);
+                recordRecentApp(bestMatch);
                 return true;
             } catch (Exception e) {
                 Log.e(TAG, "Failed to launch " + bestMatch.packageName + ": " + e.getMessage());
@@ -264,6 +272,7 @@ public class AppLauncherAndroid {
             if (intent != null) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
+                recordRecentApp(new AppEntry(query, directPkg, intent));
                 return true;
             }
         }
@@ -360,22 +369,237 @@ public class AppLauncherAndroid {
         }
     }
 
-    /**
-     * Writes text note to local file.
-     */
-    public boolean writeNote(String content) {
+    private void recordRecentApp(AppEntry app) {
+        if (app == null) return;
+        synchronized (recentApps) {
+            recentApps.removeIf(a -> a.packageName.equalsIgnoreCase(app.packageName));
+            recentApps.add(0, app);
+            if (recentApps.size() > 10) {
+                recentApps.remove(recentApps.size() - 1);
+            }
+        }
+    }
+
+    public boolean openRecentApp() {
+        synchronized (recentApps) {
+            if (!recentApps.isEmpty()) {
+                AppEntry recent = recentApps.get(0);
+                if (isPackageInstalledAndValid(recent.packageName)) {
+                    try {
+                        context.startActivity(recent.launchIntent);
+                        return true;
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
         try {
+            Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+            homeIntent.addCategory(Intent.CATEGORY_HOME);
+            homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(homeIntent);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getMostRecentAppName() {
+        synchronized (recentApps) {
+            if (!recentApps.isEmpty()) {
+                return recentApps.get(0).label;
+            }
+        }
+        return "Recent App";
+    }
+
+    public boolean closeApp(String target) {
+        String query = cleanQuery(target == null ? "" : target);
+        if (query.isEmpty() || query.equals("app") || query.equals("this app") || query.equals("current app")) {
+            try {
+                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                homeIntent.addCategory(Intent.CATEGORY_HOME);
+                homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(homeIntent);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        AppEntry match = null;
+        for (AppEntry app : trainedApps) {
+            if (app.cleanLabel.equalsIgnoreCase(query) || app.aliases.contains(query)) {
+                match = app;
+                break;
+            }
+        }
+
+        String pkg = match != null ? match.packageName : getCommonPackage(query);
+        if (pkg != null) {
+            try {
+                ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+                if (am != null) {
+                    am.killBackgroundProcesses(pkg);
+                }
+            } catch (Exception ignored) {}
+        }
+
+        try {
+            Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+            homeIntent.addCategory(Intent.CATEGORY_HOME);
+            homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(homeIntent);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean setWifi(boolean enable) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                Intent panelIntent = new Intent(Settings.Panel.ACTION_WIFI);
+                panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(panelIntent);
+                return true;
+            } else {
+                WifiManager wm = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                if (wm != null) {
+                    return wm.setWifiEnabled(enable);
+                }
+            }
+        } catch (Exception e) {
+            try {
+                Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                return true;
+            } catch (Exception ignored) {}
+        }
+        return false;
+    }
+
+    public boolean setBluetooth(boolean enable) {
+        try {
+            BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+            if (adapter != null) {
+                if (enable && !adapter.isEnabled()) {
+                    boolean ok = adapter.enable();
+                    if (ok) return true;
+                } else if (!enable && adapter.isEnabled()) {
+                    boolean ok = adapter.disable();
+                    if (ok) return true;
+                }
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                Intent panelIntent = new Intent(Settings.Panel.ACTION_BLUETOOTH);
+                panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(panelIntent);
+                return true;
+            } else {
+                Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                return true;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean clearNotifications() {
+        try {
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) {
+                nm.cancelAll();
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public boolean openStatusBar() {
+        try {
+            Object sbservice = context.getSystemService("statusbar");
+            Class<?> statusbarManager = Class.forName("android.app.StatusBarManager");
+            Method showsb = statusbarManager.getMethod("expandNotificationsPanel");
+            showsb.invoke(sbservice);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean openQuickSettings() {
+        try {
+            Object sbservice = context.getSystemService("statusbar");
+            Class<?> statusbarManager = Class.forName("android.app.StatusBarManager");
+            Method showsb = statusbarManager.getMethod("expandSettingsPanel");
+            showsb.invoke(sbservice);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean createFile(String filename) {
+        try {
+            String name = (filename == null || filename.trim().isEmpty()) ? "ultron_file.txt" : filename.trim();
             File dir = context.getExternalFilesDir(null);
             if (dir == null) dir = context.getFilesDir();
-            File noteFile = new File(dir, "ultron_notes.txt");
-            FileWriter writer = new FileWriter(noteFile, true);
-            writer.write(new Date() + ": " + content + "\n");
+            File file = new File(dir, name);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Create file failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean openFile(String filename) {
+        try {
+            String name = (filename == null || filename.trim().isEmpty()) ? "ultron_notes.txt" : filename.trim();
+            File dir = context.getExternalFilesDir(null);
+            if (dir == null) dir = context.getFilesDir();
+            File file = new File(dir, name);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            Intent viewIntent = new Intent(Intent.ACTION_VIEW);
+            viewIntent.setDataAndType(Uri.fromFile(file), "text/plain");
+            viewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            context.startActivity(viewIntent);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Open file failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean writeFile(String filename, String content) {
+        try {
+            String name = (filename == null || filename.trim().isEmpty()) ? "ultron_notes.txt" : filename.trim();
+            File dir = context.getExternalFilesDir(null);
+            if (dir == null) dir = context.getFilesDir();
+            File file = new File(dir, name);
+            FileWriter writer = new FileWriter(file, true);
+            writer.write(content + "\n");
             writer.close();
             return true;
         } catch (Exception e) {
-            Log.e(TAG, "Write note failed: " + e.getMessage());
+            Log.e(TAG, "Write file failed: " + e.getMessage());
             return false;
         }
+    }
+
+    public boolean writeNote(String content) {
+        return writeFile("ultron_notes.txt", new Date() + ": " + content);
     }
 
     private String getCommonPackage(String name) {

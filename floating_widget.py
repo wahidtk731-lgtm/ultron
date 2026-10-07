@@ -101,6 +101,7 @@ class UltronGeminiWidget:
         self.state = "ready"
         self.running = True
         self.is_mic_muted = False
+        self.is_compact = False
 
         # Live wave and loading animation state
         self.anim_tick = 0
@@ -256,10 +257,10 @@ class UltronGeminiWidget:
             fill=TEXT_WHITE
         )
 
-        # 8. Right Element 2: Gemini 4-Bar Soundwave Equalizer
-        wave_cx = 428
+        # 8. Right Element 2: Soundwave Equalizer
+        wave_cx = 414
         self.wave_bars = []
-        bar_offsets = [-9, -3, 3, 9]
+        bar_offsets = [-7, -2, 3, 8]
         for off in bar_offsets:
             bar = self.canvas.create_line(
                 wave_cx + off, cy - 4, wave_cx + off, cy + 4,
@@ -269,9 +270,17 @@ class UltronGeminiWidget:
             )
             self.wave_bars.append(bar)
 
-        # 9. Right Element 3: Close '×'
+        # 9. Right Element 3: Minimize '─'
+        self.btn_minimize = self.canvas.create_text(
+            442, cy,
+            text="─",
+            font=("DejaVu Sans", 10, "bold"),
+            fill="#8E9196"
+        )
+
+        # 10. Right Element 4: Close '×'
         self.btn_close = self.canvas.create_text(
-            462, cy,
+            464, cy,
             text="×",
             font=("DejaVu Sans", 11, "bold"),
             fill="#5E636E"
@@ -309,16 +318,29 @@ class UltronGeminiWidget:
         for b in self.wave_bars:
             self.canvas.tag_bind(b, "<Button-1>", lambda e: self.trigger_listening())
 
+        # Click Minimize '─' (Collapse to tiny bubble)
+        self.canvas.tag_bind(self.btn_minimize, "<Button-1>", lambda e: self.toggle_compact())
+        self.canvas.tag_bind(self.btn_minimize, "<Enter>", lambda e: [self.canvas.itemconfig(self.btn_minimize, fill="#FFFFFF"), self.canvas.config(cursor="hand2")])
+        self.canvas.tag_bind(self.btn_minimize, "<Leave>", lambda e: [self.canvas.itemconfig(self.btn_minimize, fill="#8E9196"), self.canvas.config(cursor="arrow")])
+
         # Click Close 'x'
         self.canvas.tag_bind(self.btn_close, "<Button-1>", lambda e: self.quit())
         self.canvas.tag_bind(self.btn_close, "<Enter>", lambda e: [self.canvas.itemconfig(self.btn_close, fill="#FF5252"), self.canvas.config(cursor="hand2")])
         self.canvas.tag_bind(self.btn_close, "<Leave>", lambda e: [self.canvas.itemconfig(self.btn_close, fill="#5E636E"), self.canvas.config(cursor="arrow")])
 
         # Hand cursor on interactive elements
-        clickable = [self.btn_plus, self.btn_plus_bg, self.sparkle, self.mic_circle, self.mic_icon] + self.wave_bars
+        clickable = [self.btn_plus, self.btn_plus_bg, self.sparkle, self.mic_circle, self.mic_icon, self.btn_minimize] + self.wave_bars
         for item in clickable:
             self.canvas.tag_bind(item, "<Enter>", lambda e: self.canvas.config(cursor="hand2"))
             self.canvas.tag_bind(item, "<Leave>", lambda e: self.canvas.config(cursor="arrow"))
+
+    def toggle_compact(self):
+        """Collapses into a tiny 54px floating orb or expands to full 480px pill so it never covers windows."""
+        self.is_compact = not self.is_compact
+        if self.is_compact:
+            self.root.geometry(f"54x54+{self.pos_x}+{self.pos_y}")
+        else:
+            self.root.geometry(f"{self.cap_w}x{self.cap_h}+{self.pos_x}+{self.pos_y}")
 
     def _on_entry_key(self, event):
         """Blocks typing when assistant is speaking or processing to prevent speech collisions."""

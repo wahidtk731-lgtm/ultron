@@ -179,11 +179,33 @@ class UltronAssistant:
 
         intent = self.intent_model.predict([cmd])[0]
 
-        if intent == "write_file":
+        if intent == "create_file":
+            filename = re.sub(r"\b(create|make|new|add)\s+(?:a\s+)?file\s*", "", cmd, flags=re.IGNORECASE).strip()
+            return self.launcher.create_file(filename)
+
+        elif intent == "write_file":
             return self._handle_write_file(cmd)
 
         elif intent == "open_file":
             return self._handle_open_file(cmd)
+
+        elif intent == "wifi_on":
+            return self.launcher.turn_on_wifi()
+
+        elif intent == "wifi_off":
+            return self.launcher.turn_off_wifi()
+
+        elif intent == "bluetooth_on":
+            return self.launcher.turn_on_bluetooth()
+
+        elif intent == "bluetooth_off":
+            return self.launcher.turn_off_bluetooth()
+
+        elif intent == "clear_notifications":
+            return self.launcher.clear_notifications()
+
+        elif intent == "recent_apps":
+            return self.launcher.open_recent_app()
 
         elif intent == "open_app":
             app_name = self.extract_target_app(cmd)
@@ -199,10 +221,7 @@ class UltronAssistant:
 
         elif intent == "close_app":
             app_name = self.extract_target_app(cmd)
-            if app_name:
-                return self.launcher.close(app_name)
-            else:
-                return False, "Which application should I close?"
+            return self.launcher.close(app_name)
 
         elif intent == "query_time":
             now = datetime.datetime.now()
@@ -213,7 +232,7 @@ class UltronAssistant:
             query = self.extract_search_query(cmd)
             if query:
                 success, msg = self.launcher.search_web(query)
-                return True, f"Searching Google for {query}."
+                return True, f"Searching web for {query}."
             else:
                 return False, "What would you like me to search for?"
 
@@ -221,7 +240,7 @@ class UltronAssistant:
             return True, "Hello! Ultron is online and ready for your commands."
 
         elif intent == "query_capabilities":
-            return True, "I am Ultron, your local AI assistant. I can open applications, launch websites, open and edit your code files, tell the time, search the web, and manage running processes—all locally."
+            return True, "I am Ultron, your local AI assistant. I can open and close applications, create and edit files, control Wi-Fi and Bluetooth, clear notifications, tell the time, and search the web—all 100% locally."
 
         elif intent == "exit":
             return False, "Going offline. Goodbye!"

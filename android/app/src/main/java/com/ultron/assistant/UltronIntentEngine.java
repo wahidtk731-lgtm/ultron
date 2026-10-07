@@ -125,50 +125,96 @@ public class UltronIntentEngine {
             return new ActionCommand("open_settings", "", c);
         }
 
-        // 2. Greet
+        // 2. Hardware Toggles: Wi-Fi
+        if (c.matches(".*\\b(turn on wifi|enable wifi|start wifi|switch on wifi|wifi on)\\b.*")) {
+            return new ActionCommand("wifi_on", "", c);
+        }
+        if (c.matches(".*\\b(turn off wifi|disable wifi|stop wifi|switch off wifi|wifi off)\\b.*")) {
+            return new ActionCommand("wifi_off", "", c);
+        }
+
+        // 3. Hardware Toggles: Bluetooth
+        if (c.matches(".*\\b(turn on bluetooth|enable bluetooth|start bluetooth|switch on bluetooth|bluetooth on)\\b.*")) {
+            return new ActionCommand("bluetooth_on", "", c);
+        }
+        if (c.matches(".*\\b(turn off bluetooth|disable bluetooth|stop bluetooth|switch off bluetooth|bluetooth off)\\b.*")) {
+            return new ActionCommand("bluetooth_off", "", c);
+        }
+
+        // 4. Status Bar & Notifications
+        if (c.matches(".*\\b(clear notifications?|clean notifications?|dismiss notifications?|wipe notifications?|remove notifications?)\\b.*")) {
+            return new ActionCommand("clear_notifications", "", c);
+        }
+        if (c.matches(".*\\b(quick settings|open quick settings|show quick settings)\\b.*")) {
+            return new ActionCommand("quick_settings", "", c);
+        }
+        if (c.matches(".*\\b(status bar|open status bar|show status bar|expand status bar|show notifications|open notifications)\\b.*")) {
+            return new ActionCommand("status_bar", "", c);
+        }
+
+        // 5. Recent Apps (replacing static ajio/chrome)
+        if (c.matches(".*\\b(recent apps?|recently opened apps?|open recent apps?|switch to recent|previous app|last app)\\b.*")) {
+            return new ActionCommand("recent_apps", "", c);
+        }
+
+        // 6. Greet
         if (c.matches(".*\\b(hello|hi|hey|good morning|good evening|good afternoon)\\b.*")) {
             return new ActionCommand("greet", "", c);
         }
 
-        // 2. Query Time
+        // 7. Query Time
         if (c.matches(".*\\b(time|date|day|what time is it|clock)\\b.*")) {
             return new ActionCommand("query_time", "", c);
         }
 
-        // 3. Query Capabilities
+        // 8. Query Capabilities
         if (c.matches(".*\\b(who are you|what can you do|capabilities|help me)\\b.*")) {
             return new ActionCommand("query_capabilities", "", c);
         }
 
-        // 4. Open App
+        // 9. Close App (guaranteed close)
+        if (c.matches(".*\\b(close|kill|terminate|exit|quit|shut down)\\b.*")) {
+            String appName = c.replaceAll("\\b(close|kill|terminate|exit|quit|shut down|app|the|this|current)\\b", " ")
+                              .replaceAll("\\s+", " ").trim();
+            return new ActionCommand("close_app", appName, c);
+        }
+
+        // 10. File Operations: Create File
+        if (c.matches(".*\\b(create file|make file|new file|create a file)\\b.*")) {
+            String filename = c.replaceAll("\\b(create file|make file|new file|create a file|called|named|file)\\b", " ")
+                               .replaceAll("\\s+", " ").trim();
+            return new ActionCommand("create_file", filename, c);
+        }
+
+        // 11. File Operations: Edit File / Open File
+        if (c.matches(".*\\b(edit file|modify file|open file)\\b.*")) {
+            String filename = c.replaceAll("\\b(edit file|modify file|open file|called|named|file)\\b", " ")
+                               .replaceAll("\\s+", " ").trim();
+            return new ActionCommand("edit_file", filename, c);
+        }
+
+        // 12. File Operations: Write File / Note
+        if (c.matches(".*\\b(write|type|insert|add to file|write in file|write to file)\\b.*")) {
+            String content = c.replaceAll("\\b(write in file|write to file|write into file|write file|write|create note|add note|type|note|in file|to file)\\b", " ")
+                              .replaceAll("\\s+", " ").trim();
+            return new ActionCommand("write_file", content, c);
+        }
+
+        // 13. Open App
         if (c.matches(".*\\b(open|launch|start|run|play)\\b.*")) {
             String appName = c.replaceAll("\\b(open|launch|start|run|please|can you|could you|app|the|an|a)\\b", " ")
                               .replaceAll("\\s+", " ").trim();
             return new ActionCommand("open_app", appName, c);
         }
 
-        // 5. Close App
-        if (c.matches(".*\\b(close|kill|terminate|exit|quit)\\b.*")) {
-            String appName = c.replaceAll("\\b(close|kill|terminate|exit|quit|app|the)\\b", " ")
-                              .replaceAll("\\s+", " ").trim();
-            return new ActionCommand("close_app", appName, c);
-        }
-
-        // 6. Search Web
-        if (c.matches(".*\\b(search|google|look up|find on web)\\b.*")) {
-            String query = c.replaceAll("\\b(search google for|search the web for|search for|google|look up|search)\\b", " ")
+        // 14. Search Web
+        if (c.matches(".*\\b(search|look up|find on web)\\b.*")) {
+            String query = c.replaceAll("\\b(search the web for|search for|look up|search)\\b", " ")
                             .replaceAll("\\s+", " ").trim();
             return new ActionCommand("search_web", query, c);
         }
 
-        // 7. Write File / Note
-        if (c.matches(".*\\b(write|create note|add note|type)\\b.*")) {
-            String content = c.replaceAll("\\b(write|create note|add note|type|note|in file|to file)\\b", " ")
-                              .replaceAll("\\s+", " ").trim();
-            return new ActionCommand("write_file", content, c);
-        }
-
-        // 8. Exit
+        // 15. Exit
         if (c.matches(".*\\b(shutdown|bye|goodbye|go offline|sleep)\\b.*")) {
             return new ActionCommand("exit", "", c);
         }

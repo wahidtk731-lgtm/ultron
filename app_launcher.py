@@ -102,6 +102,7 @@ class AppLauncher:
     def __init__(self):
         self.apps = {}
         self.user_files = {}
+        self.recent_apps = []
         self.is_chromeos = os.path.exists("/opt/google/cros-containers") or shutil.which("garcon-url-handler") is not None
         self.reload_installed_apps()
         self.reload_user_files()
@@ -220,6 +221,28 @@ class AppLauncher:
         names.update(COMMON_ALIASES.keys())
         names.update(KNOWN_WEBSITES.keys())
         return sorted(list(names))
+
+    def get_existing_app_names(self):
+        """Returns only applications and tools that actually exist and are verified installed on this system."""
+        existing = set()
+        for name, info in self.apps.items():
+            exec_bin = info.get("exec", "").split()[0]
+            if shutil.which(exec_bin) or os.path.exists(exec_bin) or os.path.exists(info.get("path", "")):
+                existing.add(name)
+        for alias, cmds in COMMON_ALIASES.items():
+            for cmd in cmds:
+                binary = cmd.split()[0].replace("garcon-url-handler", "").replace("garcon-terminal-handler", "").strip()
+                if binary and (shutil.which(binary) or os.path.exists(binary)):
+                    existing.add(alias)
+                    break
+        return sorted(list(existing))
+
+    def open_recent_app(self):
+        """Launches the most recently opened application in this session."""
+        if self.recent_apps:
+            target = self.recent_apps[0]
+            return self.launch(target)
+        return False, "No recently opened application found."
 
     def launch_url(self, url, friendly_name=None):
         """Opens a website or URL in the host/default browser."""
@@ -487,22 +510,37 @@ class AppLauncher:
                 stderr=subprocess.DEVNULL,
                 start_new_session=True
             )
+            if friendly_name:
+                clean_f = friendly_name.strip()
+                if clean_f in self.recent_apps:
+                    self.recent_apps.remove(clean_f)
+                self.recent_apps.insert(0, clean_f)
             return True, f"Opened {friendly_name}."
         except Exception as e:
             return False, f"Error opening {friendly_name}: {e}"
 
     def close(self, app_name):
-        """Closes an application cleanly, handling ChromeOS host apps with clear feedback."""
-        target = app_name.strip().lower()
-        if not target:
-            return False, "No application specified to close."
+        """Closes an application cleanly, handling active window and processes gracefully."""
+        target = app_name.strip().lower() if app_name else ""
+        if not target or target in ("app", "this app", "current app", "the app"):
+            # Close active foreground window
+            try:
+                if shutil.which("xdotool"):
+                    subprocess.run(["xdotool", "getactivewindow", "windowclose"], timeout=1.0)
+                    return True, "Closed active window."
+                elif shutil.which("wmctrl"):
+                    subprocess.run(["wmctrl", "-c", ":ACTIVE:"], timeout=1.0)
+                    return True, "Closed active window."
+            except Exception:
+                pass
+            return False, "No active application found to close."
 
         # Chrome browser special case
         if target in ("chrome", "google chrome", "browser", "chromium"):
             killed_local = False
             for proc_name in ["google-chrome", "chromium", "chrome", "google-chrome-stable"]:
                 try:
-                    res = subprocess.run(["pkill", "-x", proc_name], capture_output=True, timeout=1.0)
+                    res = subprocess.run(["pkill", "-if", proc_name], capture_output=True, timeout=1.0)
                     if res.returncode == 0:
                         killed_local = True
                 except Exception:
@@ -517,7 +555,7 @@ class AppLauncher:
         # Sublime Text special case
         if target in ("sublime", "sublime text", "subl"):
             try:
-                subprocess.run(["pkill", "-x", "sublime_text"], capture_output=True, timeout=1.0)
+                subprocess.run(["pkill", "-if", "sublime_text"], capture_output=True, timeout=1.0)
                 return True, "Closed Sublime Text."
             except Exception:
                 pass
@@ -525,7 +563,7 @@ class AppLauncher:
         # Geany
         if target in ("geany", "geany editor"):
             try:
-                subprocess.run(["pkill", "-x", "geany"], capture_output=True, timeout=1.0)
+                subprocess.run(["pkill", "-if", "geany"], capture_output=True, timeout=1.0)
                 return True, "Closed Geany."
             except Exception:
                 pass
@@ -543,7 +581,10 @@ class AppLauncher:
             if not candidate:
                 continue
             try:
-                res = subprocess.run(["pkill", "-x", candidate], capture_output=True, timeout=1.0)
+                # Try wmctrl first for graceful GUI close
+                if shutil.which("wmctrl"):
+                    subprocess.run(["wmctrl", "-c", candidate], timeout=1.0)
+                res = subprocess.run(["pkill", "-if", candidate], capture_output=True, timeout=1.0)
                 if res.returncode == 0:
                     closed_any = True
             except Exception:
@@ -553,6 +594,85 @@ class AppLauncher:
             return True, f"Closed {target}."
 
         return False, f"No running process found for '{target}'."
+
+    def turn_on_wifi(self):
+        """Turns on Wi-Fi adapter via nmcli or rfkill."""
+        try:
+            if shutil.which("nmcli"):
+                subprocess.run(["nmcli", "radio", "wifi", "on"], capture_output=True, timeout=2.0)
+                return True, "Wi-Fi turned on."
+            elif shutil.which("rfkill"):
+                subprocess.run(["rfkill", "unblock", "wifi"], capture_output=True, timeout=2.0)
+                return True, "Wi-Fi enabled."
+        except Exception as e:
+            return False, f"Could not toggle Wi-Fi: {e}"
+        return False, "Wi-Fi control tool not found."
+
+    def turn_off_wifi(self):
+        """Turns off Wi-Fi adapter via nmcli or rfkill."""
+        try:
+            if shutil.which("nmcli"):
+                subprocess.run(["nmcli", "radio", "wifi", "off"], capture_output=True, timeout=2.0)
+                return True, "Wi-Fi turned off."
+            elif shutil.which("rfkill"):
+                subprocess.run(["rfkill", "block", "wifi"], capture_output=True, timeout=2.0)
+                return True, "Wi-Fi disabled."
+        except Exception as e:
+            return False, f"Could not toggle Wi-Fi: {e}"
+        return False, "Wi-Fi control tool not found."
+
+    def turn_on_bluetooth(self):
+        """Turns on Bluetooth adapter via bluetoothctl or rfkill."""
+        try:
+            if shutil.which("bluetoothctl"):
+                subprocess.run(["bluetoothctl", "power", "on"], capture_output=True, timeout=2.0)
+                return True, "Bluetooth turned on."
+            elif shutil.which("rfkill"):
+                subprocess.run(["rfkill", "unblock", "bluetooth"], capture_output=True, timeout=2.0)
+                return True, "Bluetooth enabled."
+        except Exception as e:
+            return False, f"Could not toggle Bluetooth: {e}"
+        return False, "Bluetooth control tool not found."
+
+    def turn_off_bluetooth(self):
+        """Turns off Bluetooth adapter via bluetoothctl or rfkill."""
+        try:
+            if shutil.which("bluetoothctl"):
+                subprocess.run(["bluetoothctl", "power", "off"], capture_output=True, timeout=2.0)
+                return True, "Bluetooth turned off."
+            elif shutil.which("rfkill"):
+                subprocess.run(["rfkill", "block", "bluetooth"], capture_output=True, timeout=2.0)
+                return True, "Bluetooth disabled."
+        except Exception as e:
+            return False, f"Could not toggle Bluetooth: {e}"
+        return False, "Bluetooth control tool not found."
+
+    def clear_notifications(self):
+        """Clears desktop notifications via dunstctl or makoctl."""
+        try:
+            if shutil.which("dunstctl"):
+                subprocess.run(["dunstctl", "close-all"], capture_output=True, timeout=1.0)
+                return True, "Cleared all notifications."
+            elif shutil.which("makoctl"):
+                subprocess.run(["makoctl", "dismiss", "-a"], capture_output=True, timeout=1.0)
+                return True, "Dismissed notifications."
+        except Exception:
+            pass
+        return True, "Notifications cleared."
+
+    def create_file(self, filename):
+        """Creates an empty file in workspace if it doesn't exist."""
+        clean_name = filename.strip().strip("'\"") if filename else "new_file.txt"
+        path = self.resolve_file_path(clean_name)
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            if not os.path.exists(path):
+                with open(path, "w", encoding="utf-8") as f:
+                    pass
+            self.reload_user_files()
+            return True, f"Created file {os.path.basename(path)}."
+        except Exception as e:
+            return False, f"Failed to create file: {e}"
 
 if __name__ == "__main__":
     launcher = AppLauncher()

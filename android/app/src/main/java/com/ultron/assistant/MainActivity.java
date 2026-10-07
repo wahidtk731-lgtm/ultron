@@ -283,15 +283,16 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                             message = "Audio recording error. Tap mic to retry.";
                             break;
                         case SpeechRecognizer.ERROR_CLIENT:
-                            startVoiceRecognitionFallback();
-                            return;
+                            initSpeechRecognizer();
+                            message = "Tap mic to speak";
+                            break;
                         case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
                             message = "Microphone permission needed";
                             checkPermissionsAndInit();
                             break;
                         case SpeechRecognizer.ERROR_NETWORK:
                         case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                            message = "Network timeout. Tap mic to retry.";
+                            message = "Offline mode ready. Tap mic to retry.";
                             break;
                         case SpeechRecognizer.ERROR_NO_MATCH:
                             message = "Didn't hear that. Tap mic to retry.";
@@ -351,10 +352,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                     speechRecognizer.cancel();
                     speechRecognizer.startListening(recognizerIntent);
                 } catch (Exception e) {
-                    startVoiceRecognitionFallback();
+                    initSpeechRecognizer();
+                    updateWebStatus("ready", "Mic reset. Tap to speak.");
                 }
             } else {
-                startVoiceRecognitionFallback();
+                updateWebStatus("ready", "Ultron mic ready. Tap to speak.");
             }
         });
     }
@@ -367,18 +369,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 } catch (Exception ignored) {}
             }
         });
-    }
-
-    private void startVoiceRecognitionFallback() {
-        try {
-            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toString());
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Ask Ultron Assistant...");
-            startActivityForResult(intent, REQ_CODE_VOICE_INTENT);
-        } catch (Exception e) {
-            updateWebStatus("ready", "Voice recognizer unavailable. Type command below.");
-        }
     }
 
     @Override
@@ -447,12 +437,53 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 return launched ? "Opening " + action.entity : "I could not find " + action.entity + " installed on your device.";
 
             case "close_app":
-                return "Returning to home screen";
+                boolean closed = appLauncher.closeApp(action.entity);
+                return closed ? ("Closed " + (action.entity.isEmpty() ? "app" : action.entity)) : "Returning to home screen";
+
+            case "wifi_on":
+                appLauncher.setWifi(true);
+                return "Turning on Wi-Fi";
+
+            case "wifi_off":
+                appLauncher.setWifi(false);
+                return "Turning off Wi-Fi";
+
+            case "bluetooth_on":
+                appLauncher.setBluetooth(true);
+                return "Turning on Bluetooth";
+
+            case "bluetooth_off":
+                appLauncher.setBluetooth(false);
+                return "Turning off Bluetooth";
+
+            case "clear_notifications":
+                appLauncher.clearNotifications();
+                return "Cleared all notifications";
+
+            case "status_bar":
+                appLauncher.openStatusBar();
+                return "Opening status bar notifications";
+
+            case "quick_settings":
+                appLauncher.openQuickSettings();
+                return "Opening quick settings";
+
+            case "recent_apps":
+                boolean recOk = appLauncher.openRecentApp();
+                return recOk ? "Opening recent app" : "No recent app found";
+
+            case "create_file":
+                boolean crOk = appLauncher.createFile(action.entity);
+                return crOk ? ("Created file " + action.entity) : "Could not create file";
+
+            case "edit_file":
+                boolean edOk = appLauncher.openFile(action.entity);
+                return edOk ? ("Opening file " + action.entity) : "Could not open file";
 
             case "search_web":
                 if (action.entity.isEmpty()) return "What would you like me to search for?";
                 appLauncher.searchWeb(action.entity);
-                return "Searching Google for " + action.entity;
+                return "Searching web for " + action.entity;
 
             case "write_file":
                 if (action.entity.isEmpty()) return "What should I write down?";
@@ -581,6 +612,25 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         @JavascriptInterface
         public void toggleDockPosition() {
             // No-op in full screen activity mode
+        }
+
+        @JavascriptInterface
+        public String getRecentAppName() {
+            return appLauncher != null ? appLauncher.getMostRecentAppName() : "Recent App";
+        }
+
+        @JavascriptInterface
+        public void openRecentApp() {
+            if (appLauncher != null) {
+                appLauncher.openRecentApp();
+            }
+        }
+
+        @JavascriptInterface
+        public void closeActiveApp() {
+            if (appLauncher != null) {
+                appLauncher.closeApp("");
+            }
         }
 
         @JavascriptInterface

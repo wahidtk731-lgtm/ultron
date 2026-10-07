@@ -17,10 +17,12 @@ import os
 import sys
 
 # Load local launcher for device-first scanning
+import shutil
+
 try:
     from app_launcher import AppLauncher
     _launcher = AppLauncher()
-    DEVICE_APPS = _launcher.get_all_app_names()
+    DEVICE_APPS = _launcher.get_existing_app_names()
     USER_FILES = list(_launcher.user_files.keys())
 except Exception:
     DEVICE_APPS = []
@@ -50,7 +52,15 @@ BASE_APPS = [
     "learning", "learning project", "html project", "my website", "web project", "coding project"
 ]
 
-ALL_APPS = sorted(list(set(BASE_APPS + [a.lower() for a in DEVICE_APPS])))
+# Only train on apps that actually exist and can be launched on this device!
+def does_app_exist(app):
+    clean = app.lower().strip()
+    if clean in [a.lower() for a in DEVICE_APPS]:
+        return True
+    return shutil.which(clean) is not None
+
+VERIFIED_BASE_APPS = [a for a in BASE_APPS if does_app_exist(a)]
+ALL_APPS = sorted(list(set(VERIFIED_BASE_APPS + [a.lower() for a in DEVICE_APPS])))
 
 # 2. Comprehensive File Catalog
 BASE_FILES = [
@@ -262,6 +272,80 @@ def generate_full_dataset():
         for verb in CLOSE_VERBS:
             add_sample(f"{verb} {app}", "close_app")
             add_sample(f"hey ultron {verb} {app}", "close_app")
+
+    generic_close_phrases = [
+        "close app", "close the app", "close this app", "close current app", "close the current app",
+        "kill app", "kill the app", "kill this app", "kill current app",
+        "exit app", "exit the app", "exit this app", "quit app", "quit this app",
+        "dismiss app", "terminate app", "terminate the app", "shut down app",
+        "close application", "kill application", "exit application", "quit application",
+        "hey ultron close app", "hey ultron close this app", "ultron close app", "ultron close current app",
+        "close", "terminate", "kill process", "force close"
+    ]
+    for p in generic_close_phrases:
+        add_sample(p, "close_app")
+
+    # 6. WI-FI CONTROLS
+    wifi_on_phrases = [
+        "turn on wifi", "enable wifi", "start wifi", "switch on wifi", "wifi on", "turn on the wifi",
+        "turn on wi fi", "enable wi fi", "switch on wi fi", "wi fi on", "connect wifi",
+        "hey ultron turn on wifi", "ultron turn on wifi", "please turn on wifi"
+    ]
+    for p in wifi_on_phrases:
+        add_sample(p, "wifi_on")
+
+    wifi_off_phrases = [
+        "turn off wifi", "disable wifi", "stop wifi", "switch off wifi", "wifi off", "turn off the wifi",
+        "turn off wi fi", "disable wi fi", "switch off wi fi", "wi fi off", "disconnect wifi",
+        "hey ultron turn off wifi", "ultron turn off wifi", "please turn off wifi"
+    ]
+    for p in wifi_off_phrases:
+        add_sample(p, "wifi_off")
+
+    # 7. BLUETOOTH CONTROLS
+    bt_on_phrases = [
+        "turn on bluetooth", "enable bluetooth", "start bluetooth", "switch on bluetooth", "bluetooth on",
+        "turn on the bluetooth", "hey ultron turn on bluetooth", "ultron turn on bluetooth", "please turn on bluetooth"
+    ]
+    for p in bt_on_phrases:
+        add_sample(p, "bluetooth_on")
+
+    bt_off_phrases = [
+        "turn off bluetooth", "disable bluetooth", "stop bluetooth", "switch off bluetooth", "bluetooth off",
+        "turn off the bluetooth", "hey ultron turn off bluetooth", "ultron turn off bluetooth", "please turn off bluetooth"
+    ]
+    for p in bt_off_phrases:
+        add_sample(p, "bluetooth_off")
+
+    # 8. CLEAR NOTIFICATIONS
+    notif_phrases = [
+        "clear notifications", "clear notification", "clean notifications", "dismiss notifications",
+        "wipe notifications", "remove notifications", "clear all notifications", "delete notifications",
+        "clear the notifications", "clear my notifications", "clear status bar notifications",
+        "hey ultron clear notifications", "ultron clear notifications", "dismiss all notifications"
+    ]
+    for p in notif_phrases:
+        add_sample(p, "clear_notifications")
+
+    # 9. RECENT APPS
+    recent_phrases = [
+        "open recent app", "open recently opened app", "recent app", "recent apps", "switch to recent app",
+        "open the recent app", "switch app", "last app", "go to recent app", "open previous app",
+        "switch to previous app", "open last app", "hey ultron open recent app", "ultron recent app"
+    ]
+    for p in recent_phrases:
+        add_sample(p, "recent_apps")
+
+    # 10. CREATE_FILE
+    create_verbs = ["create file", "make file", "create a file", "make a file", "new file", "create new file", "make new file"]
+    for f in ALL_USER_FILES:
+        for cv in create_verbs:
+            add_sample(f"{cv} {f}", "create_file")
+            add_sample(f"please {cv} {f}", "create_file")
+            add_sample(f"hey ultron {cv} {f}", "create_file")
+    for f_generic in ["notes.txt", "todo.txt", "learning.py", "script.py", "test.txt", "demo.py", "app.py"]:
+        for cv in create_verbs:
+            add_sample(f"{cv} {f_generic}", "create_file")
 
     # 6. QUERY_TIME: Enriched date and time inquiries
     for p in TIME_PHRASES:
