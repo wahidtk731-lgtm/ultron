@@ -494,17 +494,10 @@ public class AppLauncherAndroid {
         } catch (Exception ignored) {}
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                Intent panelIntent = new Intent(Settings.Panel.ACTION_BLUETOOTH);
-                panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(panelIntent);
-                return true;
-            } else {
-                Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-                return true;
-            }
+            Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            return true;
         } catch (Exception e) {
             return false;
         }
