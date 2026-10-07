@@ -33,9 +33,10 @@ import java.util.Locale;
 
 /**
  * Main Activity for Ultron Assistant on Android.
- * Renders the Pixel-perfect Google Gemini Stadium Capsule HUD
- * as an edge-to-edge translucent bottom popup and bridges Native
- * Speech Recognition, Intent Routing, and TTS.
+ * Handles:
+ * 1. Long-press Center Navigation button (ACTION_ASSIST).
+ * 2. Audio and Overlay ("Display over other apps") permission configuration.
+ * 3. Starting the 24/7 Always-On-Top FloatingHUDService.
  */
 public class MainActivity extends Activity implements TTSManager.TTSListener {
 
@@ -57,21 +58,68 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        configureEdgeToEdgeWindow();
-
         mainHandler = new Handler(Looper.getMainLooper());
         intentEngine = new UltronIntentEngine();
         appLauncher = new AppLauncherAndroid(this);
         ttsManager = new TTSManager(this, this);
 
+        // 1. If triggered by holding Center Navigation button (Assist App)
+        if (isAssistIntent(getIntent())) {
+            handleAssistTrigger();
+            return;
+        }
+
+        // 2. If both Audio and Overlay permissions are granted, start Always-On-Top floating HUD
+        if (hasAudioPermission() && canDrawOverlays()) {
+            startFloatingService();
+            // Show toast and finish to let floating capsule float over home screen
+            Toast.makeText(this, "Ultron is awake and floating on your screen", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        configureEdgeToEdgeWindow();
         setupWebView();
         checkPermissionsAndInit();
     }
 
-    /**
-     * Configures the window to be a full-screen transparent edge-to-edge overlay.
-     * The HTML/CSS will draw the dimmed translucent backdrop and bottom capsule.
-     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        if (isAssistIntent(intent)) {
+            handleAssistTrigger();
+        } else {
+            startListening();
+        }
+    }
+
+    private boolean isAssistIntent(Intent intent) {
+        if (intent == null) return false;
+        String action = intent.getAction();
+        return Intent.ACTION_ASSIST.equals(action) || 
+               "android.intent.action.VOICE_ASSIST".equals(action);
+    }
+
+    private void handleAssistTrigger() {
+        if (canDrawOverlays()) {
+            Intent triggerIntent = new Intent(this, FloatingHUDService.class);
+            triggerIntent.setAction(FloatingHUDService.ACTION_ASSIST_TRIGGER);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(triggerIntent);
+            } else {
+                startService(triggerIntent);
+            }
+            finish();
+        } else {
+            configureEdgeToEdgeWindow();
+            setupWebView();
+            checkPermissionsAndInit();
+            mainHandler.postDelayed(this::startListening, 300);
+        }
+    }
+
     private void configureEdgeToEdgeWindow() {
         Window window = getWindow();
         window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
@@ -111,7 +159,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // Auto-listen on open (like Gemini on Android) if microphone permission is already granted
                 mainHandler.postDelayed(() -> {
                     if (hasAudioPermission()) {
                         startListening();
@@ -129,6 +176,10 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
     }
 
+    private boolean canDrawOverlays() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
+    }
+
     private void checkPermissionsAndInit() {
         if (!hasAudioPermission()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -136,6 +187,16 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             }
         } else {
             initSpeechRecognizer();
+            checkOverlayPermission();
+        }
+    }
+
+    private void checkOverlayPermission() {
+        if (!canDrawOverlays() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Toast.makeText(this, "Enable 'Display over other apps' so Ultron stays on top and listens for 'Hey Ultron'", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, REQ_CODE_OVERLAY_PERM);
         }
     }
 
@@ -146,6 +207,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initSpeechRecognizer();
                 startListening();
+                checkOverlayPermission();
             } else {
                 updateWebStatus("ready", "Microphone access denied. Tap mic or type command.");
             }
@@ -154,7 +216,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
     private void initSpeechRecognizer() {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            Log.w(TAG, "Direct SpeechRecognizer not available. Will use Recognizer Intent fallback.");
             return;
         }
 
@@ -204,7 +265,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                             message = "Audio recording error. Check mic.";
                             break;
                         case SpeechRecognizer.ERROR_CLIENT:
-                            // Fallback to Google Voice dialog
                             startVoiceRecognitionFallback();
                             return;
                         case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
@@ -253,7 +313,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 public void onEvent(int eventType, Bundle params) {}
             });
         } catch (Exception e) {
-            Log.e(TAG, "Failed to initialize SpeechRecognizer: " + e.getMessage());
+            Log.e(TAG, "SpeechRecognizer initialization failed: " + e.getMessage());
         }
     }
 
@@ -273,7 +333,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                     speechRecognizer.cancel();
                     speechRecognizer.startListening(recognizerIntent);
                 } catch (Exception e) {
-                    Log.e(TAG, "Error starting SpeechRecognizer: " + e.getMessage());
                     startVoiceRecognitionFallback();
                 }
             } else {
@@ -292,9 +351,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         });
     }
 
-    /**
-     * Fallback to System Voice Input Activity (works across 100% of Android devices)
-     */
     private void startVoiceRecognitionFallback() {
         try {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -316,10 +372,10 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 processCommandInternal(matches.get(0));
             }
         } else if (requestCode == REQ_CODE_OVERLAY_PERM) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
+            if (canDrawOverlays()) {
                 startFloatingService();
-            } else {
-                Toast.makeText(this, "Overlay permission is needed for Floating HUD mode", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Ultron is now awake and floating over all apps!", Toast.LENGTH_LONG).show();
+                finish();
             }
         }
     }
@@ -333,7 +389,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             return;
         }
 
-        // Split multifunction / compound commands
         List<String> subCommands = intentEngine.splitCompoundCommands(normalized);
         StringBuilder fullReply = new StringBuilder();
 
@@ -359,7 +414,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 return "The current time is " + time;
 
             case "query_capabilities":
-                return "I am Ultron, your local AI assistant. I can open applications, search the web, tell the time, and write notes.";
+                return "I am Ultron, your local AI assistant.";
 
             case "open_app":
                 if (action.entity.isEmpty()) return "Which app would you like me to open?";
@@ -421,26 +476,13 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         updateWebStatus("ready", "Ready");
     }
 
-    public void toggleFloatingOverlay() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, REQ_CODE_OVERLAY_PERM);
-                return;
-            }
-        }
-        startFloatingService();
-    }
-
-    private void startFloatingService() {
+    public void startFloatingService() {
         Intent serviceIntent = new Intent(this, FloatingHUDService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {
             startService(serviceIntent);
         }
-        finish();
     }
 
     @Override
@@ -461,9 +503,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         }
     }
 
-    /**
-     * JavaScript Bridge Interface
-     */
     public class UltronWebAppInterface {
         @JavascriptInterface
         public void startListening() {
@@ -487,7 +526,12 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
         @JavascriptInterface
         public void toggleFloatingOverlay() {
-            mainHandler.post(() -> MainActivity.this.toggleFloatingOverlay());
+            if (!canDrawOverlays()) {
+                checkOverlayPermission();
+            } else {
+                startFloatingService();
+                finish();
+            }
         }
     }
 }

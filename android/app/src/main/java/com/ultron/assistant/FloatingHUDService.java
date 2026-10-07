@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Build;
@@ -22,6 +23,7 @@ import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,17 +32,23 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Always-On-Top Floating Capsule Overlay Service for Ultron Assistant.
- * Runs on top of all Android apps (Chrome, YouTube, etc.) matching floating_widget.py.
+ * Always-On-Top Floating Overlay & 24/7 "Hey Ultron" Wake-Word Service.
+ * - Stays floating over all apps (YouTube, Chrome, games) matching floating_widget.py.
+ * - Never disappears or goes under other apps.
+ * - Continuously listens in the background for "Hey Ultron".
  */
 public class FloatingHUDService extends Service implements TTSManager.TTSListener {
 
     private static final String TAG = "FloatingHUDService";
+    public static final String ACTION_ASSIST_TRIGGER = "com.ultron.assistant.ACTION_ASSIST_TRIGGER";
     private static final String CHANNEL_ID = "ultron_overlay_channel";
     private static final int NOTIFICATION_ID = 2001;
 
+    private static FloatingHUDService instance;
+
     private WindowManager windowManager;
     private View floatingView;
+    private WindowManager.LayoutParams windowParams;
     private WebView webView;
     private SpeechRecognizer speechRecognizer;
     private Intent recognizerIntent;
@@ -48,7 +56,14 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     private AppLauncherAndroid appLauncher;
     private TTSManager ttsManager;
     private Handler mainHandler;
+
+    private boolean isContinuousListeningActive = true;
+    private boolean isProcessingCommand = false;
     private boolean isListening = false;
+
+    public static FloatingHUDService getInstance() {
+        return instance;
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -58,6 +73,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
 
         mainHandler = new Handler(Looper.getMainLooper());
         intentEngine = new UltronIntentEngine();
@@ -67,16 +83,27 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         startForegroundNotification();
         initSpeechRecognizer();
         initFloatingHUDView();
+
+        // Start continuous background listening for "Hey Ultron"
+        scheduleContinuousListening(600);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && ACTION_ASSIST_TRIGGER.equals(intent.getAction())) {
+            wakeUpFromAssist();
+        }
+        return START_STICKY;
     }
 
     private void startForegroundNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
-                "Ultron Floating Assistant",
+                "Ultron Assistant Service",
                 NotificationManager.IMPORTANCE_LOW
             );
-            channel.setDescription("Ultron Assistant Floating Capsule Overlay");
+            channel.setDescription("Ultron is awake and listening for 'Hey Ultron'");
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
@@ -97,10 +124,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
 
         Notification notification = builder
-            .setContentTitle("Ultron Assistant Active")
-            .setContentText("Floating HUD capsule is running over apps")
+            .setContentTitle("Ultron AI Assistant Active")
+            .setContentText("Say 'Hey Ultron' anytime • Stays on top of all apps")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
+            .setOngoing(true)
             .build();
 
         startForeground(NOTIFICATION_ID, notification);
@@ -116,15 +144,15 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
         }
 
-        final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+        windowParams = new WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
             layoutFlag,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         );
 
-        params.gravity = Gravity.BOTTOM;
+        windowParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
 
         webView = new WebView(this);
         webView.setBackgroundColor(0);
@@ -136,11 +164,21 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         settings.setAllowFileAccess(true);
 
         webView.addJavascriptInterface(new FloatingWebAppInterface(), "AndroidUltron");
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                webView.evaluateJavascript("if(window.setOverlayMode) window.setOverlayMode(true);", null);
+                updateWebStatus("ready", "Awake • Say 'Hey Ultron' anytime");
+            }
+        });
+
         webView.loadUrl("file:///android_asset/hud.html");
         floatingView = webView;
 
         try {
-            windowManager.addView(floatingView, params);
+            windowManager.addView(floatingView, windowParams);
         } catch (Exception e) {
             Log.e(TAG, "Failed to add floating view: " + e.getMessage());
         }
@@ -148,7 +186,14 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
     private void initSpeechRecognizer() {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            Log.w(TAG, "SpeechRecognizer not available on this device.");
             return;
+        }
+
+        if (speechRecognizer != null) {
+            try {
+                speechRecognizer.destroy();
+            } catch (Exception ignored) {}
         }
 
         try {
@@ -156,13 +201,16 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toString());
+            recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
             recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
 
             speechRecognizer.setRecognitionListener(new RecognitionListener() {
                 @Override
                 public void onReadyForSpeech(Bundle params) {
                     isListening = true;
-                    updateWebStatus("listening", "Listening for command...");
+                    if (!isProcessingCommand) {
+                        updateWebStatus("ready", "Awake • Say 'Hey Ultron' anytime");
+                    }
                 }
 
                 @Override
@@ -177,28 +225,53 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 @Override
                 public void onEndOfSpeech() {
                     isListening = false;
-                    updateWebStatus("processing", "Thinking...");
                 }
 
                 @Override
                 public void onError(int error) {
                     isListening = false;
-                    updateWebStatus("ready", "Tap mic or type command");
+                    // In continuous listening, silence timeout (ERROR_NO_MATCH / ERROR_SPEECH_TIMEOUT)
+                    // is completely normal. Silently loop back to listening.
+                    if (!isProcessingCommand && isContinuousListeningActive) {
+                        if (error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
+                            scheduleContinuousListening(500);
+                        } else {
+                            scheduleContinuousListening(350);
+                        }
+                    }
                 }
 
                 @Override
                 public void onResults(Bundle results) {
                     isListening = false;
-                    ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    ArrayList<String> matches = results != null ? results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) : null;
                     if (matches != null && !matches.isEmpty()) {
-                        processCommandInternal(matches.get(0));
-                    } else {
-                        updateWebStatus("ready", "Didn't catch that. Tap mic to retry.");
+                        String text = matches.get(0);
+                        Log.d(TAG, "Recognized: " + text);
+
+                        if (intentEngine.isWakeWord(text)) {
+                            // "Hey Ultron" detected! Wake up!
+                            handleWakeWordTriggered(text);
+                            return;
+                        }
+                    }
+
+                    // No wake word in this utterance; seamlessly resume listening
+                    if (!isProcessingCommand && isContinuousListeningActive) {
+                        scheduleContinuousListening(300);
                     }
                 }
 
                 @Override
-                public void onPartialResults(Bundle partialResults) {}
+                public void onPartialResults(Bundle partialResults) {
+                    ArrayList<String> partial = partialResults != null ? partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) : null;
+                    if (partial != null && !partial.isEmpty()) {
+                        String partialText = partial.get(0);
+                        if (intentEngine.isWakeWord(partialText)) {
+                            updateWebStatus("listening", "\"" + partialText + "...\"");
+                        }
+                    }
+                }
 
                 @Override
                 public void onEvent(int eventType, Bundle params) {}
@@ -208,38 +281,56 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
     }
 
-    private void startListening() {
+    private void scheduleContinuousListening(long delayMillis) {
+        mainHandler.postDelayed(() -> {
+            if (isContinuousListeningActive && !isProcessingCommand) {
+                startListeningInternal();
+            }
+        }, delayMillis);
+    }
+
+    private void startListeningInternal() {
+        if (speechRecognizer == null) {
+            initSpeechRecognizer();
+        }
+        if (speechRecognizer != null) {
+            try {
+                speechRecognizer.cancel();
+                speechRecognizer.startListening(recognizerIntent);
+            } catch (Exception e) {
+                Log.e(TAG, "Error starting speech recognition: " + e.getMessage());
+                scheduleContinuousListening(800);
+            }
+        }
+    }
+
+    public void wakeUpFromAssist() {
         mainHandler.post(() -> {
+            isProcessingCommand = true;
+            updateWebStatus("listening", "Listening for command...");
             if (speechRecognizer != null) {
                 try {
                     speechRecognizer.cancel();
                     speechRecognizer.startListening(recognizerIntent);
-                } catch (Exception e) {
-                    Log.e(TAG, "Error starting speech: " + e.getMessage());
-                }
-            }
-        });
-    }
-
-    private void stopListening() {
-        mainHandler.post(() -> {
-            if (speechRecognizer != null) {
-                try {
-                    speechRecognizer.stopListening();
                 } catch (Exception ignored) {}
             }
         });
     }
 
-    private void processCommandInternal(String rawText) {
+    private void handleWakeWordTriggered(String rawText) {
+        isProcessingCommand = true;
+        updateWebStatus("processing", "Thinking...");
+
         String normalized = intentEngine.normalizeSpeech(rawText);
         String commandBody = intentEngine.stripWakeWords(normalized);
 
         if (commandBody.isEmpty()) {
-            speakReply("Yes, I'm listening. What would you like me to do?", "Listening...");
+            // User just said "Hey Ultron" without a command
+            speakReply("Yes, I'm listening. What can I do for you?", "Hey Ultron");
             return;
         }
 
+        // Execute command
         List<String> subCommands = intentEngine.splitCompoundCommands(normalized);
         StringBuilder fullReply = new StringBuilder();
 
@@ -265,7 +356,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 return "The current time is " + time;
 
             case "query_capabilities":
-                return "I am Ultron, your local AI assistant.";
+                return "I am Ultron, your always-on AI assistant.";
 
             case "open_app":
                 if (action.entity.isEmpty()) return "Which app would you like me to open?";
@@ -277,9 +368,14 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 appLauncher.searchWeb(action.entity);
                 return "Searching Google for " + action.entity;
 
+            case "write_file":
+                if (action.entity.isEmpty()) return "What should I write down?";
+                appLauncher.writeNote(action.entity);
+                return "Saved note: " + action.entity;
+
             case "exit":
                 mainHandler.postDelayed(this::stopSelf, 1200);
-                return "Closing floating overlay. Goodbye!";
+                return "Going offline. Goodbye!";
 
             default:
                 boolean ok = appLauncher.launchApp(action.raw);
@@ -316,12 +412,33 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
     @Override
     public void onSpeechCompleted() {
-        updateWebStatus("ready", "Ready");
+        // Response finished; resume continuous background wake-word listening
+        isProcessingCommand = false;
+        updateWebStatus("ready", "Awake • Say 'Hey Ultron' anytime");
+        scheduleContinuousListening(500);
+    }
+
+    public void setFocusable(boolean focusable) {
+        mainHandler.post(() -> {
+            if (windowManager != null && floatingView != null) {
+                if (focusable) {
+                    windowParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                } else {
+                    windowParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                }
+                try {
+                    windowManager.updateViewLayout(floatingView, windowParams);
+                } catch (Exception ignored) {}
+            }
+        });
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        instance = null;
+        isContinuousListeningActive = false;
+
         if (floatingView != null && windowManager != null) {
             try {
                 windowManager.removeView(floatingView);
@@ -340,17 +457,23 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     public class FloatingWebAppInterface {
         @JavascriptInterface
         public void startListening() {
-            FloatingHUDService.this.startListening();
+            wakeUpFromAssist();
         }
 
         @JavascriptInterface
         public void stopListening() {
-            FloatingHUDService.this.stopListening();
+            if (speechRecognizer != null) {
+                mainHandler.post(() -> {
+                    try {
+                        speechRecognizer.stopListening();
+                    } catch (Exception ignored) {}
+                });
+            }
         }
 
         @JavascriptInterface
         public void processCommand(String text) {
-            processCommandInternal(text);
+            handleWakeWordTriggered(text);
         }
 
         @JavascriptInterface
@@ -361,6 +484,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         @JavascriptInterface
         public void toggleFloatingOverlay() {
             mainHandler.post(() -> stopSelf());
+        }
+
+        @JavascriptInterface
+        public void requestInputFocus(boolean focus) {
+            setFocusable(focus);
         }
     }
 }

@@ -52,6 +52,18 @@
       overflow: hidden;
     }
 
+    /* Floating Overlay Mode over other apps (YouTube, Chrome, Games) */
+    body.overlay-mode {
+      height: auto !important;
+      min-height: unset !important;
+      padding-bottom: 8px !important;
+      justify-content: flex-end;
+    }
+
+    body.overlay-mode .backdrop {
+      display: none !important;
+    }
+
     /* Backdrop dim */
     .backdrop {
       position: fixed;
@@ -336,7 +348,7 @@
       <div class="chip" onclick="quickCommand('Open Chrome')">🌐 Chrome</div>
       <div class="chip" onclick="quickCommand('Open Settings')">⚙️ Settings</div>
       <div class="chip" onclick="quickCommand('Search Google for AI')">🔍 Search</div>
-      <div class="chip" onclick="toggleFloating()">📌 Floating Mode</div>
+      <div class="chip" onclick="dismissAssistant()">✕ Hide</div>
     </div>
 
     <!-- Response / Feedback Card -->
@@ -561,10 +573,38 @@
     }
 
     function onBackdropClick() {
-      // Optional: dismiss HUD if in overlay mode
       if (hasAndroidBridge) {
         window.AndroidUltron.dismiss();
       }
+    }
+
+    function dismissAssistant() {
+      if (hasAndroidBridge) {
+        window.AndroidUltron.dismiss();
+      }
+    }
+
+    window.setOverlayMode = function(enabled) {
+      if (enabled) {
+        document.body.classList.add("overlay-mode");
+      } else {
+        document.body.classList.remove("overlay-mode");
+      }
+    };
+
+    // Input focus hooks for overlay service
+    const inputField = document.getElementById("cmdInput");
+    if (inputField) {
+      inputField.addEventListener("focus", function() {
+        if (hasAndroidBridge && window.AndroidUltron.requestInputFocus) {
+          window.AndroidUltron.requestInputFocus(true);
+        }
+      });
+      inputField.addEventListener("blur", function() {
+        if (hasAndroidBridge && window.AndroidUltron.requestInputFocus) {
+          window.AndroidUltron.requestInputFocus(false);
+        }
+      });
     }
 
     // Android Callbacks (Invoked by Android Java Native Layer)
