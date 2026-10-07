@@ -146,8 +146,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         // Use guaranteed explicit height and 70dp offset above navigation bar
         windowParams = new WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
-            dpToPx(82),
+            dpToPx(105),
             layoutFlag,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         );
@@ -189,7 +190,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         mainHandler.post(() -> {
             if (floatingView != null && windowManager != null) {
                 isExpanded = expand;
-                windowParams.height = dpToPx(expand ? 240 : 82);
+                windowParams.height = dpToPx(expand ? 280 : 105);
                 windowParams.y = dpToPx(70);
                 try {
                     windowManager.updateViewLayout(floatingView, windowParams);
@@ -337,6 +338,15 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
     private String executeAction(UltronIntentEngine.ActionCommand action) {
         switch (action.intent) {
+            case "open_settings":
+                mainHandler.post(() -> {
+                    expandOverlay(true);
+                    if (webView != null) {
+                        webView.evaluateJavascript("openSettingsModal();", null);
+                    }
+                });
+                return "Opening Ultron settings";
+
             case "greet":
                 return "Hello! Ultron is online and ready for your commands.";
 
@@ -496,6 +506,39 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 ttsManager.setPitch(pitch);
                 ttsManager.setSpeechRate(rate);
             }
+        }
+
+        @JavascriptInterface
+        public void setWindowHeight(int dp) {
+            mainHandler.post(() -> {
+                if (floatingView != null && windowManager != null) {
+                    windowParams.height = dpToPx(dp);
+                    try {
+                        windowManager.updateViewLayout(floatingView, windowParams);
+                    } catch (Exception ignored) {}
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void setDefaultAssistantConfirmed() {
+            getSharedPreferences("ultron_prefs", MODE_PRIVATE)
+                .edit()
+                .putBoolean("is_default_assistant", true)
+                .putBoolean("assistant_prompt_dismissed", true)
+                .apply();
+        }
+
+        @JavascriptInterface
+        public void testVoice(String text) {
+            if (ttsManager != null) {
+                ttsManager.speak(text != null && !text.isEmpty() ? text : "Hello! I am Ultron, your personal assistant.");
+            }
+        }
+
+        @JavascriptInterface
+        public void closeFloatingOverlay() {
+            mainHandler.post(() -> stopSelf());
         }
 
         @JavascriptInterface

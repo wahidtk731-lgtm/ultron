@@ -120,7 +120,12 @@ public class UltronIntentEngine {
     public ActionCommand classifyCommand(String cmd) {
         String c = cmd.toLowerCase().trim();
 
-        // 1. Greet
+        // 1. Settings command (Theme, Voice, Assistant preferences)
+        if (c.matches(".*\\b(settings|ultron settings|open settings|preferences|options|voice settings|theme settings|sound settings|customize)\\b.*")) {
+            return new ActionCommand("open_settings", "", c);
+        }
+
+        // 2. Greet
         if (c.matches(".*\\b(hello|hi|hey|good morning|good evening|good afternoon)\\b.*")) {
             return new ActionCommand("greet", "", c);
         }

@@ -76,6 +76,15 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         startListening();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (webView != null) {
+            boolean isDefault = isDefaultAssistant();
+            webView.evaluateJavascript(String.format("if(window.onAssistantCheck) window.onAssistantCheck(%b);", isDefault), null);
+        }
+    }
+
     private void configureEdgeToEdgeWindow() {
         Window window = getWindow();
         window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
@@ -132,12 +141,40 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
     public boolean isDefaultAssistant() {
         try {
+            // 1. Check persistent confirmation
+            android.content.SharedPreferences prefs = getSharedPreferences("ultron_prefs", MODE_PRIVATE);
+            if (prefs.getBoolean("is_default_assistant", false) || prefs.getBoolean("assistant_prompt_dismissed", false)) {
+                return true;
+            }
+
+            // 2. Check if triggered via Assist intent
+            Intent intent = getIntent();
+            if (intent != null) {
+                String action = intent.getAction();
+                if (Intent.ACTION_ASSIST.equals(action) || Intent.ACTION_VOICE_ASSIST.equals(action)) {
+                    prefs.edit().putBoolean("is_default_assistant", true).apply();
+                    return true;
+                }
+            }
+
+            // 3. Android 10+ RoleManager check
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                android.app.role.RoleManager roleManager = getSystemService(android.app.role.RoleManager.class);
+                if (roleManager != null && roleManager.isRoleHeld(android.app.role.RoleManager.ROLE_ASSISTANT)) {
+                    prefs.edit().putBoolean("is_default_assistant", true).apply();
+                    return true;
+                }
+            }
+
+            // 4. Secure settings query
             String defaultAssist = Settings.Secure.getString(getContentResolver(), "voice_interaction_service");
-            if (defaultAssist != null && defaultAssist.contains(getPackageName())) {
+            if (defaultAssist != null && defaultAssist.toLowerCase().contains(getPackageName().toLowerCase())) {
+                prefs.edit().putBoolean("is_default_assistant", true).apply();
                 return true;
             }
             String assist = Settings.Secure.getString(getContentResolver(), "assistant");
-            if (assist != null && assist.contains(getPackageName())) {
+            if (assist != null && assist.toLowerCase().contains(getPackageName().toLowerCase())) {
+                prefs.edit().putBoolean("is_default_assistant", true).apply();
                 return true;
             }
         } catch (Exception ignored) {}
@@ -386,6 +423,14 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
     private String executeAction(UltronIntentEngine.ActionCommand action) {
         switch (action.intent) {
+            case "open_settings":
+                mainHandler.post(() -> {
+                    if (webView != null) {
+                        webView.evaluateJavascript("openSettingsModal();", null);
+                    }
+                });
+                return "Opening Ultron settings";
+
             case "greet":
                 return "Hello! Ultron is online and ready for your commands.";
 
@@ -514,6 +559,22 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             if (ttsManager != null) {
                 ttsManager.setPitch(pitch);
                 ttsManager.setSpeechRate(rate);
+            }
+        }
+
+        @JavascriptInterface
+        public void setDefaultAssistantConfirmed() {
+            getSharedPreferences("ultron_prefs", MODE_PRIVATE)
+                .edit()
+                .putBoolean("is_default_assistant", true)
+                .putBoolean("assistant_prompt_dismissed", true)
+                .apply();
+        }
+
+        @JavascriptInterface
+        public void testVoice(String text) {
+            if (ttsManager != null) {
+                ttsManager.speak(text != null && !text.isEmpty() ? text : "Hello! I am Ultron, your personal assistant.");
             }
         }
 
