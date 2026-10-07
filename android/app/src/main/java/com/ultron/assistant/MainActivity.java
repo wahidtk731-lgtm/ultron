@@ -551,6 +551,19 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         }
     }
 
+    public void openFloatingMode() {
+        if (!canDrawOverlays()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, REQ_CODE_OVERLAY_PERM);
+            }
+        } else {
+            startFloatingService();
+            finish();
+        }
+    }
+
     @Override
     public void onBackPressed() {
         finish();
@@ -649,19 +662,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 appLauncher.trainInstalledApps();
             }
         }
-
-    public void openFloatingMode() {
-        if (!canDrawOverlays()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, REQ_CODE_OVERLAY_PERM);
-            }
-        } else {
-            startFloatingService();
-            finish();
-        }
-    }
 
         @JavascriptInterface
         public String getRecentAppsJson() {
