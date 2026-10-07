@@ -579,6 +579,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         }
 
         @JavascriptInterface
+        public void toggleDockPosition() {
+            // No-op in full screen activity mode
+        }
+
+        @JavascriptInterface
         public void refreshInstalledApps() {
             if (appLauncher != null) {
                 appLauncher.trainInstalledApps();

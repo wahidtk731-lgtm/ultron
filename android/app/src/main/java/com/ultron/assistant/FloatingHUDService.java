@@ -58,6 +58,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
     private boolean isListening = false;
     private boolean isExpanded = false;
+    private boolean isDockedTop = false;
 
     public static FloatingHUDService getInstance() {
         return instance;
@@ -143,10 +144,10 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
         }
 
-        // Use guaranteed explicit height and 70dp offset above navigation bar
+        // Use guaranteed explicit height (140dp) to fit chips, capsule, and status comfortably
         windowParams = new WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
-            dpToPx(105),
+            dpToPx(140),
             layoutFlag,
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -186,12 +187,30 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
     }
 
+    public void toggleDockPosition() {
+        mainHandler.post(() -> {
+            if (floatingView != null && windowManager != null) {
+                isDockedTop = !isDockedTop;
+                if (isDockedTop) {
+                    windowParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                    windowParams.y = dpToPx(40);
+                } else {
+                    windowParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+                    windowParams.y = dpToPx(70);
+                }
+                try {
+                    windowManager.updateViewLayout(floatingView, windowParams);
+                } catch (Exception ignored) {}
+            }
+        });
+    }
+
     private void expandOverlay(boolean expand) {
         mainHandler.post(() -> {
             if (floatingView != null && windowManager != null) {
                 isExpanded = expand;
-                windowParams.height = dpToPx(expand ? 280 : 105);
-                windowParams.y = dpToPx(70);
+                windowParams.height = dpToPx(expand ? 280 : 140);
+                windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
                 try {
                     windowManager.updateViewLayout(floatingView, windowParams);
                 } catch (Exception ignored) {}
@@ -539,6 +558,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         @JavascriptInterface
         public void closeFloatingOverlay() {
             mainHandler.post(() -> stopSelf());
+        }
+
+        @JavascriptInterface
+        public void toggleDockPosition() {
+            FloatingHUDService.this.toggleDockPosition();
         }
 
         @JavascriptInterface

@@ -56,9 +56,14 @@
     body.overlay-mode {
       height: 100% !important;
       min-height: unset !important;
-      padding: 0 !important;
+      padding: 4px 0 !important;
       margin: 0 !important;
-      justify-content: flex-end;
+      box-sizing: border-box !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      overflow: visible !important;
     }
 
     body.overlay-mode .backdrop {
@@ -71,10 +76,22 @@
     }
 
     body.overlay-mode .assistant-container {
-      width: 96%;
-      max-width: 480px;
-      margin-bottom: 6px;
-      gap: 6px;
+      width: 96% !important;
+      max-width: 480px !important;
+      margin: 0 !important;
+      gap: 6px !important;
+      animation: none !important;
+      transform: none !important;
+      box-sizing: border-box !important;
+    }
+
+    body.overlay-mode .stadium-capsule {
+      margin: 0 !important;
+    }
+
+    body.overlay-mode .status-text {
+      margin-top: 2px !important;
+      font-size: 11px !important;
     }
 
     /* Backdrop dim */
@@ -531,6 +548,7 @@
     <!-- Quick Suggestion Chips (Clean, Prioritized) -->
     <div class="chips-row">
       <div class="chip chip-primary" onclick="openSettingsModal()">⚙️ Settings</div>
+      <div class="chip" id="chipDockPos" onclick="toggleDockPosition()" style="display: none;">📌 Dock Top/Bottom</div>
       <div class="chip" onclick="toggleFloating()">🗂️ Floating Mode</div>
       <div class="chip" onclick="quickCommand('Open Ajio')">Open Ajio</div>
       <div class="chip" onclick="quickCommand('Open YouTube')">Open YouTube</div>
@@ -601,6 +619,7 @@
           <div class="shortcut-buttons">
             <button class="btn-setting-action" onclick="setAsDefaultAssistant()">⚙️ Change Default Assistant (Center Button)</button>
             <button class="btn-setting-action" onclick="refreshAppsIndex()">🔄 Re-train Installed Apps</button>
+            <button class="btn-setting-action" id="btnDockToggle" onclick="toggleDockPosition()" style="display: none;">📌 Move HUD to Top / Bottom</button>
             <button class="btn-setting-action" id="btnOverlayClose" onclick="closeOverlayAction()" style="display: none;">❌ Close Floating Overlay</button>
           </div>
         </div>
@@ -857,7 +876,7 @@
       }
       if (document.body.classList.contains("overlay-mode")) {
         if (hasAndroidBridge && window.AndroidUltron.setWindowHeight) {
-          window.AndroidUltron.setWindowHeight(willShow ? 420 : 105);
+          window.AndroidUltron.setWindowHeight(willShow ? 480 : 140);
         }
       }
     }
@@ -867,7 +886,7 @@
       if (modal) modal.style.display = "none";
       if (document.body.classList.contains("overlay-mode")) {
         if (hasAndroidBridge && window.AndroidUltron.setWindowHeight) {
-          window.AndroidUltron.setWindowHeight(105);
+          window.AndroidUltron.setWindowHeight(140);
         }
       }
     }
@@ -954,6 +973,16 @@
       document.querySelectorAll(".voice-btn").forEach(b => {
         if (b.id && b.id.startsWith("pitch")) b.classList.remove("active");
       });
+      if (pitch <= 0.85) {
+        const btn = document.getElementById("pitchDeep");
+        if (btn) btn.classList.add("active");
+      } else if (pitch >= 1.1) {
+        const btn = document.getElementById("pitchHigher");
+        if (btn) btn.classList.add("active");
+      } else {
+        const btn = document.getElementById("pitchNatural");
+        if (btn) btn.classList.add("active");
+      }
       if (hasAndroidBridge && window.AndroidUltron.saveVoiceSettings) {
         window.AndroidUltron.saveVoiceSettings(currentPitch, currentSpeed);
       }
@@ -965,10 +994,26 @@
       document.querySelectorAll(".voice-btn").forEach(b => {
         if (b.id && b.id.startsWith("speed")) b.classList.remove("active");
       });
+      if (speed <= 0.9) {
+        const btn = document.getElementById("speedSlow");
+        if (btn) btn.classList.add("active");
+      } else if (speed >= 1.2) {
+        const btn = document.getElementById("speedFast");
+        if (btn) btn.classList.add("active");
+      } else {
+        const btn = document.getElementById("speedNormal");
+        if (btn) btn.classList.add("active");
+      }
       if (hasAndroidBridge && window.AndroidUltron.saveVoiceSettings) {
         window.AndroidUltron.saveVoiceSettings(currentPitch, currentSpeed);
       }
       localStorage.setItem("ultron_speed", speed);
+    }
+
+    function toggleDockPosition() {
+      if (hasAndroidBridge && window.AndroidUltron.toggleDockPosition) {
+        window.AndroidUltron.toggleDockPosition();
+      }
     }
 
     function refreshAppsIndex() {
@@ -998,13 +1043,17 @@
       if (savedTheme) setTheme(savedTheme);
 
       const savedPitch = parseFloat(localStorage.getItem("ultron_pitch"));
-      if (!isNaN(savedPitch)) currentPitch = savedPitch;
+      if (!isNaN(savedPitch)) {
+        setVoicePitch(savedPitch);
+      } else {
+        setVoicePitch(0.95);
+      }
 
       const savedSpeed = parseFloat(localStorage.getItem("ultron_speed"));
-      if (!isNaN(savedSpeed)) currentSpeed = savedSpeed;
-
-      if (hasAndroidBridge && window.AndroidUltron.saveVoiceSettings) {
-        window.AndroidUltron.saveVoiceSettings(currentPitch, currentSpeed);
+      if (!isNaN(savedSpeed)) {
+        setVoiceSpeed(savedSpeed);
+      } else {
+        setVoiceSpeed(1.05);
       }
     });
 
@@ -1013,10 +1062,18 @@
         document.body.classList.add("overlay-mode");
         const overlayCloseBtn = document.getElementById("btnOverlayClose");
         if (overlayCloseBtn) overlayCloseBtn.style.display = "block";
+        const dockChip = document.getElementById("chipDockPos");
+        if (dockChip) dockChip.style.display = "inline-flex";
+        const dockBtn = document.getElementById("btnDockToggle");
+        if (dockBtn) dockBtn.style.display = "block";
       } else {
         document.body.classList.remove("overlay-mode");
         const overlayCloseBtn = document.getElementById("btnOverlayClose");
         if (overlayCloseBtn) overlayCloseBtn.style.display = "none";
+        const dockChip = document.getElementById("chipDockPos");
+        if (dockChip) dockChip.style.display = "none";
+        const dockBtn = document.getElementById("btnDockToggle");
+        if (dockBtn) dockBtn.style.display = "none";
       }
     };
 
