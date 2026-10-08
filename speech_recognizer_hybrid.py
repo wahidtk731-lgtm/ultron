@@ -16,8 +16,22 @@ from speech_normalizer import normalize_speech, is_wake_word, strip_wake_words
 class HybridSpeechRecognizer:
     """Ultron's 100% Offline Speech Recognition Engine."""
 
-    def __init__(self, sample_rate=16000):
+    def __init__(self, sample_rate=16000, model_path="model"):
         self.sample_rate = sample_rate
+        self.model_path = model_path
+        self.vosk_recognizer = None
+        self._init_vosk()
+
+    def _init_vosk(self):
+        """Initializes local offline Vosk engine if model exists."""
+        if os.path.exists(self.model_path):
+            try:
+                import vosk
+                vosk.SetLogLevel(-1)
+                model = vosk.Model(self.model_path)
+                self.vosk_recognizer = vosk.KaldiRecognizer(model, self.sample_rate)
+            except Exception:
+                self.vosk_recognizer = None
 
     def recognize_audio_bytes(self, raw_bytes, vosk_fallback_text=None):
         """
@@ -31,6 +45,19 @@ class HybridSpeechRecognizer:
 
         if not raw_bytes:
             return ""
+
+        # Process raw audio bytes directly with on-device Vosk engine
+        if self.vosk_recognizer:
+            try:
+                self.vosk_recognizer.AcceptWaveform(raw_bytes)
+                res = json.loads(self.vosk_recognizer.FinalResult())
+                text = res.get("text", "").strip()
+                if text:
+                    norm = normalize_speech(text)
+                    print(f"\n[Ultron Local Vosk STT]: '{text}' -> '{norm}'")
+                    return norm
+            except Exception:
+                pass
 
         return ""
 

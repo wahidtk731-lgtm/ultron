@@ -46,8 +46,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     private static final int REQ_CODE_OVERLAY_PERM = 103;
 
     private WebView webView;
-    private SpeechRecognizer speechRecognizer;
-    private Intent recognizerIntent;
+    private UltronIndependentVoiceInput voiceInput;
     private UltronIntentEngine intentEngine;
     private AppLauncherAndroid appLauncher;
     private TTSManager ttsManager;
@@ -227,7 +226,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQ_RECORD_AUDIO);
             }
         } else {
-            initSpeechRecognizer();
+            initVoiceInput();
         }
     }
 
@@ -236,7 +235,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQ_RECORD_AUDIO) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                initSpeechRecognizer();
+                initVoiceInput();
                 startListening();
             } else {
                 updateWebStatus("ready", "Microphone access denied. Tap mic or type below.");
@@ -244,109 +243,49 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         }
     }
 
-    private void initSpeechRecognizer() {
-        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            Log.w(TAG, "Direct SpeechRecognizer not available. Will use Recognizer Intent fallback.");
-            return;
+    private void initVoiceInput() {
+        if (voiceInput != null) {
+            voiceInput.destroy();
         }
 
-        if (speechRecognizer != null) {
-            try {
-                speechRecognizer.destroy();
-            } catch (Exception ignored) {}
-            speechRecognizer = null;
-        }
+        voiceInput = new UltronIndependentVoiceInput(this, new UltronIndependentVoiceInput.VoiceInputListener() {
+            @Override
+            public void onReady() {
+                isListening = true;
+                updateWebStatus("listening", "Listening... Speak your command");
+            }
 
-        try {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-            recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toString());
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-            recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+            @Override
+            public void onBeginningOfSpeech() {
+                isListening = true;
+                updateWebStatus("listening", "Listening to voice...");
+            }
 
-            speechRecognizer.setRecognitionListener(new RecognitionListener() {
-                @Override
-                public void onReadyForSpeech(Bundle params) {
-                    isListening = true;
-                    updateWebStatus("listening", "Listening... Speak your command");
+            @Override
+            public void onRmsChanged(float rmsDb) {
+                if (webView != null) {
+                    webView.evaluateJavascript(String.format(Locale.US, "if(window.onRmsUpdate) window.onRmsUpdate(%.1f);", rmsDb), null);
                 }
+            }
 
-                @Override
-                public void onBeginningOfSpeech() {}
+            @Override
+            public void onEndOfSpeech() {
+                isListening = false;
+                updateWebStatus("processing", "Thinking...");
+            }
 
-                @Override
-                public void onRmsChanged(float rmsdB) {}
+            @Override
+            public void onResult(String recognizedText) {
+                isListening = false;
+                processCommandInternal(recognizedText);
+            }
 
-                @Override
-                public void onBufferReceived(byte[] buffer) {}
-
-                @Override
-                public void onEndOfSpeech() {
-                    isListening = false;
-                    updateWebStatus("processing", "Thinking...");
-                }
-
-                @Override
-                public void onError(int error) {
-                    isListening = false;
-                    String message = "Tap mic to speak";
-
-                    switch (error) {
-                        case SpeechRecognizer.ERROR_AUDIO:
-                            message = "Audio recording error. Tap mic to retry.";
-                            break;
-                        case SpeechRecognizer.ERROR_CLIENT:
-                        case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                        case SpeechRecognizer.ERROR_SERVER_DISCONNECTED:
-                            initSpeechRecognizer();
-                            message = "Ready • Tap mic to speak";
-                            break;
-                        case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-                            message = "Microphone permission needed";
-                            checkPermissionsAndInit();
-                            break;
-                        case SpeechRecognizer.ERROR_NETWORK:
-                        case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                            message = "Network error. Tap mic to retry.";
-                            break;
-                        case SpeechRecognizer.ERROR_NO_MATCH:
-                            message = "Didn't hear that. Tap mic to retry.";
-                            break;
-                        case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                            message = "Listening timed out. Tap mic to speak.";
-                            break;
-                    }
-                    updateWebStatus("ready", message);
-                }
-
-                @Override
-                public void onResults(Bundle results) {
-                    isListening = false;
-                    ArrayList<String> matches = results != null ? results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) : null;
-                    if (matches != null && !matches.isEmpty()) {
-                        String recognizedText = matches.get(0);
-                        processCommandInternal(recognizedText);
-                    } else {
-                        updateWebStatus("ready", "Didn't catch that. Tap mic to retry.");
-                    }
-                }
-
-                @Override
-                public void onPartialResults(Bundle partialResults) {
-                    ArrayList<String> partial = partialResults != null ? partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) : null;
-                    if (partial != null && !partial.isEmpty()) {
-                        updateWebStatus("listening", "\"" + partial.get(0) + "...\"");
-                    }
-                }
-
-                @Override
-                public void onEvent(int eventType, Bundle params) {}
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "SpeechRecognizer initialization failed: " + e.getMessage());
-        }
+            @Override
+            public void onError(String errorMessage) {
+                isListening = false;
+                updateWebStatus("ready", errorMessage);
+            }
+        });
     }
 
     public void startListening() {
@@ -356,42 +295,36 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 return;
             }
 
-            if (speechRecognizer == null) {
-                initSpeechRecognizer();
+            if (voiceInput == null) {
+                initVoiceInput();
             }
 
-            if (speechRecognizer != null) {
-                try {
-                    speechRecognizer.cancel();
-                    speechRecognizer.startListening(recognizerIntent);
-                } catch (Exception e) {
-                    initSpeechRecognizer();
-                    try {
-                        speechRecognizer.startListening(recognizerIntent);
-                    } catch (Exception ex) {
-                        updateWebStatus("ready", "Mic reset. Tap to speak.");
-                    }
-                }
-            } else {
-                updateWebStatus("ready", "Ultron mic ready. Tap to speak.");
+            if (voiceInput != null) {
+                voiceInput.startListening();
             }
         });
     }
 
     public void stopListening() {
         mainHandler.post(() -> {
-            if (speechRecognizer != null) {
-                try {
-                    speechRecognizer.stopListening();
-                } catch (Exception ignored) {}
+            if (voiceInput != null) {
+                voiceInput.stopListening();
             }
+            updateWebStatus("ready", "Ultron Ready");
         });
+    }
+
+    public void openSystemVoiceSheet() {
+        if (voiceInput != null) {
+            voiceInput.launchSystemVoiceSheet();
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQ_CODE_VOICE_INTENT && resultCode == RESULT_OK && data != null) {
+        if ((requestCode == REQ_CODE_VOICE_INTENT || requestCode == UltronIndependentVoiceInput.REQ_CODE_SYSTEM_VOICE)
+                && resultCode == RESULT_OK && data != null) {
             ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches != null && !matches.isEmpty()) {
                 processCommandInternal(matches.get(0));
@@ -624,10 +557,9 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (speechRecognizer != null) {
-            try {
-                speechRecognizer.destroy();
-            } catch (Exception ignored) {}
+        if (voiceInput != null) {
+            voiceInput.destroy();
+            voiceInput = null;
         }
         if (ttsManager != null) {
             ttsManager.shutdown();
@@ -643,6 +575,23 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         @JavascriptInterface
         public void stopListening() {
             MainActivity.this.stopListening();
+        }
+
+        @JavascriptInterface
+        public void setVoiceEngine(String engine) {
+            if (voiceInput != null) {
+                voiceInput.setEngine(engine);
+            }
+        }
+
+        @JavascriptInterface
+        public String getVoiceEngine() {
+            return voiceInput != null ? voiceInput.getCurrentEngine() : "independent";
+        }
+
+        @JavascriptInterface
+        public void launchSystemVoiceSheet() {
+            mainHandler.post(() -> openSystemVoiceSheet());
         }
 
         @JavascriptInterface

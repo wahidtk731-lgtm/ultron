@@ -679,6 +679,16 @@
           </div>
         </div>
 
+        <!-- Voice Input Engine -->
+        <div class="setting-item">
+          <label>Voice Input Engine</label>
+          <div class="voice-options">
+            <button class="voice-btn active" id="engineIndependent" onclick="selectVoiceEngine('independent')">🎙️ Independent Mic</button>
+            <button class="voice-btn" id="engineSystem" onclick="selectVoiceEngine('system')">📋 System Sheet</button>
+            <button class="voice-btn" id="engineGoogle" onclick="selectVoiceEngine('google')">🌐 Google</button>
+          </div>
+        </div>
+
         <!-- Voice Sound & Pitch -->
         <div class="setting-item">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -780,6 +790,11 @@
 
       micBtn.className = "mic-button " + state;
       capsule.className = "stadium-capsule " + (state === "processing" ? "processing" : "");
+
+      if (state !== "listening") {
+        micBtn.style.transform = "";
+        micBtn.style.boxShadow = "";
+      }
 
       if (message) {
         statusLabel.innerText = message;
@@ -1306,6 +1321,56 @@
     window.onStatusUpdate = function(state, message) {
       setState(state, message);
     };
+
+    // Live RMS Volume Visualizer from Native AudioRecord
+    window.onRmsUpdate = function(rmsDb) {
+      if (currentState !== "listening") return;
+      const micBtn = document.getElementById("micBtn");
+      if (micBtn) {
+        const scale = Math.min(1.28, Math.max(0.96, 0.98 + (rmsDb / 150.0)));
+        const glow = Math.min(34, Math.max(10, (rmsDb / 90.0) * 32));
+        micBtn.style.transform = `scale(${scale})`;
+        micBtn.style.boxShadow = `0 0 ${glow}px rgba(234, 67, 53, 0.85)`;
+      }
+    };
+
+    // Voice Input Engine Selection
+    function selectVoiceEngine(engine) {
+      document.querySelectorAll('.voice-options .voice-btn').forEach(btn => {
+        if (btn.id && btn.id.startsWith("engine")) {
+          btn.classList.remove('active');
+        }
+      });
+      const targetId = "engine" + engine.charAt(0).toUpperCase() + engine.slice(1);
+      const targetBtn = document.getElementById(targetId);
+      if (targetBtn) {
+        targetBtn.classList.add('active');
+      }
+
+      if (hasAndroidBridge && window.AndroidUltron.setVoiceEngine) {
+        window.AndroidUltron.setVoiceEngine(engine);
+      }
+
+      const statusLabel = document.getElementById("statusLabel");
+      if (statusLabel) {
+        const displayNames = {
+          independent: "Independent Mic (Offline)",
+          system: "System Voice Sheet",
+          google: "Google Speech Recognizer"
+        };
+        statusLabel.innerText = "Engine: " + (displayNames[engine] || engine);
+      }
+    }
+
+    // Sync saved voice engine on load
+    if (hasAndroidBridge && window.AndroidUltron.getVoiceEngine) {
+      try {
+        const savedEngine = window.AndroidUltron.getVoiceEngine();
+        if (savedEngine) {
+          selectVoiceEngine(savedEngine);
+        }
+      } catch (ignored) {}
+    }
   </script>
 </body>
 </html>
