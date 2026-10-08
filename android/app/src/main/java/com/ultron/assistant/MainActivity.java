@@ -269,6 +269,14 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             }
 
             @Override
+            public void onPartialResult(String partialText) {
+                if (webView != null && partialText != null) {
+                    String safe = partialText.replace("'", "\\'");
+                    webView.evaluateJavascript(String.format("if(window.onPartialSpeech) window.onPartialSpeech('%s');", safe), null);
+                }
+            }
+
+            @Override
             public void onEndOfSpeech() {
                 isListening = false;
                 updateWebStatus("processing", "Thinking...");

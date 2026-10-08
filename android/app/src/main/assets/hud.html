@@ -1304,7 +1304,17 @@
 
     // Android Callbacks (Invoked by Android Java Native Layer)
     window.onSpeechResult = function(transcript) {
+      const input = document.getElementById("cmdInput");
+      if (input && transcript) input.value = transcript;
       processCommand(transcript);
+    };
+
+    window.onPartialSpeech = function(partial) {
+      if (!partial || currentState !== "listening") return;
+      const input = document.getElementById("cmdInput");
+      if (input) input.value = partial;
+      const statusLabel = document.getElementById("statusLabel");
+      if (statusLabel) statusLabel.innerText = '"' + partial + '..."';
     };
 
     window.onAssistantReply = function(query, reply) {

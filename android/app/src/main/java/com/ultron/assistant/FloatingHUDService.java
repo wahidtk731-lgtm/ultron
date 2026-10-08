@@ -291,6 +291,14 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             }
 
             @Override
+            public void onPartialResult(String partialText) {
+                if (webView != null && partialText != null) {
+                    String safe = partialText.replace("'", "\\'");
+                    webView.evaluateJavascript(String.format("if(window.onPartialSpeech) window.onPartialSpeech('%s');", safe), null);
+                }
+            }
+
+            @Override
             public void onEndOfSpeech() {
                 isListening = false;
                 updateWebStatus("processing", "Thinking...");
@@ -340,6 +348,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
     public void wakeUpFromAssist() {
         startListening();
+    }
+
+    public void processCommandFromBridge(String text) {
+        mainHandler.post(() -> {
+            processCommandInternal(text);
+        });
     }
 
     private void processCommandInternal(String rawText) {
@@ -592,6 +606,15 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         @JavascriptInterface
         public String getVoiceEngine() {
             return voiceInput != null ? voiceInput.getCurrentEngine() : "independent";
+        }
+
+        @JavascriptInterface
+        public void launchSystemVoiceSheet() {
+            mainHandler.post(() -> {
+                if (voiceInput != null) {
+                    voiceInput.launchSystemVoiceSheet();
+                }
+            });
         }
 
         @JavascriptInterface
