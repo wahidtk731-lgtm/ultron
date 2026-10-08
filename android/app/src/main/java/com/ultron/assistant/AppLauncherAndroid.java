@@ -76,6 +76,12 @@ public class AppLauncherAndroid {
         }
 
         private static void addPhoneticAliases(String name, Set<String> set) {
+            if (name.contains("google")) {
+                set.add("google");
+                set.add("google app");
+                set.add("google search");
+                set.add("g search");
+            }
             if (name.contains("ajio") || name.contains("jio")) {
                 set.add("ajio");
                 set.add("a jio");
@@ -232,6 +238,28 @@ public class AppLauncherAndroid {
 
         String query = cleanQuery(target);
         String queryNoSpace = query.replace(" ", "");
+
+        // High-Priority Direct Google Launching
+        if (query.equals("google") || query.equals("google app") || query.equals("google search")) {
+            if (isPackageInstalledAndValid("com.google.android.googlequicksearchbox")) {
+                Intent gIntent = pm.getLaunchIntentForPackage("com.google.android.googlequicksearchbox");
+                if (gIntent != null) {
+                    gIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(gIntent);
+                    recordRecentApp(new AppEntry("Google", "com.google.android.googlequicksearchbox", gIntent));
+                    return true;
+                }
+            }
+            if (isPackageInstalledAndValid("com.android.chrome")) {
+                Intent cIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com"));
+                cIntent.setPackage("com.android.chrome");
+                cIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(cIntent);
+                recordRecentApp(new AppEntry("Google", "com.android.chrome", cIntent));
+                return true;
+            }
+            return searchWeb("");
+        }
 
         AppEntry bestMatch = null;
         int bestScore = 0;
@@ -861,6 +889,48 @@ public class AppLauncherAndroid {
 
     private String getCommonPackage(String name) {
         switch (name) {
+            case "google":
+            case "google app":
+            case "google search":
+                return "com.google.android.googlequicksearchbox";
+            case "instagram":
+            case "insta":
+                return "com.instagram.android";
+            case "whatsapp":
+            case "whats app":
+                return "com.whatsapp";
+            case "spotify":
+                return "com.spotify.music";
+            case "telegram":
+                return "org.telegram.messenger";
+            case "play store":
+            case "playstore":
+            case "store":
+                return "com.android.vending";
+            case "gallery":
+            case "photos":
+                return "com.google.android.apps.photos";
+            case "clock":
+            case "alarm":
+                return "com.google.android.deskclock";
+            case "contacts":
+                return "com.google.android.contacts";
+            case "messages":
+            case "sms":
+                return "com.google.android.apps.messaging";
+            case "phone":
+            case "dialer":
+                return "com.google.android.dialer";
+            case "facebook":
+                return "com.facebook.katana";
+            case "twitter":
+                return "com.twitter.android";
+            case "netflix":
+                return "com.netflix.mediaclient";
+            case "amazon":
+                return "in.amazon.mShop.android.shopping";
+            case "flipkart":
+                return "com.flipkart.android";
             case "chrome":
             case "google chrome":
             case "browser":

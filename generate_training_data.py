@@ -52,15 +52,33 @@ BASE_APPS = [
     "learning", "learning project", "html project", "my website", "web project", "coding project"
 ]
 
-# Only train on apps that actually exist and can be launched on this device!
-def does_app_exist(app):
-    clean = app.lower().strip()
-    if clean in [a.lower() for a in DEVICE_APPS]:
-        return True
-    return shutil.which(clean) is not None
+POPULAR_MOBILE_APPS = [
+    # Top Mobile & Android Apps
+    "google", "google app", "google search",
+    "instagram", "insta", "reels",
+    "whatsapp", "whats app", "wa",
+    "youtube", "shorts", "yt",
+    "camera", "cam", "photos", "gallery",
+    "settings", "system settings",
+    "calculator", "calc",
+    "clock", "alarm", "timer",
+    "maps", "google maps",
+    "gmail", "email", "mail",
+    "play store", "playstore", "store",
+    "contacts", "messages", "sms",
+    "phone", "dialer",
+    "spotify", "music",
+    "telegram", "facebook", "twitter", "x",
+    "netflix", "prime video",
+    "amazon", "flipkart",
+    "zomato", "swiggy",
+    "paytm", "phonepe", "gpay", "google pay",
+    "snapchat", "tiktok", "reddit", "discord",
+    "files", "file manager", "downloads", "documents",
+    "calendar", "notes", "chrome", "browser"
+]
 
-VERIFIED_BASE_APPS = [a for a in BASE_APPS if does_app_exist(a)]
-ALL_APPS = sorted(list(set(VERIFIED_BASE_APPS + [a.lower() for a in DEVICE_APPS])))
+ALL_APPS = sorted(list(set(BASE_APPS + POPULAR_MOBILE_APPS + [a.lower() for a in DEVICE_APPS])))
 
 # 2. Comprehensive File Catalog
 BASE_FILES = [
