@@ -725,9 +725,9 @@ public class AppLauncherAndroid {
         }
 
         // 5. System Wi-Fi Panel (Android 10-11 API 29-30)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= 29) {
             try {
-                Intent panelIntent = new Intent(Settings.Panel.ACTION_WIFI);
+                Intent panelIntent = new Intent("android.settings.panel.action.WIFI");
                 panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(panelIntent);
                 return true;

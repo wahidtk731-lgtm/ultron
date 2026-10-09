@@ -55,16 +55,43 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            try {
+                android.util.Log.e("ULTRON_CRASH", "FATAL CRASH:", throwable);
+                java.io.StringWriter sw = new java.io.StringWriter();
+                java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+                throwable.printStackTrace(pw);
+                String stack = sw.toString();
+                java.io.File crashFile = new java.io.File("/storage/emulated/0/Project/ultron_crash.log");
+                java.io.FileWriter fw = new java.io.FileWriter(crashFile);
+                fw.write("UNCAUGHT_EXCEPTION:\n" + stack);
+                fw.close();
+            } catch (Throwable ignored) {}
+        });
+
         super.onCreate(savedInstanceState);
 
-        mainHandler = new Handler(Looper.getMainLooper());
-        intentEngine = new UltronIntentEngine();
-        appLauncher = new AppLauncherAndroid(this);
-        ttsManager = new TTSManager(this, this);
+        try {
+            mainHandler = new Handler(Looper.getMainLooper());
+            intentEngine = new UltronIntentEngine();
+            appLauncher = new AppLauncherAndroid(this);
+            ttsManager = new TTSManager(this, this);
 
-        configureEdgeToEdgeWindow();
-        setupWebView();
-        checkPermissionsAndInit();
+            configureEdgeToEdgeWindow();
+            setupWebView();
+            checkPermissionsAndInit();
+        } catch (Throwable t) {
+            try {
+                java.io.StringWriter sw = new java.io.StringWriter();
+                java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+                t.printStackTrace(pw);
+                java.io.File crashFile = new java.io.File("/storage/emulated/0/Project/ultron_crash.log");
+                java.io.FileWriter fw = new java.io.FileWriter(crashFile);
+                fw.write("ON_CREATE_CRASH:\n" + sw.toString());
+                fw.close();
+            } catch (Throwable ignored) {}
+            Toast.makeText(this, "Ultron Init: " + t.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -108,8 +135,10 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             window.setNavigationBarColor(Color.TRANSPARENT);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.setDecorFitsSystemWindows(false);
+        if (Build.VERSION.SDK_INT >= 30) {
+            try {
+                Window.class.getMethod("setDecorFitsSystemWindows", boolean.class).invoke(window, false);
+            } catch (Throwable ignored) {}
         } else {
             window.getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
@@ -169,13 +198,22 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 }
             }
 
-            // 3. Android 10+ RoleManager check
+            // 3. Android 10+ RoleManager check (safely via reflection for Android 9)
             if (Build.VERSION.SDK_INT >= 29) {
-                android.app.role.RoleManager roleManager = getSystemService(android.app.role.RoleManager.class);
-                if (roleManager != null && roleManager.isRoleHeld(android.app.role.RoleManager.ROLE_ASSISTANT)) {
-                    prefs.edit().putBoolean("is_default_assistant", true).apply();
-                    return true;
-                }
+                try {
+                    Class<?> roleClass = Class.forName("android.app.role.RoleManager");
+                    Object roleManager = getSystemService(roleClass);
+                    if (roleManager != null) {
+                        java.lang.reflect.Method isRoleHeld = roleClass.getMethod("isRoleHeld", String.class);
+                        java.lang.reflect.Field roleAssistField = roleClass.getField("ROLE_ASSISTANT");
+                        String roleAssistant = (String) roleAssistField.get(null);
+                        boolean held = (Boolean) isRoleHeld.invoke(roleManager, roleAssistant);
+                        if (held) {
+                            prefs.edit().putBoolean("is_default_assistant", true).apply();
+                            return true;
+                        }
+                    }
+                } catch (Throwable ignored) {}
             }
 
             // 4. Secure settings query
