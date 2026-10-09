@@ -84,10 +84,16 @@ zipalign -f -p 4 bin/UltronAssistant-unaligned.apk bin/UltronAssistant-aligned.a
 echo "[6/6] Signing APK..."
 python3 scripts/sign_apk.py bin/UltronAssistant-aligned.apk bin/UltronAssistant.apk
 
-# 8. Copy to /sdcard/Download
-if [ -d "/sdcard/Download" ]; then
-    cp bin/UltronAssistant.apk /sdcard/Download/UltronAssistant.apk
-    echo "✅ Exported to: /sdcard/Download/UltronAssistant.apk"
+# 8. Copy to internal storage Project folder and repository root
+cp bin/UltronAssistant.apk UltronAssistant.apk
+PROJECT_DIR="/storage/emulated/0/Project"
+if [ -d "$PROJECT_DIR" ]; then
+    cp bin/UltronAssistant.apk "$PROJECT_DIR/UltronAssistant.apk"
+    if [ -d "$PROJECT_DIR/UltronAssistant-APK" ]; then
+        cp bin/UltronAssistant.apk "$PROJECT_DIR/UltronAssistant-APK/UltronAssistant.apk"
+    fi
+    echo "✅ Exported to: $PROJECT_DIR/UltronAssistant.apk"
+    echo "✅ Exported to: $PROJECT_DIR/UltronAssistant-APK/UltronAssistant.apk"
 fi
 
 echo "=================================================================="
