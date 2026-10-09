@@ -84,7 +84,7 @@ def sign_apk(in_apk, out_apk):
     cmd_sign = [
         "openssl", "smime", "-sign", "-in", sf_path, "-out", rsa_path,
         "-outform", "DER", "-inkey", saved_key, "-signer", saved_cert, "-nodetach",
-        "-md", "sha256"
+        "-noattr", "-md", "sha256"
     ]
     subprocess.check_call(cmd_sign)
     

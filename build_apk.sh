@@ -85,6 +85,10 @@ echo "[6/6] Zipaligning APK (4-byte alignment)..."
 zipalign -f -p 4 bin/UltronAssistant-signed.apk bin/UltronAssistant.apk
 zipalign -c -v 4 bin/UltronAssistant.apk
 
+# Verify signature integrity with Dalvik JarFile
+echo "Verifying cryptographic signatures..."
+dalvikvm -Xmx256m -cp bin/TestVerify.dex TestVerify bin/UltronAssistant.apk | grep "VERIFY COMPLETED SUCCESSFULLY"
+
 # 8. Copy to internal storage Project folder and repository root
 cp bin/UltronAssistant.apk UltronAssistant.apk
 PROJECT_DIR="/storage/emulated/0/Project"
