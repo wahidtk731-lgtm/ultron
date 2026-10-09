@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="24"
-        android:targetSdkVersion="33" />
+        android:targetSdkVersion="28" />
 
     <!-- Permissions required for Ultron Assistant -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />

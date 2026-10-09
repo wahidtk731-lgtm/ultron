@@ -32,7 +32,8 @@ def sign_apk(in_apk, out_apk):
         "Created-By: 1.0 (Ultron Android Builder)"
     ]
     
-    entries_digests = {}
+    entries_digests_sha1 = {}
+    entries_digests_sha256 = {}
     
     with zipfile.ZipFile(in_apk, 'r') as zin:
         for info in zin.infolist():
@@ -40,30 +41,36 @@ def sign_apk(in_apk, out_apk):
                 continue
             data = zin.read(info.filename)
             sha1 = base64.b64encode(hashlib.sha1(data).digest()).decode('ascii')
-            entries_digests[info.filename] = sha1
+            sha256 = base64.b64encode(hashlib.sha256(data).digest()).decode('ascii')
+            entries_digests_sha1[info.filename] = sha1
+            entries_digests_sha256[info.filename] = sha256
             
             manifest_lines.append("")
             manifest_lines.append(f"Name: {info.filename}")
             manifest_lines.append(f"SHA1-Digest: {sha1}")
+            manifest_lines.append(f"SHA-256-Digest: {sha256}")
 
     manifest_lines.append("")
     manifest_content = "\r\n".join(manifest_lines).encode("utf-8")
     
     # 3. Compute CERT.SF
     manifest_sha1 = base64.b64encode(hashlib.sha1(manifest_content).digest()).decode('ascii')
+    manifest_sha256 = base64.b64encode(hashlib.sha256(manifest_content).digest()).decode('ascii')
     sf_lines = [
         "Signature-Version: 1.0",
         "Created-By: 1.0 (Ultron Android Builder)",
-        f"SHA1-Digest-Manifest: {manifest_sha1}"
+        f"SHA1-Digest-Manifest: {manifest_sha1}",
+        f"SHA-256-Digest-Manifest: {manifest_sha256}"
     ]
     
-    for filename, _ in entries_digests.items():
-        # Each section digest in MANIFEST.MF
-        section = f"Name: {filename}\r\nSHA1-Digest: {entries_digests[filename]}\r\n\r\n".encode("utf-8")
+    for filename in entries_digests_sha1:
+        section = f"Name: {filename}\r\nSHA1-Digest: {entries_digests_sha1[filename]}\r\nSHA-256-Digest: {entries_digests_sha256[filename]}\r\n\r\n".encode("utf-8")
         sec_sha1 = base64.b64encode(hashlib.sha1(section).digest()).decode('ascii')
+        sec_sha256 = base64.b64encode(hashlib.sha256(section).digest()).decode('ascii')
         sf_lines.append("")
         sf_lines.append(f"Name: {filename}")
         sf_lines.append(f"SHA1-Digest: {sec_sha1}")
+        sf_lines.append(f"SHA-256-Digest: {sec_sha256}")
         
     sf_lines.append("")
     sf_content = "\r\n".join(sf_lines).encode("utf-8")
@@ -76,7 +83,8 @@ def sign_apk(in_apk, out_apk):
     # 4. Sign CERT.SF with openssl smime to produce CERT.RSA
     cmd_sign = [
         "openssl", "smime", "-sign", "-in", sf_path, "-out", rsa_path,
-        "-outform", "DER", "-inkey", saved_key, "-signer", saved_cert, "-nodetach"
+        "-outform", "DER", "-inkey", saved_key, "-signer", saved_cert, "-nodetach",
+        "-md", "sha256"
     ]
     subprocess.check_call(cmd_sign)
     

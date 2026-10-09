@@ -76,13 +76,14 @@ aapt package -f \
 
 (cd bin && aapt add UltronAssistant-unaligned.apk classes.dex)
 
-# 6. Align APK
-echo "[5/6] Zipaligning APK..."
-zipalign -f -p 4 bin/UltronAssistant-unaligned.apk bin/UltronAssistant-aligned.apk
+# 6. Sign APK
+echo "[5/6] Signing APK (v1 JAR SHA-256 + SHA-1)..."
+python3 scripts/sign_apk.py bin/UltronAssistant-unaligned.apk bin/UltronAssistant-signed.apk
 
-# 7. Sign APK
-echo "[6/6] Signing APK..."
-python3 scripts/sign_apk.py bin/UltronAssistant-aligned.apk bin/UltronAssistant.apk
+# 7. Align APK
+echo "[6/6] Zipaligning APK (4-byte alignment)..."
+zipalign -f -p 4 bin/UltronAssistant-signed.apk bin/UltronAssistant.apk
+zipalign -c -v 4 bin/UltronAssistant.apk
 
 # 8. Copy to internal storage Project folder and repository root
 cp bin/UltronAssistant.apk UltronAssistant.apk
