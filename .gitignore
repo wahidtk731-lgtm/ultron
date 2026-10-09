@@ -73,3 +73,10 @@ Thumbs.db
 # Core dump files
 core
 core.*
+
+# Android local build artifacts
+bin/
+obj/
+gen/
+*.apk
+*.keystore

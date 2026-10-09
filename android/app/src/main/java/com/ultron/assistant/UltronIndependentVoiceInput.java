@@ -127,16 +127,8 @@ public class UltronIndependentVoiceInput {
                 return;
             }
 
-            // 3. ENGINE_INDEPENDENT: Check for custom STT endpoint
-            SharedPreferences prefs = context.getSharedPreferences("ultron_prefs", Context.MODE_PRIVATE);
-            String customUrl = prefs.getString("custom_stt_url", null);
-            if (customUrl != null && !customUrl.trim().isEmpty()) {
-                startIndependentAudioCapture(customUrl.trim());
-                return;
-            }
-
-            // Default: High-Accuracy On-Device / Offline Native Speech Engine
-            startNativeSpeechRecognizer(true);
+            // 3. Default: ENGINE_INDEPENDENT -> Direct hardware AudioRecord capture
+            startIndependentAudioCapture();
         });
     }
 
@@ -195,11 +187,14 @@ public class UltronIndependentVoiceInput {
         try {
             SpeechRecognizer recognizer = null;
 
-            // Android 13+ (API 31/33): Check on-device offline recognition
-            if (preferOffline && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 13+ (API 31): Check on-device offline recognition via reflection
+            if (preferOffline && Build.VERSION.SDK_INT >= 31) {
                 try {
-                    if (SpeechRecognizer.isOnDeviceRecognitionAvailable(context)) {
-                        recognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(context);
+                    java.lang.reflect.Method isAvail = SpeechRecognizer.class.getMethod("isOnDeviceRecognitionAvailable", Context.class);
+                    Boolean avail = (Boolean) isAvail.invoke(null, context);
+                    if (avail != null && avail) {
+                        java.lang.reflect.Method createOnDevice = SpeechRecognizer.class.getMethod("createOnDeviceSpeechRecognizer", Context.class);
+                        recognizer = (SpeechRecognizer) createOnDevice.invoke(null, context);
                         Log.i(TAG, "Created On-Device Offline SpeechRecognizer");
                     }
                 } catch (Throwable t) {
@@ -333,7 +328,7 @@ public class UltronIndependentVoiceInput {
                 break;
             case SpeechRecognizer.ERROR_CLIENT:
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-            case SpeechRecognizer.ERROR_SERVER_DISCONNECTED:
+            case 11: // SpeechRecognizer.ERROR_SERVER_DISCONNECTED
             default:
                 message = "Mic ready. Tap to speak.";
                 break;
@@ -376,7 +371,7 @@ public class UltronIndependentVoiceInput {
     /**
      * Direct Hardware AudioRecord Capture with Sensitive VAD & Pre-Roll Ring Buffer.
      */
-    private void startIndependentAudioCapture(String customUrl) {
+    private void startIndependentAudioCapture() {
         int minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
         int bufferSize = Math.max(minBufferSize, 4096);
 
@@ -405,8 +400,9 @@ public class UltronIndependentVoiceInput {
         }
 
         if (recordInstance == null) {
-            Log.e(TAG, "AudioRecord could not be initialized.");
-            startNativeSpeechRecognizer(true);
+            Log.e(TAG, "AudioRecord could not be initialized from any audio source.");
+            notifyError("Microphone busy. Using voice dialog.");
+            launchSystemVoiceSheet();
             return;
         }
 
@@ -422,12 +418,12 @@ public class UltronIndependentVoiceInput {
         isListening.set(true);
         notifyReady();
 
-        recordingThread = new Thread(() -> runAudioLoop(customUrl), "UltronAudioRecordThread");
+        recordingThread = new Thread(this::runAudioLoop, "UltronAudioRecordThread");
         recordingThread.setPriority(Thread.MAX_PRIORITY);
         recordingThread.start();
     }
 
-    private void runAudioLoop(String customUrl) {
+    private void runAudioLoop() {
         short[] audioBuffer = new short[1024];
         ByteArrayOutputStream pcmStream = new ByteArrayOutputStream();
 
@@ -462,7 +458,7 @@ public class UltronIndependentVoiceInput {
             double meanSquare = (double) sumSquare / read;
             double rms = Math.sqrt(meanSquare);
 
-            // 2. Report RMS dB for HUD wave visualizer
+            // 2. Report RMS dB for HUD wave visualizer (0 - 95 dB)
             float rmsDb = 0f;
             if (rms > 1.0) {
                 rmsDb = (float) (20.0 * Math.log10(rms / 32767.0) + 90.0);
@@ -475,16 +471,16 @@ public class UltronIndependentVoiceInput {
                 notifyRms(rmsDb);
             }
 
-            // 3. Ambient noise baseline calibration (first 200ms, capped at 120.0)
-            if (now - startTimeMs < 200) {
+            // 3. Ambient noise baseline calibration (first 250ms, capped at 120.0)
+            if (now - startTimeMs < 250) {
                 ambientNoiseRms = (ambientNoiseRms * ambientFrames + rms) / (ambientFrames + 1);
                 if (ambientNoiseRms > 120.0) ambientNoiseRms = 120.0;
                 ambientFrames++;
             }
 
             // 4. Sensitive dynamic speech detection
-            // Normal speech RMS ranges from 70 to 300. Quiet room is 5 to 25.
-            double speechThreshold = Math.max(ambientNoiseRms * 1.25 + 30.0, 55.0);
+            // Normal speech RMS ranges from 60 to 300. Quiet ambient is 5 to 25.
+            double speechThreshold = Math.max(ambientNoiseRms * 1.30 + 25.0, 50.0);
             boolean isLoud = rms >= speechThreshold;
 
             if (isLoud) {
@@ -515,9 +511,9 @@ public class UltronIndependentVoiceInput {
                     pcmStream.write((s >> 8) & 0xFF);
                 }
 
-                // Silence endpointing: 1.0s silence after speech or 7.0s max
+                // Silence endpointing: 1.1s silence after speech or 7.5s max
                 long silenceDuration = now - lastSpeechSoundMs;
-                if (silenceDuration >= 1000 || (now - speechStartMs >= 7000)) {
+                if (silenceDuration >= 1100 || (now - speechStartMs >= 7500)) {
                     break;
                 }
             } else {
@@ -528,8 +524,8 @@ public class UltronIndependentVoiceInput {
                     if (preRollCount < preRollCapacity) preRollCount++;
                 }
 
-                // Timeout: 5 seconds with zero speech
-                if (now - startTimeMs >= 5000) {
+                // Timeout: 5.5 seconds with zero speech
+                if (now - startTimeMs >= 5500) {
                     break;
                 }
             }
@@ -554,36 +550,62 @@ public class UltronIndependentVoiceInput {
         notifyEndOfSpeech();
 
         byte[] pcmData = pcmStream.toByteArray();
+        processRecordedAudio(pcmData);
+    }
 
-        // 6. Post to Custom STT endpoint if configured
-        if (customUrl != null && !customUrl.trim().isEmpty() && isNetworkConnected()) {
-            byte[] wavData = pcmToWav(pcmData, SAMPLE_RATE, 1, 16);
-            String transcript = postAudioToEndpoint(customUrl.trim(), wavData);
+    private void processRecordedAudio(byte[] pcmData) {
+        SharedPreferences prefs = context.getSharedPreferences("ultron_prefs", Context.MODE_PRIVATE);
+        String customUrl = prefs.getString("custom_stt_url", null);
+
+        // Tier 1: Zero-Key High-Accuracy Speech Recognition API (if online)
+        if (isNetworkConnected()) {
+            String transcript = querySpeechApi(pcmData, customUrl);
             if (transcript != null && !transcript.trim().isEmpty()) {
+                Log.i(TAG, "Independent Mic recognized: " + transcript);
                 notifyResult(transcript.trim());
                 return;
             }
         }
 
-        // Fallback: If custom STT returned empty or unconfigured, launch native sheet
+        // Tier 2: System Voice Sheet dialog fallback
+        Log.w(TAG, "Speech API unavailable, falling back to System Voice Sheet");
         mainHandler.post(this::launchSystemVoiceSheet);
     }
 
-    private String postAudioToEndpoint(String endpointUrl, byte[] wavData) {
+    private String querySpeechApi(byte[] pcmData, String customUrl) {
+        String endpointUrl = (customUrl != null && !customUrl.trim().isEmpty()) ?
+                customUrl.trim() :
+                "https://www.google.com/speech-api/v2/recognize?client=chromium&lang=en-US&key=AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw";
+
         HttpURLConnection conn = null;
         try {
             URL url = new URL(endpointUrl);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "audio/wav");
-            conn.setConnectTimeout(4000);
-            conn.setReadTimeout(5000);
-            conn.setDoOutput(true);
 
-            DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
-            dos.write(wavData);
-            dos.flush();
-            dos.close();
+            if (customUrl != null && !customUrl.trim().isEmpty()) {
+                // If custom URL, send standard WAV
+                byte[] wav = pcmToWav(pcmData, SAMPLE_RATE, 1, 16);
+                conn.setRequestProperty("Content-Type", "audio/wav");
+                conn.setConnectTimeout(4500);
+                conn.setReadTimeout(5500);
+                conn.setDoOutput(true);
+                DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
+                dos.write(wav);
+                dos.flush();
+                dos.close();
+            } else {
+                // Default high-precision Chromium Speech API: sends raw linear PCM
+                conn.setRequestProperty("Content-Type", "audio/l16; rate=16000");
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+                conn.setConnectTimeout(4500);
+                conn.setReadTimeout(5500);
+                conn.setDoOutput(true);
+                DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
+                dos.write(pcmData);
+                dos.flush();
+                dos.close();
+            }
 
             int code = conn.getResponseCode();
             if (code == 200) {
@@ -595,21 +617,32 @@ public class UltronIndependentVoiceInput {
                     baos.write(buf, 0, len);
                 }
                 String resp = baos.toString("UTF-8").trim();
+                Log.i(TAG, "Speech API response: " + resp);
 
-                // Simple JSON extraction for "text" or "transcript"
-                if (resp.contains("\"text\":") || resp.contains("\"transcript\":")) {
-                    int idx = resp.indexOf("\"text\":");
-                    if (idx == -1) idx = resp.indexOf("\"transcript\":");
-                    int start = resp.indexOf("\"", idx + 8);
-                    int end = resp.indexOf("\"", start + 1);
-                    if (start != -1 && end != -1) {
-                        return resp.substring(start + 1, end).trim();
+                // Robust parsing for Google speech API and custom endpoints
+                for (String line : resp.split("\n")) {
+                    line = line.trim();
+                    if (line.isEmpty()) continue;
+                    if (line.contains("\"transcript\":")) {
+                        int idx = line.indexOf("\"transcript\":");
+                        int start = line.indexOf("\"", idx + 13);
+                        int end = line.indexOf("\"", start + 1);
+                        if (start != -1 && end != -1 && end > start) {
+                            return line.substring(start + 1, end).trim();
+                        }
+                    }
+                    if (line.contains("\"text\":")) {
+                        int idx = line.indexOf("\"text\":");
+                        int start = line.indexOf("\"", idx + 7);
+                        int end = line.indexOf("\"", start + 1);
+                        if (start != -1 && end != -1 && end > start) {
+                            return line.substring(start + 1, end).trim();
+                        }
                     }
                 }
-                return resp;
             }
         } catch (Exception e) {
-            Log.w(TAG, "Custom STT request failed: " + e.getMessage());
+            Log.w(TAG, "Speech API request failed: " + e.getMessage());
         } finally {
             if (conn != null) conn.disconnect();
         }

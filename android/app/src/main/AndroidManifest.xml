@@ -64,7 +64,7 @@
         <!-- Invisible Voice Bridge Activity for Floating HUD -->
         <activity
             android:name=".VoiceInputBridgeActivity"
-            android:exported="false"
+            android:exported="true"
             android:theme="@style/Theme.UltronAssistant.Translucent"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
 

@@ -170,7 +170,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             }
 
             // 3. Android 10+ RoleManager check
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= 29) {
                 android.app.role.RoleManager roleManager = getSystemService(android.app.role.RoleManager.class);
                 if (roleManager != null && roleManager.isRoleHeld(android.app.role.RoleManager.ROLE_ASSISTANT)) {
                     prefs.edit().putBoolean("is_default_assistant", true).apply();

@@ -715,9 +715,9 @@ public class AppLauncherAndroid {
         } catch (Exception ignored) {}
 
         // 4. System Internet Connectivity Panel (Android 12+ API 31+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= 31) {
             try {
-                Intent panelIntent = new Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY);
+                Intent panelIntent = new Intent("android.settings.panel.action.INTERNET_CONNECTIVITY");
                 panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(panelIntent);
                 return true;
