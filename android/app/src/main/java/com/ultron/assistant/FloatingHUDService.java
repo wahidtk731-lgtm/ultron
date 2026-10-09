@@ -135,10 +135,13 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
     private boolean isViewAttached = false;
 
-    public void setOverlayVisible(boolean visible) {
-        mainHandler.post(() -> {
-            if (floatingView != null) {
-                floatingView.setVisibility(visible ? View.VISIBLE : View.GONE);
+    public void setOverlayVisible(final boolean visible) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (floatingView != null) {
+                    floatingView.setVisibility(visible ? View.VISIBLE : View.GONE);
+                }
             }
         });
     }
@@ -201,64 +204,73 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     }
 
     public void toggleDockPosition() {
-        mainHandler.post(() -> {
-            if (floatingView != null && windowManager != null) {
-                isDockedTop = !isDockedTop;
-                if (isDockedTop) {
-                    windowParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-                    windowParams.y = dpToPx(40);
-                } else {
-                    windowParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-                    windowParams.y = dpToPx(70);
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (floatingView != null && windowManager != null) {
+                    isDockedTop = !isDockedTop;
+                    if (isDockedTop) {
+                        windowParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                        windowParams.y = dpToPx(40);
+                    } else {
+                        windowParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+                        windowParams.y = dpToPx(70);
+                    }
+                    try {
+                        windowManager.updateViewLayout(floatingView, windowParams);
+                    } catch (Exception ignored) {}
                 }
-                try {
-                    windowManager.updateViewLayout(floatingView, windowParams);
-                } catch (Exception ignored) {}
             }
         });
     }
 
-    private void expandOverlay(boolean expand) {
-        mainHandler.post(() -> {
-            if (floatingView != null && windowManager != null) {
-                isExpanded = expand;
-                windowParams.height = dpToPx(expand ? 280 : 140);
-                windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
-                try {
-                    windowManager.updateViewLayout(floatingView, windowParams);
-                } catch (Exception ignored) {}
+    private void expandOverlay(final boolean expand) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (floatingView != null && windowManager != null) {
+                    isExpanded = expand;
+                    windowParams.height = dpToPx(expand ? 280 : 140);
+                    windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
+                    try {
+                        windowManager.updateViewLayout(floatingView, windowParams);
+                    } catch (Exception ignored) {}
+                }
             }
         });
     }
 
     private boolean isMiniBubble = false;
 
-    public void setMiniBubbleMode(boolean mini) {
-        mainHandler.post(() -> {
-            if (floatingView != null && windowManager != null) {
-                isMiniBubble = mini;
-                if (mini) {
-                    windowParams.width = dpToPx(56);
-                    windowParams.height = dpToPx(56);
-                    windowParams.gravity = Gravity.TOP | Gravity.START;
-                    windowParams.x = dpToPx(16);
-                    windowParams.y = dpToPx(240);
-                    if (webView != null) {
-                        webView.evaluateJavascript("if(window.setMiniBubbleView) window.setMiniBubbleView(true);", null);
+    public void setMiniBubbleMode(final boolean mini) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (floatingView != null && windowManager != null) {
+                    isMiniBubble = mini;
+                    if (mini) {
+                        windowParams.width = dpToPx(56);
+                        windowParams.height = dpToPx(56);
+                        windowParams.gravity = Gravity.TOP | Gravity.START;
+                        windowParams.x = dpToPx(16);
+                        windowParams.y = dpToPx(240);
+                        if (webView != null) {
+                            webView.evaluateJavascript("if(window.setMiniBubbleView) window.setMiniBubbleView(true);", null);
+                        }
+                    } else {
+                        windowParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+                        windowParams.height = dpToPx(140);
+                        windowParams.gravity = isDockedTop ? (Gravity.TOP | Gravity.CENTER_HORIZONTAL) : (Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+                        windowParams.x = 0;
+                        windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
+                        if (webView != null) {
+                            webView.evaluateJavascript("if(window.setMiniBubbleView) window.setMiniBubbleView(false);", null);
+                        }
                     }
-                } else {
-                    windowParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-                    windowParams.height = dpToPx(140);
-                    windowParams.gravity = isDockedTop ? (Gravity.TOP | Gravity.CENTER_HORIZONTAL) : (Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-                    windowParams.x = 0;
-                    windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
-                    if (webView != null) {
-                        webView.evaluateJavascript("if(window.setMiniBubbleView) window.setMiniBubbleView(false);", null);
-                    }
+                    try {
+                        windowManager.updateViewLayout(floatingView, windowParams);
+                    } catch (Exception ignored) {}
                 }
-                try {
-                    windowManager.updateViewLayout(floatingView, windowParams);
-                } catch (Exception ignored) {}
             }
         });
     }
@@ -314,35 +326,46 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             public void onError(String errorMessage) {
                 isListening = false;
                 updateWebStatus("ready", errorMessage);
-                mainHandler.postDelayed(() -> expandOverlay(false), 2000);
+                mainHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        expandOverlay(false);
+                    }
+                }, 2000);
             }
         });
     }
 
     public void startListening() {
-        mainHandler.post(() -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                updateWebStatus("ready", "Mic permission required");
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    updateWebStatus("ready", "Mic permission required");
+                    expandOverlay(true);
+                    return;
+                }
                 expandOverlay(true);
-                return;
-            }
-            expandOverlay(true);
-            if (voiceInput == null) {
-                initVoiceInput();
-            }
-            if (voiceInput != null) {
-                voiceInput.startListening();
+                if (voiceInput == null) {
+                    initVoiceInput();
+                }
+                if (voiceInput != null) {
+                    voiceInput.startListening();
+                }
             }
         });
     }
 
     public void stopListening() {
-        mainHandler.post(() -> {
-            if (voiceInput != null) {
-                voiceInput.stopListening();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (voiceInput != null) {
+                    voiceInput.stopListening();
+                }
+                updateWebStatus("ready", "Tap mic or type command");
             }
-            updateWebStatus("ready", "Tap mic or type command");
         });
     }
 
@@ -350,9 +373,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         startListening();
     }
 
-    public void processCommandFromBridge(String text) {
-        mainHandler.post(() -> {
-            processCommandInternal(text);
+    public void processCommandFromBridge(final String text) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                processCommandInternal(text);
+            }
         });
     }
 
@@ -387,29 +413,38 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
         // Step 1: Execute first action immediately
         UltronIntentEngine.ActionCommand action1 = actions.get(0);
-        String reply1 = executeAction(action1);
+        final String reply1 = executeAction(action1);
 
         String preview = "Step 1: " + reply1 + " • Next: " + subCommands.get(1);
         sendWebReply(rawText, preview);
         updateWebStatus("processing", preview);
 
-        // Step 2: Execute second action after 1.3 seconds delay for genuine multitasking
-        mainHandler.postDelayed(() -> {
-            UltronIntentEngine.ActionCommand action2 = actions.get(1);
-            String reply2 = executeAction(action2);
+        final String fRawText = rawText;
+        final List<UltronIntentEngine.ActionCommand> fActions = actions;
 
-            if (actions.size() > 2) {
-                mainHandler.postDelayed(() -> {
-                    UltronIntentEngine.ActionCommand action3 = actions.get(2);
-                    String reply3 = executeAction(action3);
-                    String finalCombined = "Step 1: " + reply1 + ", then " + reply2 + ", and " + reply3;
-                    sendWebReply(rawText, finalCombined);
-                    speakReply(finalCombined, rawText);
-                }, 1300);
-            } else {
-                String finalCombined = reply1 + ", then " + reply2;
-                sendWebReply(rawText, finalCombined);
-                speakReply(finalCombined, rawText);
+        // Step 2: Execute second action after 1.3 seconds delay for genuine multitasking
+        mainHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                UltronIntentEngine.ActionCommand action2 = fActions.get(1);
+                final String reply2 = executeAction(action2);
+
+                if (fActions.size() > 2) {
+                    mainHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            UltronIntentEngine.ActionCommand action3 = fActions.get(2);
+                            String reply3 = executeAction(action3);
+                            String finalCombined = "Step 1: " + reply1 + ", then " + reply2 + ", and " + reply3;
+                            sendWebReply(fRawText, finalCombined);
+                            speakReply(finalCombined, fRawText);
+                        }
+                    }, 1300);
+                } else {
+                    String finalCombined = reply1 + ", then " + reply2;
+                    sendWebReply(fRawText, finalCombined);
+                    speakReply(finalCombined, fRawText);
+                }
             }
         }, 1300);
     }
@@ -417,10 +452,13 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     private String executeAction(UltronIntentEngine.ActionCommand action) {
         switch (action.intent) {
             case "open_settings":
-                mainHandler.post(() -> {
-                    expandOverlay(true);
-                    if (webView != null) {
-                        webView.evaluateJavascript("openSettingsModal();", null);
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        expandOverlay(true);
+                        if (webView != null) {
+                            webView.evaluateJavascript("openSettingsModal();", null);
+                        }
                     }
                 });
                 return "Opening Ultron settings";
@@ -473,7 +511,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 return "Opening quick settings";
 
             case "floating_mode":
-                mainHandler.post(() -> setMiniBubbleMode(!isMiniBubble));
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        setMiniBubbleMode(!isMiniBubble);
+                    }
+                });
                 return "Toggled floating bubble mode";
 
             case "recent_apps":
@@ -508,7 +551,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 return "Saved note: " + action.entity;
 
             case "exit":
-                mainHandler.postDelayed(this::stopSelf, 1200);
+                mainHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        stopSelf();
+                    }
+                }, 1200);
                 return "Closing floating overlay. Goodbye!";
 
             default:
@@ -522,19 +570,25 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         ttsManager.speak(text);
     }
 
-    private void updateWebStatus(String state, String message) {
-        mainHandler.post(() -> {
-            if (webView != null) {
-                webView.evaluateJavascript(String.format("window.onStatusUpdate('%s', '%s');", state, message), null);
+    private void updateWebStatus(final String state, final String message) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript(String.format("window.onStatusUpdate('%s', '%s');", state, message), null);
+                }
             }
         });
     }
 
-    private void sendWebReply(String query, String reply) {
-        mainHandler.post(() -> {
-            if (webView != null) {
-                webView.evaluateJavascript(String.format("window.onAssistantReply('%s', '%s');", 
-                    query.replace("'", "\\'"), reply.replace("'", "\\'")), null);
+    private void sendWebReply(final String query, final String reply) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript(String.format("window.onAssistantReply('%s', '%s');", 
+                        query.replace("'", "\\'"), reply.replace("'", "\\'")), null);
+                }
             }
         });
     }
@@ -547,20 +601,28 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     @Override
     public void onSpeechCompleted() {
         updateWebStatus("ready", "Ultron Ready");
-        mainHandler.postDelayed(() -> expandOverlay(false), 3000);
+        mainHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                expandOverlay(false);
+            }
+        }, 3000);
     }
 
-    public void setFocusable(boolean focusable) {
-        mainHandler.post(() -> {
-            if (windowManager != null && floatingView != null) {
-                if (focusable) {
-                    windowParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
-                } else {
-                    windowParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+    public void setFocusable(final boolean focusable) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (windowManager != null && floatingView != null) {
+                    if (focusable) {
+                        windowParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                    } else {
+                        windowParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                    }
+                    try {
+                        windowManager.updateViewLayout(floatingView, windowParams);
+                    } catch (Exception ignored) {}
                 }
-                try {
-                    windowManager.updateViewLayout(floatingView, windowParams);
-                } catch (Exception ignored) {}
             }
         });
     }
@@ -610,9 +672,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
         @JavascriptInterface
         public void launchSystemVoiceSheet() {
-            mainHandler.post(() -> {
-                if (voiceInput != null) {
-                    voiceInput.launchSystemVoiceSheet();
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (voiceInput != null) {
+                        voiceInput.launchSystemVoiceSheet();
+                    }
                 }
             });
         }
@@ -624,12 +689,22 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
         @JavascriptInterface
         public void dismiss() {
-            mainHandler.post(() -> stopSelf());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    stopSelf();
+                }
+            });
         }
 
         @JavascriptInterface
         public void toggleFloatingOverlay() {
-            mainHandler.post(() -> setMiniBubbleMode(!isMiniBubble));
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    setMiniBubbleMode(!isMiniBubble);
+                }
+            });
         }
 
         @JavascriptInterface
@@ -665,13 +740,16 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
 
         @JavascriptInterface
-        public void setWindowHeight(int dp) {
-            mainHandler.post(() -> {
-                if (floatingView != null && windowManager != null) {
-                    windowParams.height = dpToPx(dp);
-                    try {
-                        windowManager.updateViewLayout(floatingView, windowParams);
-                    } catch (Exception ignored) {}
+        public void setWindowHeight(final int dp) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (floatingView != null && windowManager != null) {
+                        windowParams.height = dpToPx(dp);
+                        try {
+                            windowManager.updateViewLayout(floatingView, windowParams);
+                        } catch (Exception ignored) {}
+                    }
                 }
             });
         }
@@ -694,7 +772,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
         @JavascriptInterface
         public void closeFloatingOverlay() {
-            mainHandler.post(() -> stopSelf());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    stopSelf();
+                }
+            });
         }
 
         @JavascriptInterface

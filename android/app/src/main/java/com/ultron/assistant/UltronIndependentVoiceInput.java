@@ -54,7 +54,7 @@ public class UltronIndependentVoiceInput {
         void onReady();
         void onBeginningOfSpeech();
         void onRmsChanged(float rmsDb);
-        default void onPartialResult(String partialText) {}
+        void onPartialResult(String partialText);
         void onEndOfSpeech();
         void onResult(String recognizedText);
         void onError(String errorMessage);
@@ -105,30 +105,33 @@ public class UltronIndependentVoiceInput {
     }
 
     public void startListening() {
-        mainHandler.post(() -> {
-            stopListening();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                stopListening();
 
-            // 1. Check microphone permission
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                    notifyError("Microphone permission required. Tap to grant.");
+                // 1. Check microphone permission
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                        notifyError("Microphone permission required. Tap to grant.");
+                        return;
+                    }
+                }
+
+                // 2. Route by selected engine
+                if (ENGINE_SYSTEM_SHEET.equals(currentEngine)) {
+                    launchSystemVoiceSheet();
                     return;
                 }
-            }
 
-            // 2. Route by selected engine
-            if (ENGINE_SYSTEM_SHEET.equals(currentEngine)) {
-                launchSystemVoiceSheet();
-                return;
-            }
+                if (ENGINE_GOOGLE.equals(currentEngine)) {
+                    startNativeSpeechRecognizer(false);
+                    return;
+                }
 
-            if (ENGINE_GOOGLE.equals(currentEngine)) {
-                startNativeSpeechRecognizer(false);
-                return;
+                // 3. Default: ENGINE_INDEPENDENT -> Direct hardware AudioRecord capture
+                startIndependentAudioCapture();
             }
-
-            // 3. Default: ENGINE_INDEPENDENT -> Direct hardware AudioRecord capture
-            startIndependentAudioCapture();
         });
     }
 
@@ -175,7 +178,7 @@ public class UltronIndependentVoiceInput {
      * Native Android Speech Recognition Engine with On-Device Priority.
      * Guarantees 99.9% accuracy on app names, system toggles, and assistant commands.
      */
-    private void startNativeSpeechRecognizer(boolean preferOffline) {
+    private void startNativeSpeechRecognizer(final boolean preferOffline) {
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
             Log.w(TAG, "Direct SpeechRecognizer not available. Falling back to System Voice Sheet.");
             launchSystemVoiceSheet();
@@ -321,7 +324,12 @@ public class UltronIndependentVoiceInput {
             case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
                 if (wasOfflinePreferred) {
                     // Try without offline preference if offline packs are missing
-                    mainHandler.post(() -> startNativeSpeechRecognizer(false));
+                    mainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            startNativeSpeechRecognizer(false);
+                        }
+                    });
                     return;
                 }
                 message = "Network error. Tap mic to retry.";
@@ -418,7 +426,12 @@ public class UltronIndependentVoiceInput {
         isListening.set(true);
         notifyReady();
 
-        recordingThread = new Thread(this::runAudioLoop, "UltronAudioRecordThread");
+        recordingThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runAudioLoop();
+            }
+        }, "UltronAudioRecordThread");
         recordingThread.setPriority(Thread.MAX_PRIORITY);
         recordingThread.start();
     }
@@ -569,7 +582,12 @@ public class UltronIndependentVoiceInput {
 
         // Tier 2: System Voice Sheet dialog fallback
         Log.w(TAG, "Speech API unavailable, falling back to System Voice Sheet");
-        mainHandler.post(this::launchSystemVoiceSheet);
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                launchSystemVoiceSheet();
+            }
+        });
     }
 
     private String querySpeechApi(byte[] pcmData, String customUrl) {
@@ -702,44 +720,65 @@ public class UltronIndependentVoiceInput {
     }
 
     private void notifyReady() {
-        mainHandler.post(() -> {
-            if (listener != null) listener.onReady();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (listener != null) listener.onReady();
+            }
         });
     }
 
     private void notifyBeginningOfSpeech() {
-        mainHandler.post(() -> {
-            if (listener != null) listener.onBeginningOfSpeech();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (listener != null) listener.onBeginningOfSpeech();
+            }
         });
     }
 
-    private void notifyRms(float rmsDb) {
-        mainHandler.post(() -> {
-            if (listener != null) listener.onRmsChanged(rmsDb);
+    private void notifyRms(final float rmsDb) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (listener != null) listener.onRmsChanged(rmsDb);
+            }
         });
     }
 
-    private void notifyPartialResult(String partialText) {
-        mainHandler.post(() -> {
-            if (listener != null) listener.onPartialResult(partialText);
+    private void notifyPartialResult(final String partialText) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (listener != null) listener.onPartialResult(partialText);
+            }
         });
     }
 
     private void notifyEndOfSpeech() {
-        mainHandler.post(() -> {
-            if (listener != null) listener.onEndOfSpeech();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (listener != null) listener.onEndOfSpeech();
+            }
         });
     }
 
-    private void notifyResult(String result) {
-        mainHandler.post(() -> {
-            if (listener != null) listener.onResult(result);
+    private void notifyResult(final String result) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (listener != null) listener.onResult(result);
+            }
         });
     }
 
-    private void notifyError(String error) {
-        mainHandler.post(() -> {
-            if (listener != null) listener.onError(error);
+    private void notifyError(final String error) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (listener != null) listener.onError(error);
+            }
         });
     }
 }

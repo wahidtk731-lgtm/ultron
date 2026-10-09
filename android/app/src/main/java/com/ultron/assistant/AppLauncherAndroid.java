@@ -473,7 +473,11 @@ public class AppLauncherAndroid {
     public void recordRecentApp(AppEntry app) {
         if (app == null) return;
         synchronized (recentApps) {
-            recentApps.removeIf(a -> a.packageName.equalsIgnoreCase(app.packageName));
+            for (java.util.Iterator<AppEntry> it = recentApps.iterator(); it.hasNext(); ) {
+                if (it.next().packageName.equalsIgnoreCase(app.packageName)) {
+                    it.remove();
+                }
+            }
             recentApps.add(0, app);
             if (recentApps.size() > 10) {
                 recentApps.remove(recentApps.size() - 1);

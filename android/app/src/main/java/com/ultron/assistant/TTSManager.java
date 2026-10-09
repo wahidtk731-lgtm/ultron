@@ -25,20 +25,23 @@ public class TTSManager {
 
     public TTSManager(Context context, TTSListener listener) {
         this.listener = listener;
-        this.tts = new TextToSpeech(context.getApplicationContext(), status -> {
-            if (status == TextToSpeech.SUCCESS) {
-                int res = tts.setLanguage(Locale.US);
-                if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    res = tts.setLanguage(Locale.getDefault());
+        this.tts = new TextToSpeech(context.getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int res = tts.setLanguage(Locale.US);
+                    if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        res = tts.setLanguage(Locale.getDefault());
+                    }
+                    if (res != TextToSpeech.LANG_MISSING_DATA && res != TextToSpeech.LANG_NOT_SUPPORTED) {
+                        isReady = true;
+                        tts.setPitch(0.95f);      // Confident natural tone
+                        tts.setSpeechRate(1.05f);  // Crisp pacing
+                        setupListener();
+                    }
+                } else {
+                    Log.e(TAG, "TTS Initialization failed: " + status);
                 }
-                if (res != TextToSpeech.LANG_MISSING_DATA && res != TextToSpeech.LANG_NOT_SUPPORTED) {
-                    isReady = true;
-                    tts.setPitch(0.95f);      // Confident natural tone
-                    tts.setSpeechRate(1.05f);  // Crisp pacing
-                    setupListener();
-                }
-            } else {
-                Log.e(TAG, "TTS Initialization failed: " + status);
             }
         });
     }

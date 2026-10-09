@@ -33,36 +33,22 @@ aapt package -f -m \
 echo "[2/6] Compiling Java classes..."
 rm -rf obj/*
 if command -v javac >/dev/null 2>&1; then
-    javac -source 11 -target 11 -d obj -cp "$ANDROID_JAR:gen" \
+    javac -source 7 -target 7 -d obj -cp "$ANDROID_JAR:gen" \
         $(find android/app/src/main/java gen -name "*.java")
 else
-    # Termux dalvikvm + ecj compiler
-    mkdir -p "$HOME/stubs/java/lang/invoke"
-    if [ ! -f "$HOME/stubs/java/lang/invoke/LambdaMetafactory.class" ]; then
-        cat << 'EOF' > "$HOME/stubs/java/lang/invoke/LambdaMetafactory.java"
-package java.lang.invoke;
-public final class LambdaMetafactory {
-    public static CallSite metafactory(MethodHandles.Lookup caller, String invokedName, MethodType invokedType, MethodType samMethodType, MethodHandle implMethod, MethodType instantiatedMethodType) throws LambdaConversionException { return null; }
-    public static CallSite altMetafactory(MethodHandles.Lookup caller, String invokedName, MethodType invokedType, Object... args) throws LambdaConversionException { return null; }
-}
-EOF
-        dalvikvm -Xmx256m -cp /data/data/com.termux/files/usr/share/dex/ecj.jar \
-            org.eclipse.jdt.internal.compiler.batch.Main -proc:none -8 \
-            -cp "$ANDROID_JAR" -d "$HOME/stubs" "$HOME/stubs/java/lang/invoke/LambdaMetafactory.java"
-    fi
-
+    # Termux dalvikvm + ecj compiler (Target Java 7 for 100% reliable Dalvik bytecode on Android 9+)
     dalvikvm -Xmx256m -cp /data/data/com.termux/files/usr/share/dex/ecj.jar \
-        org.eclipse.jdt.internal.compiler.batch.Main -proc:none -8 \
-        -cp "$ANDROID_JAR:$HOME/stubs:gen" -d obj \
+        org.eclipse.jdt.internal.compiler.batch.Main -proc:none -7 \
+        -cp "$ANDROID_JAR:gen" -d obj \
         $(find android/app/src/main/java gen -name "*.java")
 fi
 
 # 4. Dex bytecode
 echo "[3/6] Converting classes to DEX bytecode..."
 if command -v d8 >/dev/null 2>&1; then
-    d8 --min-api 26 --output bin/ $(find obj -name "*.class")
+    d8 --min-api 21 --output bin/ $(find obj -name "*.class")
 else
-    dx --dex --min-sdk-version=26 --output=bin/classes.dex obj
+    dx --dex --output=bin/classes.dex obj
 fi
 
 # 5. Package resources and assets

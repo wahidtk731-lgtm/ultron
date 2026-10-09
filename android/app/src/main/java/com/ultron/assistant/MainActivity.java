@@ -55,18 +55,21 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            try {
-                android.util.Log.e("ULTRON_CRASH", "FATAL CRASH:", throwable);
-                java.io.StringWriter sw = new java.io.StringWriter();
-                java.io.PrintWriter pw = new java.io.PrintWriter(sw);
-                throwable.printStackTrace(pw);
-                String stack = sw.toString();
-                java.io.File crashFile = new java.io.File("/storage/emulated/0/Project/ultron_crash.log");
-                java.io.FileWriter fw = new java.io.FileWriter(crashFile);
-                fw.write("UNCAUGHT_EXCEPTION:\n" + stack);
-                fw.close();
-            } catch (Throwable ignored) {}
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread thread, Throwable throwable) {
+                try {
+                    android.util.Log.e("ULTRON_CRASH", "FATAL CRASH:", throwable);
+                    java.io.StringWriter sw = new java.io.StringWriter();
+                    java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+                    throwable.printStackTrace(pw);
+                    String stack = sw.toString();
+                    java.io.File crashFile = new java.io.File("/storage/emulated/0/Project/ultron_crash.log");
+                    java.io.FileWriter fw = new java.io.FileWriter(crashFile);
+                    fw.write("UNCAUGHT_EXCEPTION:\n" + stack);
+                    fw.close();
+                } catch (Throwable ignored) {}
+            }
         });
 
         super.onCreate(savedInstanceState);
@@ -164,13 +167,16 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                mainHandler.postDelayed(() -> {
-                    boolean isDefault = isDefaultAssistant();
-                    webView.evaluateJavascript(String.format("if(window.onAssistantCheck) window.onAssistantCheck(%b);", isDefault), null);
-                    webView.evaluateJavascript("if(window.updateRecentApps) window.updateRecentApps();", null);
+                mainHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean isDefault = isDefaultAssistant();
+                        webView.evaluateJavascript(String.format("if(window.onAssistantCheck) window.onAssistantCheck(%b);", isDefault), null);
+                        webView.evaluateJavascript("if(window.updateRecentApps) window.updateRecentApps();", null);
 
-                    if (hasAudioPermission()) {
-                        startListening();
+                        if (hasAudioPermission()) {
+                            startListening();
+                        }
                     }
                 }, 350);
             }
@@ -335,28 +341,34 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     }
 
     public void startListening() {
-        mainHandler.post(() -> {
-            if (!hasAudioPermission()) {
-                checkPermissionsAndInit();
-                return;
-            }
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (!hasAudioPermission()) {
+                    checkPermissionsAndInit();
+                    return;
+                }
 
-            if (voiceInput == null) {
-                initVoiceInput();
-            }
+                if (voiceInput == null) {
+                    initVoiceInput();
+                }
 
-            if (voiceInput != null) {
-                voiceInput.startListening();
+                if (voiceInput != null) {
+                    voiceInput.startListening();
+                }
             }
         });
     }
 
     public void stopListening() {
-        mainHandler.post(() -> {
-            if (voiceInput != null) {
-                voiceInput.stopListening();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (voiceInput != null) {
+                    voiceInput.stopListening();
+                }
+                updateWebStatus("ready", "Ultron Ready");
             }
-            updateWebStatus("ready", "Ultron Ready");
         });
     }
 
@@ -412,29 +424,38 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
         // Step 1: Execute first action immediately
         UltronIntentEngine.ActionCommand action1 = actions.get(0);
-        String reply1 = executeAction(action1);
+        final String reply1 = executeAction(action1);
 
         String preview = "Step 1: " + reply1 + " • Next: " + subCommands.get(1);
         sendWebReply(rawText, preview);
         updateWebStatus("processing", preview);
 
-        // Step 2: Execute second action after 1.3 seconds delay for genuine multitasking
-        mainHandler.postDelayed(() -> {
-            UltronIntentEngine.ActionCommand action2 = actions.get(1);
-            String reply2 = executeAction(action2);
+        final String fRawText = rawText;
+        final List<UltronIntentEngine.ActionCommand> fActions = actions;
 
-            if (actions.size() > 2) {
-                mainHandler.postDelayed(() -> {
-                    UltronIntentEngine.ActionCommand action3 = actions.get(2);
-                    String reply3 = executeAction(action3);
-                    String finalCombined = "Step 1: " + reply1 + ", then " + reply2 + ", and " + reply3;
-                    sendWebReply(rawText, finalCombined);
-                    speakReply(finalCombined, rawText);
-                }, 1300);
-            } else {
-                String finalCombined = reply1 + ", then " + reply2;
-                sendWebReply(rawText, finalCombined);
-                speakReply(finalCombined, rawText);
+        // Step 2: Execute second action after 1.3 seconds delay for genuine multitasking
+        mainHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                UltronIntentEngine.ActionCommand action2 = fActions.get(1);
+                final String reply2 = executeAction(action2);
+
+                if (fActions.size() > 2) {
+                    mainHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            UltronIntentEngine.ActionCommand action3 = fActions.get(2);
+                            String reply3 = executeAction(action3);
+                            String finalCombined = "Step 1: " + reply1 + ", then " + reply2 + ", and " + reply3;
+                            sendWebReply(fRawText, finalCombined);
+                            speakReply(finalCombined, fRawText);
+                        }
+                    }, 1300);
+                } else {
+                    String finalCombined = reply1 + ", then " + reply2;
+                    sendWebReply(fRawText, finalCombined);
+                    speakReply(finalCombined, fRawText);
+                }
             }
         }, 1300);
     }
@@ -442,9 +463,12 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     private String executeAction(UltronIntentEngine.ActionCommand action) {
         switch (action.intent) {
             case "open_settings":
-                mainHandler.post(() -> {
-                    if (webView != null) {
-                        webView.evaluateJavascript("openSettingsModal();", null);
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (webView != null) {
+                            webView.evaluateJavascript("openSettingsModal();", null);
+                        }
                     }
                 });
                 return "Opening Ultron settings";
@@ -497,7 +521,12 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 return "Opening quick settings";
 
             case "floating_mode":
-                mainHandler.post(this::openFloatingMode);
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        openFloatingMode();
+                    }
+                });
                 return "Switching to floating bubble mode";
 
             case "recent_apps":
@@ -532,7 +561,12 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 return "Saved note: " + action.entity;
 
             case "exit":
-                mainHandler.postDelayed(this::finish, 1200);
+                mainHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                }, 1200);
                 return "Going offline. Goodbye!";
 
             default:
@@ -546,19 +580,25 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         ttsManager.speak(text);
     }
 
-    private void updateWebStatus(String state, String message) {
-        mainHandler.post(() -> {
-            if (webView != null) {
-                webView.evaluateJavascript(String.format("window.onStatusUpdate('%s', '%s');", state, message), null);
+    private void updateWebStatus(final String state, final String message) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript(String.format("window.onStatusUpdate('%s', '%s');", state, message), null);
+                }
             }
         });
     }
 
-    private void sendWebReply(String query, String reply) {
-        mainHandler.post(() -> {
-            if (webView != null) {
-                webView.evaluateJavascript(String.format("window.onAssistantReply('%s', '%s');", 
-                    query.replace("'", "\\'"), reply.replace("'", "\\'")), null);
+    private void sendWebReply(final String query, final String reply) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (webView != null) {
+                    webView.evaluateJavascript(String.format("window.onAssistantReply('%s', '%s');", 
+                        query.replace("'", "\\'"), reply.replace("'", "\\'")), null);
+                }
             }
         });
     }
@@ -637,7 +677,12 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
         @JavascriptInterface
         public void launchSystemVoiceSheet() {
-            mainHandler.post(() -> openSystemVoiceSheet());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    openSystemVoiceSheet();
+                }
+            });
         }
 
         @JavascriptInterface
@@ -647,7 +692,12 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
         @JavascriptInterface
         public void dismiss() {
-            mainHandler.post(() -> finish());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    finish();
+                }
+            });
         }
 
         @JavascriptInterface
