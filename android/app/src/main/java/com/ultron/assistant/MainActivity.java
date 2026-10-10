@@ -706,6 +706,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         }
 
         @JavascriptInterface
+        public void openVoiceInputSettings() {
+            MainActivity.this.openDefaultAssistantSettings();
+        }
+
+        @JavascriptInterface
         public void saveVoiceSettings(float pitch, float rate) {
             if (ttsManager != null) {
                 ttsManager.setPitch(pitch);

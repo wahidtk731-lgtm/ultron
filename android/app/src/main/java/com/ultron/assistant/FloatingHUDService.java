@@ -732,6 +732,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
 
         @JavascriptInterface
+        public void openVoiceInputSettings() {
+            openDefaultAssistantSettings();
+        }
+
+        @JavascriptInterface
         public void saveVoiceSettings(float pitch, float rate) {
             if (ttsManager != null) {
                 ttsManager.setPitch(pitch);

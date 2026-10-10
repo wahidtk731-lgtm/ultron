@@ -680,16 +680,6 @@
           </div>
         </div>
 
-        <!-- Voice Input Engine -->
-        <div class="setting-item">
-          <label>Voice Input Engine</label>
-          <div class="voice-options">
-            <button class="voice-btn active" id="engineIndependent" onclick="selectVoiceEngine('independent')">🎙️ Independent Mic</button>
-            <button class="voice-btn" id="engineSystem" onclick="selectVoiceEngine('system')">📋 System Sheet</button>
-            <button class="voice-btn" id="engineGoogle" onclick="selectVoiceEngine('google')">🌐 Google</button>
-          </div>
-        </div>
-
         <!-- Voice Sound & Pitch -->
         <div class="setting-item">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -715,8 +705,9 @@
 
         <!-- System Shortcuts -->
         <div class="setting-item">
-          <label>System Integration</label>
+          <label>Device & System Settings</label>
           <div class="shortcut-buttons">
+            <button class="btn-setting-action" onclick="openVoiceInputDeviceSettings()">🎙️ Voice Input in Device Settings</button>
             <button class="btn-setting-action" onclick="toggleFloating()">🫧 Floating Bubble Mode (Over other apps)</button>
             <button class="btn-setting-action" onclick="setAsDefaultAssistant()">⚙️ Change Default Assistant (Center Button)</button>
             <button class="btn-setting-action" onclick="refreshAppsIndex()">🔄 Re-train Installed Apps</button>
@@ -994,6 +985,14 @@
         if (hasAndroidBridge && window.AndroidUltron.setWindowHeight) {
           window.AndroidUltron.setWindowHeight(140);
         }
+      }
+    }
+
+    function openVoiceInputDeviceSettings() {
+      if (hasAndroidBridge && window.AndroidUltron.openVoiceInputSettings) {
+        window.AndroidUltron.openVoiceInputSettings();
+      } else if (hasAndroidBridge && window.AndroidUltron.openDefaultAssistantSettings) {
+        window.AndroidUltron.openDefaultAssistantSettings();
       }
     }
 
