@@ -675,9 +675,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (voiceInput != null) {
-                        voiceInput.launchSystemVoiceSheet();
-                    }
+                    startListening();
                 }
             });
         }

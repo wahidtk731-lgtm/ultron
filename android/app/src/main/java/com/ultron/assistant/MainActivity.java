@@ -373,16 +373,13 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     }
 
     public void openSystemVoiceSheet() {
-        if (voiceInput != null) {
-            voiceInput.launchSystemVoiceSheet();
-        }
+        startListening();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if ((requestCode == REQ_CODE_VOICE_INTENT || requestCode == UltronIndependentVoiceInput.REQ_CODE_SYSTEM_VOICE)
-                && resultCode == RESULT_OK && data != null) {
+        if (requestCode == REQ_CODE_VOICE_INTENT && resultCode == RESULT_OK && data != null) {
             ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches != null && !matches.isEmpty()) {
                 processCommandInternal(matches.get(0));
