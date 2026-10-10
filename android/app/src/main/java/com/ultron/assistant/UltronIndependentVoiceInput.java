@@ -511,6 +511,8 @@ public class UltronIndependentVoiceInput {
                     long speechStartTime = 0;
                     long lastSpeechTime = 0;
                     boolean heardSpeech = false;
+                    double ambientRms = 25.0;
+                    int frameCount = 0;
 
                     while (isFallbackRecording.get() && !Thread.currentThread().isInterrupted()) {
                         int read = recorder.read(buffer, 0, buffer.length);
@@ -525,11 +527,25 @@ public class UltronIndependentVoiceInput {
                         pcmStream.write(byteBuffer, 0, read * 2);
 
                         double rms = Math.sqrt((double) sum / read);
+
+                        // Adaptive ambient room noise calibration (first 6 frames ~200ms)
+                        if (frameCount < 6) {
+                            ambientRms = (ambientRms * frameCount + rms) / (frameCount + 1);
+                            frameCount++;
+                        } else {
+                            if (rms < ambientRms * 1.2) {
+                                ambientRms = 0.95 * ambientRms + 0.05 * rms;
+                            }
+                        }
+
+                        // Highly responsive speech trigger threshold (ambient + safety delta)
+                        double speechThreshold = Math.max(48.0, ambientRms * 1.5);
+
                         float db = (float) (20.0 * Math.log10(rms + 1e-4));
                         notifyRms(Math.min(95f, Math.max(0f, db)));
 
                         long now = System.currentTimeMillis();
-                        if (rms > 350.0) {
+                        if (rms > speechThreshold) {
                             if (!heardSpeech) {
                                 heardSpeech = true;
                                 speechStartTime = now;
@@ -538,11 +554,11 @@ public class UltronIndependentVoiceInput {
                             lastSpeechTime = now;
                         }
 
-                        // Auto-detect speech end: 1.8s of silence after speech, or 5.5s maximum
-                        if (heardSpeech && (now - lastSpeechTime > 1800 || now - speechStartTime > 5500)) {
+                        // Auto-detect speech end: 1.2s silence after speech, or 5.0s maximum total speech
+                        if (heardSpeech && (now - lastSpeechTime > 1200 || now - speechStartTime > 5000)) {
                             break;
                         }
-                        if (!heardSpeech && (now - startTime > 4500)) {
+                        if (!heardSpeech && (now - startTime > 4200)) {
                             break;
                         }
                     }
@@ -556,7 +572,7 @@ public class UltronIndependentVoiceInput {
                     notifyEndOfSpeech();
 
                     byte[] pcmData = pcmStream.toByteArray();
-                    if (!heardSpeech || pcmData.length < 3200) {
+                    if (!heardSpeech && pcmData.length < 9600) {
                         notifyError("Didn't hear that. Tap mic to speak.");
                         return;
                     }
