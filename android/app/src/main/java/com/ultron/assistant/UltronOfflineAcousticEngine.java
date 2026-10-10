@@ -23,7 +23,7 @@ public class UltronOfflineAcousticEngine {
     private static final String TAG = "UltronAcousticEngine";
     private static final String PREF_TRAINED_VOICE = "ultron_trained_voice";
     private static final String PREF_VOICE_VER = "ultron_voice_version";
-    private static final int CURRENT_VOICE_VER = 3;
+    private static final int CURRENT_VOICE_VER = 4;
 
     private static final int SAMPLE_RATE = 16000;
     private static final int FRAME_SIZE = 400; // 25ms
@@ -49,6 +49,11 @@ public class UltronOfflineAcousticEngine {
     private static final float[] P_R  = new float[]{-0.9f, 1.2f, 0.3f, -0.2f, 0.4f, -0.3f, 0.2f, -0.1f, 0.1f, -0.1f, 0.0f, -0.0f};
     private static final float[] P_L  = new float[]{-1.1f, 1.4f, 0.6f, -0.3f, 0.3f, -0.2f, 0.2f, -0.1f, 0.1f, -0.1f, 0.0f, -0.0f};
     private static final float[] P_K  = new float[]{0.6f, -0.5f, 0.8f, -0.6f, 0.7f, -0.4f, 0.3f, -0.2f, 0.2f, -0.1f, 0.1f, -0.0f};
+    private static final float[] P_B  = new float[]{-1.5f, 0.9f, -1.0f, 0.4f, -0.6f, 0.3f, -0.2f, 0.1f, -0.1f, 0.1f, -0.1f, 0.0f};
+    private static final float[] P_D  = new float[]{-1.0f, 0.6f, 0.5f, -0.5f, 0.6f, -0.4f, 0.3f, -0.2f, 0.2f, -0.1f, 0.1f, -0.0f};
+    private static final float[] P_G  = new float[]{-1.2f, 0.4f, 0.7f, -0.4f, 0.5f, -0.3f, 0.2f, -0.2f, 0.1f, -0.1f, 0.1f, -0.0f};
+    private static final float[] P_V  = new float[]{0.6f, -0.8f, 0.4f, -0.2f, 0.3f, -0.3f, 0.2f, -0.2f, 0.1f, -0.1f, 0.1f, -0.1f};
+    private static final float[] P_Z  = new float[]{1.0f, -1.2f, 0.8f, -0.4f, 0.7f, -0.5f, 0.4f, -0.3f, 0.3f, -0.2f, 0.1f, -0.1f};
 
     // Cache pre-computed Mel filterbanks
     private static double[][] melFilters = null;
@@ -125,7 +130,7 @@ public class UltronOfflineAcousticEngine {
         logI(TAG, "Best DTW Acoustic Match: '" + bestCommand + "' (score: " + bestDistance + ")");
 
         // Accept best match within robust distance window
-        if (bestDistance < 26.0f && !bestCommand.isEmpty()) {
+        if (bestDistance < 46.0f && !bestCommand.isEmpty()) {
             return bestCommand;
         }
 
@@ -158,7 +163,7 @@ public class UltronOfflineAcousticEngine {
             if (e > peakE) peakE = e;
         }
 
-        double threshold = Math.max(28.0, peakE * 0.14);
+        double threshold = Math.max(16.0, peakE * 0.12);
         int firstVoiced = 0;
         while (firstVoiced < numFrames && energies[firstVoiced] < threshold) {
             firstVoiced++;
@@ -257,8 +262,8 @@ public class UltronOfflineAcousticEngine {
             }
         }
 
-        // Voiced frames: within 45 dB of peak energy
-        double energyFloor = maxEnergy - 45.0;
+        // Voiced frames: within 60 dB of peak energy
+        double energyFloor = maxEnergy - 60.0;
         double[] meanMfcc = new double[NUM_MFCC];
         int activeFrames = 0;
         for (int f = 0; f < numFrames; f++) {
@@ -302,7 +307,14 @@ public class UltronOfflineAcousticEngine {
         int n = q.length;
         int m = t.length;
 
-        int band = Math.max(14, Math.abs(n - m) + 10);
+        // Temporal length ratio constraint (prevents short words from matching long phrases)
+        float lenRatio = (float) Math.max(n, m) / (float) Math.min(n, m);
+        float lengthPenalty = 0.0f;
+        if (lenRatio > 1.75f) {
+            lengthPenalty = (lenRatio - 1.75f) * 12.0f;
+        }
+
+        int band = Math.max(16, Math.abs(n - m) + 12);
         float[][] dp = new float[n][m];
 
         for (int i = 0; i < n; i++) {
@@ -337,7 +349,7 @@ public class UltronOfflineAcousticEngine {
             return 999.0f;
         }
 
-        return dp[n - 1][m - 1] / (n + m);
+        return (dp[n - 1][m - 1] / (n + m)) + lengthPenalty;
     }
 
     private static float frameDist(float[] a, float[] b) {
@@ -358,41 +370,61 @@ public class UltronOfflineAcousticEngine {
 
         canonicalCache = new ArrayList<AcousticTemplate>();
 
-        // 1. "turn on wifi" & "turn off wifi"
+        // 1. "turn on wifi" & "turn off wifi" (full & short variations)
         canonicalCache.add(new AcousticTemplate("turn on wifi", buildTrajectory(
             new float[][]{P_T, P_R, P_N, P_O, P_N, P_W, P_A, P_I, P_F, P_A, P_I}, 65)));
         canonicalCache.add(new AcousticTemplate("turn off wifi", buildTrajectory(
             new float[][]{P_T, P_R, P_N, P_O, P_F, P_W, P_A, P_I, P_F, P_A, P_I}, 68)));
+        canonicalCache.add(new AcousticTemplate("turn on wifi", buildTrajectory(
+            new float[][]{P_W, P_A, P_I, P_F, P_A, P_I, P_O, P_N}, 44)));
+        canonicalCache.add(new AcousticTemplate("turn off wifi", buildTrajectory(
+            new float[][]{P_W, P_A, P_I, P_F, P_A, P_I, P_O, P_F}, 46)));
 
-        // 2. "turn on bluetooth" & "turn off bluetooth"
+        // 2. "turn on bluetooth" & "turn off bluetooth" (full & short variations)
         canonicalCache.add(new AcousticTemplate("turn on bluetooth", buildTrajectory(
-            new float[][]{P_T, P_R, P_N, P_O, P_N, P_L, P_U, P_T, P_U, P_TH}, 80)));
+            new float[][]{P_T, P_R, P_N, P_O, P_N, P_B, P_L, P_U, P_T, P_U, P_TH}, 80)));
         canonicalCache.add(new AcousticTemplate("turn off bluetooth", buildTrajectory(
-            new float[][]{P_T, P_R, P_N, P_O, P_F, P_L, P_U, P_T, P_U, P_TH}, 83)));
+            new float[][]{P_T, P_R, P_N, P_O, P_F, P_B, P_L, P_U, P_T, P_U, P_TH}, 83)));
+        canonicalCache.add(new AcousticTemplate("turn on bluetooth", buildTrajectory(
+            new float[][]{P_B, P_L, P_U, P_T, P_U, P_TH, P_O, P_N}, 52)));
+        canonicalCache.add(new AcousticTemplate("turn off bluetooth", buildTrajectory(
+            new float[][]{P_B, P_L, P_U, P_T, P_U, P_TH, P_O, P_F}, 54)));
 
         // 3. "open settings"
         canonicalCache.add(new AcousticTemplate("open settings", buildTrajectory(
             new float[][]{P_O, P_T, P_E, P_N, P_S, P_E, P_T, P_I, P_N, P_S}, 72)));
+        canonicalCache.add(new AcousticTemplate("open settings", buildTrajectory(
+            new float[][]{P_S, P_E, P_T, P_I, P_N, P_S}, 44)));
 
         // 4. "open youtube"
         canonicalCache.add(new AcousticTemplate("open youtube", buildTrajectory(
             new float[][]{P_O, P_T, P_E, P_N, P_I, P_U, P_T, P_U, P_T}, 66)));
+        canonicalCache.add(new AcousticTemplate("open youtube", buildTrajectory(
+            new float[][]{P_I, P_U, P_T, P_U, P_T}, 40)));
 
         // 5. "open camera"
         canonicalCache.add(new AcousticTemplate("open camera", buildTrajectory(
             new float[][]{P_O, P_T, P_E, P_N, P_K, P_A, P_M, P_R, P_A}, 70)));
+        canonicalCache.add(new AcousticTemplate("open camera", buildTrajectory(
+            new float[][]{P_K, P_A, P_M, P_R, P_A}, 42)));
 
         // 6. "open chrome"
         canonicalCache.add(new AcousticTemplate("open chrome", buildTrajectory(
             new float[][]{P_O, P_T, P_E, P_N, P_K, P_R, P_O, P_M}, 58)));
+        canonicalCache.add(new AcousticTemplate("open chrome", buildTrajectory(
+            new float[][]{P_K, P_R, P_O, P_M}, 36)));
 
         // 7. "recent apps"
         canonicalCache.add(new AcousticTemplate("recent apps", buildTrajectory(
             new float[][]{P_R, P_I, P_S, P_E, P_N, P_T, P_A, P_T, P_S}, 62)));
+        canonicalCache.add(new AcousticTemplate("recent apps", buildTrajectory(
+            new float[][]{P_R, P_I, P_S, P_E, P_N, P_T, P_S}, 44)));
 
         // 8. "what time is it"
         canonicalCache.add(new AcousticTemplate("what time is it", buildTrajectory(
             new float[][]{P_W, P_A, P_T, P_T, P_A, P_I, P_M, P_I, P_S, P_I, P_T}, 75)));
+        canonicalCache.add(new AcousticTemplate("what time is it", buildTrajectory(
+            new float[][]{P_T, P_A, P_I, P_M}, 35)));
 
         // 9. "clear notifications"
         canonicalCache.add(new AcousticTemplate("clear notifications", buildTrajectory(
@@ -406,6 +438,7 @@ public class UltronOfflineAcousticEngine {
     }
 
     private static float[][] buildTrajectory(float[][] phonemes, int totalFrames) {
+        if (totalFrames <= 1) totalFrames = 2;
         float[][] traj = new float[totalFrames][NUM_MFCC];
         int numP = phonemes.length;
         for (int f = 0; f < totalFrames; f++) {
