@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="com.ultron.assistant.UltronVoiceSessionService"
+    android:recognitionService="com.ultron.assistant.UltronRecognitionService"
+    android:settingsActivity="com.ultron.assistant.MainActivity"
+    android:supportsAssist="true" />
