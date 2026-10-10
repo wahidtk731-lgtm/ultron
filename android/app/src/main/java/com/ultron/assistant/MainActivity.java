@@ -708,6 +708,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         }
 
         @JavascriptInterface
+        public void openOfflineSpeechSettings() {
+            UltronIndependentVoiceInput.openOfflineSpeechSettings(MainActivity.this);
+        }
+
+        @JavascriptInterface
         public void saveVoiceSettings(float pitch, float rate) {
             if (ttsManager != null) {
                 ttsManager.setPitch(pitch);

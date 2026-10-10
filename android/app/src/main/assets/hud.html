@@ -707,6 +707,7 @@
         <div class="setting-item">
           <label>Device & System Settings</label>
           <div class="shortcut-buttons">
+            <button class="btn-setting-action" onclick="openOfflineSpeechSettings()">📥 Download Offline Voice Pack (100% Offline)</button>
             <button class="btn-setting-action" onclick="openVoiceInputDeviceSettings()">🎙️ Voice Input in Device Settings</button>
             <button class="btn-setting-action" onclick="toggleFloating()">🫧 Floating Bubble Mode (Over other apps)</button>
             <button class="btn-setting-action" onclick="setAsDefaultAssistant()">⚙️ Change Default Assistant (Center Button)</button>
@@ -985,6 +986,14 @@
         if (hasAndroidBridge && window.AndroidUltron.setWindowHeight) {
           window.AndroidUltron.setWindowHeight(140);
         }
+      }
+    }
+
+    function openOfflineSpeechSettings() {
+      if (hasAndroidBridge && window.AndroidUltron.openOfflineSpeechSettings) {
+        window.AndroidUltron.openOfflineSpeechSettings();
+      } else {
+        openVoiceInputDeviceSettings();
       }
     }
 

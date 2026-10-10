@@ -735,6 +735,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
 
         @JavascriptInterface
+        public void openOfflineSpeechSettings() {
+            UltronIndependentVoiceInput.openOfflineSpeechSettings(FloatingHUDService.this);
+        }
+
+        @JavascriptInterface
         public void saveVoiceSettings(float pitch, float rate) {
             if (ttsManager != null) {
                 ttsManager.setPitch(pitch);

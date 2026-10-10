@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.speech.RecognitionListener;
 import android.speech.RecognitionService;
+import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
 import java.util.ArrayList;
@@ -91,7 +92,15 @@ public class UltronRecognitionService extends RecognitionService {
                         public void onEvent(int eventType, Bundle params) {}
                     });
 
-                    delegateRecognizer.startListening(recognizerIntent);
+                    Intent offlineIntent = UltronIndependentVoiceInput.buildOfflineRecognizerIntent(UltronRecognitionService.this);
+                    if (recognizerIntent != null && recognizerIntent.getExtras() != null) {
+                        offlineIntent.putExtras(recognizerIntent.getExtras());
+                    }
+                    offlineIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
+                    offlineIntent.putExtra("android.speech.extra.PREFER_OFFLINE", true);
+                    offlineIntent.putExtra("android.speech.extra.DICTATION_MODE", true);
+
+                    delegateRecognizer.startListening(offlineIntent);
 
                 } catch (Exception e) {
                     Log.e(TAG, "Error starting delegated recognition: " + e.getMessage());
