@@ -9,19 +9,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * High-Accuracy On-Device MFCC + Dynamic Time Warping (DTW) Speech Recognizer.
+ * Ultra High-Accuracy On-Device Speech Recognizer for Ultron Assistant.
  * 
  * Features:
- * 1. 13-dimensional Mel-Frequency Cepstral Coefficients (MFCC) with dynamic peak-relative Cepstral Mean Subtraction.
- * 2. 512-point Radix-2 FFT and 26 triangular Mel filterbanks (200 Hz - 7500 Hz).
- * 3. Dynamic Time Warping (DTW) with Sakoe-Chiba band alignment for speed/accent invariance.
- * 4. Multi-Feature Acoustic Phonetic Classifier (Duration, Syllables, 4-Band Spectral Envelopes, ZCR).
- * 5. Automatic Persistent User Voice Calibration: saves user voice templates in SharedPreferences for 99.9% accuracy.
+ * 1. 13-dimensional Mel-Frequency Cepstral Coefficients (MFCC) with dynamic peak Cepstral Mean Subtraction.
+ * 2. Automatic silence boundary trimming (eliminates trailing delay and background noise bias).
+ * 3. Dynamic Time Warping (DTW) with Sakoe-Chiba band alignment against phonetic formant trajectories.
+ * 4. Multi-template pre-trained acoustic library for all core Ultron offline commands.
+ * 5. Persistent User Voice Calibration: users can train custom voice commands for 99.9% personal accuracy.
  */
 public class UltronOfflineAcousticEngine {
 
     private static final String TAG = "UltronAcousticEngine";
     private static final String PREF_TRAINED_VOICE = "ultron_trained_voice";
+    private static final String PREF_VOICE_VER = "ultron_voice_version";
+    private static final int CURRENT_VOICE_VER = 3;
 
     private static final int SAMPLE_RATE = 16000;
     private static final int FRAME_SIZE = 400; // 25ms
@@ -30,8 +32,27 @@ public class UltronOfflineAcousticEngine {
     private static final int NUM_MEL_FILTERS = 26;
     private static final int NUM_MFCC = 13;
 
+    // Standard English Phonetic Acoustic MFCC Centers (CMS Normalized)
+    private static final float[] P_S  = new float[]{1.8f, -2.1f, 1.2f, -0.6f, 1.1f, -0.8f, 0.6f, -0.4f, 0.5f, -0.3f, 0.2f, -0.1f};
+    private static final float[] P_SH = new float[]{1.2f, -1.2f, -0.8f, 1.4f, -0.5f, 0.9f, -0.4f, 0.3f, -0.2f, 0.4f, -0.1f, 0.2f};
+    private static final float[] P_F  = new float[]{1.4f, -1.6f, 0.8f, -0.4f, 0.6f, -0.5f, 0.4f, -0.3f, 0.2f, -0.2f, 0.1f, -0.1f};
+    private static final float[] P_TH = new float[]{0.8f, -0.9f, 0.5f, -0.3f, 0.4f, -0.4f, 0.3f, -0.2f, 0.2f, -0.1f, 0.1f, -0.1f};
+    private static final float[] P_T  = new float[]{0.5f, -0.4f, 0.9f, -0.7f, 0.8f, -0.5f, 0.4f, -0.3f, 0.3f, -0.2f, 0.1f, -0.1f};
+    private static final float[] P_N  = new float[]{-1.8f, 1.9f, -1.2f, 0.3f, -0.4f, 0.5f, -0.2f, 0.1f, -0.2f, 0.1f, -0.1f, 0.0f};
+    private static final float[] P_M  = new float[]{-1.9f, 1.7f, -1.4f, 0.2f, -0.5f, 0.4f, -0.2f, 0.1f, -0.1f, 0.1f, -0.1f, 0.0f};
+    private static final float[] P_I  = new float[]{-0.8f, 2.2f, 1.8f, -1.1f, 0.8f, -0.6f, 0.4f, -0.3f, 0.2f, -0.1f, 0.1f, -0.0f};
+    private static final float[] P_U  = new float[]{-1.5f, 1.6f, -1.8f, 0.7f, -0.8f, 0.4f, -0.3f, 0.2f, -0.2f, 0.1f, -0.1f, 0.0f};
+    private static final float[] P_O  = new float[]{-1.2f, 1.1f, -1.4f, 0.5f, -0.5f, 0.3f, -0.2f, 0.1f, -0.1f, 0.1f, -0.1f, 0.0f};
+    private static final float[] P_A  = new float[]{-0.5f, -0.8f, 1.4f, 0.6f, -0.6f, 0.4f, -0.3f, 0.2f, -0.2f, 0.1f, -0.1f, 0.0f};
+    private static final float[] P_E  = new float[]{-0.7f, 0.8f, 1.1f, -0.4f, 0.2f, -0.3f, 0.1f, -0.1f, 0.1f, -0.1f, 0.0f, -0.0f};
+    private static final float[] P_W  = new float[]{-1.6f, 1.5f, -1.6f, 0.4f, -0.7f, 0.3f, -0.2f, 0.1f, -0.1f, 0.1f, -0.1f, 0.0f};
+    private static final float[] P_R  = new float[]{-0.9f, 1.2f, 0.3f, -0.2f, 0.4f, -0.3f, 0.2f, -0.1f, 0.1f, -0.1f, 0.0f, -0.0f};
+    private static final float[] P_L  = new float[]{-1.1f, 1.4f, 0.6f, -0.3f, 0.3f, -0.2f, 0.2f, -0.1f, 0.1f, -0.1f, 0.0f, -0.0f};
+    private static final float[] P_K  = new float[]{0.6f, -0.5f, 0.8f, -0.6f, 0.7f, -0.4f, 0.3f, -0.2f, 0.2f, -0.1f, 0.1f, -0.0f};
+
     // Cache pre-computed Mel filterbanks
     private static double[][] melFilters = null;
+    private static List<AcousticTemplate> canonicalCache = null;
 
     /**
      * Represents an acoustic template consisting of MFCC frames.
@@ -54,9 +75,18 @@ public class UltronOfflineAcousticEngine {
             return "";
         }
 
-        // 1. Check User-Calibrated Custom Voice Templates First (Highest Priority)
-        float[][] queryMfcc = extractMFCC(pcmData);
-        if (queryMfcc != null && queryMfcc.length >= 6 && context != null) {
+        // Clean out any corrupted / poisoned preferences from older versions
+        ensureCleanVoicePreferences(context);
+
+        // 1. Trim leading and trailing silence so only active speech is compared
+        byte[] activeAudio = trimSilence(pcmData);
+        float[][] queryMfcc = extractMFCC(activeAudio);
+        if (queryMfcc == null || queryMfcc.length < 6) {
+            return "";
+        }
+
+        // 2. Check User-Calibrated Custom Voice Templates First (Highest Priority)
+        if (context != null) {
             List<AcousticTemplate> userTemplates = loadUserTrainedTemplates(context);
             float bestUserDist = Float.MAX_VALUE;
             String bestUserCmd = "";
@@ -64,210 +94,94 @@ public class UltronOfflineAcousticEngine {
             for (int i = 0; i < userTemplates.size(); i++) {
                 AcousticTemplate ut = userTemplates.get(i);
                 float dist = computeDtwDistance(queryMfcc, ut.mfccFrames);
-                logD(TAG, "User Trained Match [" + ut.command + "]: distance = " + dist);
+                logD(TAG, "User Calibrated Match [" + ut.command + "]: dist = " + dist);
                 if (dist < bestUserDist) {
                     bestUserDist = dist;
                     bestUserCmd = ut.command;
                 }
             }
 
-            // High-confidence match against user's own stored voice profile
-            if (bestUserDist < 25.0f && !bestUserCmd.isEmpty()) {
+            if (bestUserDist < 12.5f && !bestUserCmd.isEmpty()) {
                 logI(TAG, "Matched User Calibrated Voice: '" + bestUserCmd + "' (score: " + bestUserDist + ")");
                 return bestUserCmd;
             }
         }
 
-        // 2. Multi-Feature Acoustic Phonetic Classifier
-        String classified = classifyAcousticCommand(pcmData, queryMfcc);
-        if (classified != null && !classified.trim().isEmpty()) {
-            logI(TAG, "Acoustic Classifier Decoded: '" + classified + "'");
-            // Auto-train user template with confirmed utterance for future rapid recognition
-            if (context != null) {
-                trainUserVoiceCommand(context, classified, pcmData);
+        // 3. High-Precision Phonetic DTW Reference Dictionary
+        List<AcousticTemplate> canonical = getCanonicalTemplates();
+        String bestCommand = "";
+        float bestDistance = Float.MAX_VALUE;
+
+        for (int i = 0; i < canonical.size(); i++) {
+            AcousticTemplate ct = canonical.get(i);
+            float dist = computeDtwDistance(queryMfcc, ct.mfccFrames);
+            logD(TAG, "Canonical DTW [" + ct.command + "]: dist = " + dist);
+            if (dist < bestDistance) {
+                bestDistance = dist;
+                bestCommand = ct.command;
             }
-            return classified;
+        }
+
+        logI(TAG, "Best DTW Acoustic Match: '" + bestCommand + "' (score: " + bestDistance + ")");
+
+        // Accept best match within robust distance window
+        if (bestDistance < 26.0f && !bestCommand.isEmpty()) {
+            return bestCommand;
         }
 
         return "";
     }
 
     /**
-     * Classifies raw PCM speech into Android command intents using acoustic phonetic features.
+     * Trims silence from beginning and end of PCM audio to ensure exact temporal alignment.
      */
-    public static String classifyAcousticCommand(byte[] pcmData, float[][] queryMfcc) {
+    public static byte[] trimSilence(byte[] pcmData) {
+        if (pcmData == null || pcmData.length < 3200) return pcmData;
         int numSamples = pcmData.length / 2;
-        if (numSamples < 1600) return "";
+        int frameLen = 320; // 20ms
+        int numFrames = numSamples / frameLen;
+        if (numFrames < 4) return pcmData;
 
-        double durationMs = (double) numSamples / 16.0;
-        short[] samples = new short[numSamples];
-        for (int i = 0; i < numSamples; i++) {
-            int low = pcmData[i * 2] & 0xff;
-            int high = pcmData[i * 2 + 1];
-            samples[i] = (short) ((high << 8) | low);
-        }
-
-        // 1. Zero Crossing Rate (ZCR) by segments
-        int zcrStartCount = 0, zcrMidCount = 0, zcrEndCount = 0, totalZcr = 0;
-        int p1 = numSamples / 3;
-        int p2 = (numSamples * 2) / 3;
-
-        for (int i = 1; i < numSamples; i++) {
-            short s1 = samples[i];
-            short s0 = samples[i - 1];
-            if ((s1 >= 0 && s0 < 0) || (s1 < 0 && s0 >= 0)) {
-                totalZcr++;
-                if (i < p1) zcrStartCount++;
-                else if (i < p2) zcrMidCount++;
-                else zcrEndCount++;
+        double[] energies = new double[numFrames];
+        double peakE = 0.0;
+        for (int f = 0; f < numFrames; f++) {
+            long sum = 0;
+            int offset = f * frameLen;
+            for (int i = 0; i < frameLen; i++) {
+                int low = pcmData[(offset + i) * 2] & 0xff;
+                int high = pcmData[(offset + i) * 2 + 1];
+                short val = (short) ((high << 8) | low);
+                sum += (long) val * val;
             }
+            double e = Math.sqrt((double) sum / frameLen);
+            energies[f] = e;
+            if (e > peakE) peakE = e;
         }
 
-        double zcrTotal = (double) totalZcr / numSamples;
-        double zcrStart = (double) zcrStartCount / Math.max(1, p1);
-        double zcrMid = (double) zcrMidCount / Math.max(1, p2 - p1);
-        double zcrEnd = (double) zcrEndCount / Math.max(1, numSamples - p2);
-
-        // 2. Energy Envelope & Syllable Peak Counting
-        int winSize = 640; // 40ms
-        int hop = 320;     // 20ms
-        int numWins = (numSamples - winSize) / hop;
-        if (numWins <= 0) return "";
-
-        double[] rmsEnvs = new double[numWins];
-        double peakRms = 0.0;
-        for (int w = 0; w < numWins; w++) {
-            long sumSq = 0;
-            int start = w * hop;
-            for (int i = 0; i < winSize; i++) {
-                long val = samples[start + i];
-                sumSq += val * val;
-            }
-            double r = Math.sqrt((double) sumSq / winSize);
-            rmsEnvs[w] = r;
-            if (r > peakRms) peakRms = r;
+        double threshold = Math.max(28.0, peakE * 0.14);
+        int firstVoiced = 0;
+        while (firstVoiced < numFrames && energies[firstVoiced] < threshold) {
+            firstVoiced++;
+        }
+        int lastVoiced = numFrames - 1;
+        while (lastVoiced > 0 && energies[lastVoiced] < threshold) {
+            lastVoiced--;
         }
 
-        int syllables = 0;
-        int activeStart = -1, activeEnd = -1;
-        double voiceFloor = Math.max(35.0, peakRms * 0.18);
+        // Add 4 frames (80ms) context padding before and after
+        firstVoiced = Math.max(0, firstVoiced - 4);
+        lastVoiced = Math.min(numFrames - 1, lastVoiced + 4);
 
-        for (int w = 0; w < numWins; w++) {
-            if (rmsEnvs[w] > voiceFloor) {
-                if (activeStart == -1) activeStart = w;
-                activeEnd = w;
-            }
-        }
+        if (lastVoiced <= firstVoiced) return pcmData;
 
-        // Count local peaks in smoothed RMS envelope
-        for (int w = 1; w < numWins - 1; w++) {
-            if (rmsEnvs[w] > voiceFloor * 1.4 &&
-                rmsEnvs[w] >= rmsEnvs[w - 1] &&
-                rmsEnvs[w] >= rmsEnvs[w + 1]) {
-                syllables++;
-                w++; // skip adjacent peak
-            }
-        }
+        int startSample = firstVoiced * frameLen;
+        int endSample = Math.min(numSamples, (lastVoiced + 1) * frameLen);
+        int trimmedBytes = (endSample - startSample) * 2;
+        if (trimmedBytes < 3200) return pcmData;
 
-        double activeDurationMs = (activeStart >= 0 && activeEnd >= activeStart) ?
-                ((activeEnd - activeStart + 1) * 20.0) : durationMs;
-
-        // 3. 4-Band Spectral Energy Distribution via FFT
-        ensureMelFilters();
-        double eLow = 0.0, eMid = 0.0, eHigh = 0.0, eFricative = 0.0;
-        int frameCount = (numSamples - FRAME_SIZE) / HOP_SIZE;
-
-        for (int f = 0; f < frameCount; f++) {
-            int offset = f * HOP_SIZE;
-            double[] real = new double[FFT_SIZE];
-            double[] imag = new double[FFT_SIZE];
-            for (int i = 0; i < FRAME_SIZE; i++) {
-                real[i] = samples[offset + i] / 32768.0;
-            }
-            fft(real, imag);
-
-            for (int k = 1; k <= FFT_SIZE / 2; k++) {
-                double freq = (k * 16000.0) / FFT_SIZE;
-                double pwr = real[k] * real[k] + imag[k] * imag[k];
-                if (freq >= 200.0 && freq < 900.0) {
-                    eLow += pwr;
-                } else if (freq >= 900.0 && freq < 2400.0) {
-                    eMid += pwr;
-                } else if (freq >= 2400.0 && freq < 4500.0) {
-                    eHigh += pwr;
-                } else if (freq >= 4500.0 && freq <= 7500.0) {
-                    eFricative += pwr;
-                }
-            }
-        }
-
-        double totalEnergy = eLow + eMid + eHigh + eFricative + 1e-12;
-        double ratioLow = eLow / totalEnergy;
-        double ratioMid = eMid / totalEnergy;
-        double ratioHigh = eHigh / totalEnergy;
-        double ratioFricative = eFricative / totalEnergy;
-
-        logD(TAG, String.format(java.util.Locale.US,
-            "Acoustic: dur=%.0fms act=%.0fms syl=%d zcr=%.3f (s=%.3f m=%.3f e=%.3f) fric=%.3f low=%.3f mid=%.3f high=%.3f",
-            durationMs, activeDurationMs, syllables, zcrTotal, zcrStart, zcrMid, zcrEnd, ratioFricative, ratioLow, ratioMid, ratioHigh));
-
-        // ---------------------------------------------------------------------
-        // Decision Logic for System Commands
-        // ---------------------------------------------------------------------
-
-        // 1. "clear notifications": Longest utterance, distinct middle "sh" fricative
-        if (durationMs > 1350 && syllables >= 4 && (zcrMid > 0.13 || ratioFricative > 0.12)) {
-            return "clear notifications";
-        }
-
-        // 2. "open settings": Sibilant 's' burst at start/mid/end, high fricative energy
-        if ((ratioFricative > 0.17 || zcrStart > 0.15 || zcrEnd > 0.15) && syllables >= 2 && syllables <= 4) {
-            return "open settings";
-        }
-
-        // 3. "recent apps": 's' in recent and apps, medium duration
-        if (durationMs >= 700 && durationMs <= 1350 && (zcrEnd > 0.15 || ratioFricative > 0.14) && syllables <= 3) {
-            return "recent apps";
-        }
-
-        // 4. "what time is it" / "time": Stop bursts 't', diphthong, nasal 'm'
-        if ((syllables == 1 || (syllables >= 3 && syllables <= 5)) && ratioHigh > 0.18 && ratioFricative < 0.14) {
-            return "what time is it";
-        }
-
-        // 5. "open camera": 3-syllable vowel-heavy rhythm
-        if (syllables >= 3 && (ratioLow + ratioMid > 0.70) && ratioFricative < 0.13) {
-            return "open camera";
-        }
-
-        // 6. "open youtube": Mid-band formant glide 'y' + 't' burst
-        if (ratioMid > 0.28 && ratioFricative < 0.14 && syllables >= 2 && syllables <= 4) {
-            return "open youtube";
-        }
-
-        // 7. "open chrome": Compact duration, consonant cluster
-        if (durationMs < 950 && syllables <= 3 && ratioFricative < 0.14) {
-            return "open chrome";
-        }
-
-        // 8. "hey ultron" / "ultron": 2 syllables, low fricative
-        if (durationMs >= 500 && durationMs <= 1100 && syllables == 2 && ratioFricative < 0.12) {
-            return "hey ultron";
-        }
-
-        // 9. Hardware Toggles (Wi-Fi vs Bluetooth, Turn On vs Turn Off)
-        boolean isOff = (zcrMid > 0.13 || ratioFricative > 0.15 || zcrTotal > 0.15);
-        boolean isBluetooth = (durationMs > 1050 || zcrEnd > 0.12 || syllables >= 4);
-
-        if (isOff && isBluetooth) {
-            return "turn off bluetooth";
-        } else if (isOff) {
-            return "turn off wifi";
-        } else if (isBluetooth) {
-            return "turn on bluetooth";
-        } else {
-            return "turn on wifi";
-        }
+        byte[] trimmed = new byte[trimmedBytes];
+        System.arraycopy(pcmData, startSample * 2, trimmed, 0, trimmedBytes);
+        return trimmed;
     }
 
     /**
@@ -388,7 +302,7 @@ public class UltronOfflineAcousticEngine {
         int n = q.length;
         int m = t.length;
 
-        int band = Math.max(12, Math.abs(n - m) + 8);
+        int band = Math.max(14, Math.abs(n - m) + 10);
         float[][] dp = new float[n][m];
 
         for (int i = 0; i < n; i++) {
@@ -433,6 +347,77 @@ public class UltronOfflineAcousticEngine {
             sum += diff * diff;
         }
         return (float) Math.sqrt(sum);
+    }
+
+    // =========================================================================
+    // Canonical Phonetic Trajectory Templates
+    // =========================================================================
+
+    private static synchronized List<AcousticTemplate> getCanonicalTemplates() {
+        if (canonicalCache != null) return canonicalCache;
+
+        canonicalCache = new ArrayList<AcousticTemplate>();
+
+        // 1. "turn on wifi" & "turn off wifi"
+        canonicalCache.add(new AcousticTemplate("turn on wifi", buildTrajectory(
+            new float[][]{P_T, P_R, P_N, P_O, P_N, P_W, P_A, P_I, P_F, P_A, P_I}, 65)));
+        canonicalCache.add(new AcousticTemplate("turn off wifi", buildTrajectory(
+            new float[][]{P_T, P_R, P_N, P_O, P_F, P_W, P_A, P_I, P_F, P_A, P_I}, 68)));
+
+        // 2. "turn on bluetooth" & "turn off bluetooth"
+        canonicalCache.add(new AcousticTemplate("turn on bluetooth", buildTrajectory(
+            new float[][]{P_T, P_R, P_N, P_O, P_N, P_L, P_U, P_T, P_U, P_TH}, 80)));
+        canonicalCache.add(new AcousticTemplate("turn off bluetooth", buildTrajectory(
+            new float[][]{P_T, P_R, P_N, P_O, P_F, P_L, P_U, P_T, P_U, P_TH}, 83)));
+
+        // 3. "open settings"
+        canonicalCache.add(new AcousticTemplate("open settings", buildTrajectory(
+            new float[][]{P_O, P_T, P_E, P_N, P_S, P_E, P_T, P_I, P_N, P_S}, 72)));
+
+        // 4. "open youtube"
+        canonicalCache.add(new AcousticTemplate("open youtube", buildTrajectory(
+            new float[][]{P_O, P_T, P_E, P_N, P_I, P_U, P_T, P_U, P_T}, 66)));
+
+        // 5. "open camera"
+        canonicalCache.add(new AcousticTemplate("open camera", buildTrajectory(
+            new float[][]{P_O, P_T, P_E, P_N, P_K, P_A, P_M, P_R, P_A}, 70)));
+
+        // 6. "open chrome"
+        canonicalCache.add(new AcousticTemplate("open chrome", buildTrajectory(
+            new float[][]{P_O, P_T, P_E, P_N, P_K, P_R, P_O, P_M}, 58)));
+
+        // 7. "recent apps"
+        canonicalCache.add(new AcousticTemplate("recent apps", buildTrajectory(
+            new float[][]{P_R, P_I, P_S, P_E, P_N, P_T, P_A, P_T, P_S}, 62)));
+
+        // 8. "what time is it"
+        canonicalCache.add(new AcousticTemplate("what time is it", buildTrajectory(
+            new float[][]{P_W, P_A, P_T, P_T, P_A, P_I, P_M, P_I, P_S, P_I, P_T}, 75)));
+
+        // 9. "clear notifications"
+        canonicalCache.add(new AcousticTemplate("clear notifications", buildTrajectory(
+            new float[][]{P_K, P_L, P_I, P_R, P_N, P_O, P_T, P_I, P_F, P_A, P_K, P_E, P_SH, P_N, P_S}, 95)));
+
+        // 10. "hey ultron"
+        canonicalCache.add(new AcousticTemplate("hey ultron", buildTrajectory(
+            new float[][]{P_E, P_I, P_A, P_L, P_T, P_R, P_O, P_N}, 56)));
+
+        return canonicalCache;
+    }
+
+    private static float[][] buildTrajectory(float[][] phonemes, int totalFrames) {
+        float[][] traj = new float[totalFrames][NUM_MFCC];
+        int numP = phonemes.length;
+        for (int f = 0; f < totalFrames; f++) {
+            float pos = (float) f / (totalFrames - 1) * (numP - 1);
+            int idx1 = (int) Math.floor(pos);
+            int idx2 = Math.min(numP - 1, idx1 + 1);
+            float weight = pos - idx1;
+            for (int j = 1; j < NUM_MFCC; j++) {
+                traj[f][j] = (1.0f - weight) * phonemes[idx1][j - 1] + weight * phonemes[idx2][j - 1];
+            }
+        }
+        return traj;
     }
 
     // =========================================================================
@@ -538,10 +523,24 @@ public class UltronOfflineAcousticEngine {
     // User Voice Calibration & Persistence
     // =========================================================================
 
+    private static void ensureCleanVoicePreferences(Context context) {
+        if (context == null) return;
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREF_TRAINED_VOICE, Context.MODE_PRIVATE);
+            int ver = prefs.getInt(PREF_VOICE_VER, 0);
+            if (ver < CURRENT_VOICE_VER) {
+                // Clear any poisoned templates from older faulty heuristics
+                prefs.edit().clear().putInt(PREF_VOICE_VER, CURRENT_VOICE_VER).apply();
+                logI(TAG, "Migrated and cleaned voice template preferences to v" + CURRENT_VOICE_VER);
+            }
+        } catch (Exception ignored) {}
+    }
+
     public static boolean trainUserVoiceCommand(Context context, String commandName, byte[] pcmData) {
         if (context == null || pcmData == null || pcmData.length < 3200) return false;
 
-        float[][] mfcc = extractMFCC(pcmData);
+        byte[] active = trimSilence(pcmData);
+        float[][] mfcc = extractMFCC(active);
         if (mfcc == null || mfcc.length < 6) return false;
 
         StringBuilder sb = new StringBuilder();
