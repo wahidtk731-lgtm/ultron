@@ -230,6 +230,13 @@ public class UltronIndependentVoiceInput {
 
                 stopAudioRecordFallback();
 
+                // 2. If device has no internet, immediately start on-device AudioRecord capture
+                if (!isNetworkConnected()) {
+                    Log.i(TAG, "No internet: activating on-device AudioRecord listener directly");
+                    startAudioRecordFallback();
+                    return;
+                }
+
                 try {
                     ensureRecognizer();
 
@@ -353,29 +360,14 @@ public class UltronIndependentVoiceInput {
                 safeDestroyRecognizer();
             }
 
-            // If error is network-related, offline speech model might not be downloaded
-            if (error == SpeechRecognizer.ERROR_NETWORK || error == SpeechRecognizer.ERROR_NETWORK_TIMEOUT) {
-                if (isNetworkConnected()) {
-                    // If online, retry with network intent
-                    Log.i(TAG, "Offline failed, retrying online");
-                    Intent onlineIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                    onlineIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                    onlineIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
-                    onlineIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.getPackageName());
-                    try {
-                        ensureRecognizer();
-                        speechRecognizer.startListening(onlineIntent);
-                        isListening.set(true);
-                        return;
-                    } catch (Exception ignored) {}
-                } else {
-                    notifyError("Offline speech pack missing. Tap settings to download.");
-                    return;
-                }
-            }
-
-            if (error == SpeechRecognizer.ERROR_CLIENT || error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
-                Log.i(TAG, "Falling back to AudioRecord after SpeechRecognizer error " + error);
+            // If SpeechRecognizer has any issue, seamlessly capture via on-device AudioRecord
+            if (error == SpeechRecognizer.ERROR_NETWORK ||
+                error == SpeechRecognizer.ERROR_NETWORK_TIMEOUT ||
+                error == SpeechRecognizer.ERROR_CLIENT ||
+                error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
+                error == 9) {
+                Log.i(TAG, "SpeechRecognizer unavailable (error " + error + "), seamlessly switching to AudioRecord capture");
+                safeDestroyRecognizer();
                 startAudioRecordFallback();
                 return;
             }
@@ -569,12 +561,21 @@ public class UltronIndependentVoiceInput {
                         return;
                     }
 
+                    // Tier 1: If online, check Chromium high-precision speech API
                     if (isNetworkConnected()) {
                         String text = queryChromiumSpeechApi(pcmData);
                         if (text != null && !text.trim().isEmpty()) {
                             notifyResult(text.trim());
                             return;
                         }
+                    }
+
+                    // Tier 2: 100% Offline On-Device Acoustic Command Recognizer
+                    String offlineDecoded = UltronOfflineAcousticEngine.recognizeCommand(pcmData);
+                    if (offlineDecoded != null && !offlineDecoded.trim().isEmpty()) {
+                        Log.i(TAG, "Offline Acoustic Engine Decoded: " + offlineDecoded);
+                        notifyResult(offlineDecoded.trim());
+                        return;
                     }
 
                     notifyError("Didn't catch that. Tap mic to retry.");
