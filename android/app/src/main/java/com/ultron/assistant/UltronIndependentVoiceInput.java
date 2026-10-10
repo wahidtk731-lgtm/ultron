@@ -571,7 +571,7 @@ public class UltronIndependentVoiceInput {
                     }
 
                     // Tier 2: 100% Offline On-Device Acoustic Command Recognizer
-                    String offlineDecoded = UltronOfflineAcousticEngine.recognizeCommand(pcmData);
+                    String offlineDecoded = UltronOfflineAcousticEngine.recognizeCommand(context, pcmData);
                     if (offlineDecoded != null && !offlineDecoded.trim().isEmpty()) {
                         Log.i(TAG, "Offline Acoustic Engine Decoded: " + offlineDecoded);
                         notifyResult(offlineDecoded.trim());
