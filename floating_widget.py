@@ -688,7 +688,11 @@ class UltronGeminiWidget:
 
                     if raw_text:
                         norm = normalize_speech(raw_text)
-                        if is_wake_word(norm) or self.state == "listening":
+                        if self.state == "listening":
+                            cmd_body = strip_wake_words(norm) or norm
+                            has_partial = False
+                            self._dispatch_command(cmd_body)
+                        elif is_wake_word(norm):
                             cmd_body = strip_wake_words(norm)
                             if cmd_body:
                                 has_partial = False
@@ -713,7 +717,7 @@ class UltronGeminiWidget:
                             if cmd_body and len(cmd_body.split()) >= 2:
                                 has_partial = False
                                 self._dispatch_command(norm_part)
-                            else:
+                            elif norm_part in ("hey ultron", "ok ultron", "hi ultron", "ultron", "hey all thrown", "all thrown"):
                                 self.trigger_listening()
                                 has_partial = False
         finally:

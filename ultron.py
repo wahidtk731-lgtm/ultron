@@ -417,10 +417,16 @@ class UltronAssistant:
                             if final_speech:
                                 print(f"\n[Transcribed]: {final_speech}")
                                 if is_wake_word(final_speech) or active_listening:
-                                    should_continue = self.process_command(final_speech)
-                                    active_listening = False
-                                    if not should_continue:
-                                        break
+                                    norm_speech = normalize_speech(final_speech)
+                                    cmd_body = strip_wake_words(norm_speech)
+                                    if not cmd_body and is_wake_word(final_speech):
+                                        self.tts.speak("Yes, I'm listening. What would you like me to do?")
+                                        active_listening = True
+                                    else:
+                                        should_continue = self.process_command(final_speech)
+                                        active_listening = False
+                                        if not should_continue:
+                                            break
                         else:
                             audio_buffer.clear()
                     else:

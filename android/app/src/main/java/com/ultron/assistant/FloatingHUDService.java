@@ -601,7 +601,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
             default:
                 boolean ok = appLauncher.launchApp(action.raw);
-                return ok ? "Opening " + action.raw : "I could not find " + action.raw + " on your device.";
+                if (!ok) {
+                    appLauncher.searchWeb(action.raw);
+                    return "Searching web for " + action.raw;
+                }
+                return "Opening " + action.raw;
         }
     }
 

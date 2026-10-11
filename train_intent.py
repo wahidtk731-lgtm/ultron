@@ -99,6 +99,20 @@ class PurePythonIntentClassifier:
                 if sim > best_sim:
                     best_sim = sim
                     best_c = c
+            
+            # Smart contextual guards for open-domain questions & vocabulary
+            low = text.lower().strip()
+            time_words = ("time", "date", "clock", "hour", "day", "month", "year", "today")
+            question_starters = ("what", "who", "where", "when", "why", "how", "which", "tell me", "explain", "define", "meaning", "calculate", "translate")
+            
+            if best_c == "query_time" and not any(w in low for w in time_words):
+                best_c = "search_web"
+            elif best_c in ("create_file", "write_file", "open_file") and not any(w in low for w in ("file", ".py", ".cpp", ".js", ".html", ".css", ".txt", ".sh", ".md", ".json")):
+                if any(low.startswith(q) for q in question_starters) or "?" in low:
+                    best_c = "search_web"
+            elif any(low.startswith(q) for q in question_starters) and not any(w in low for w in time_words):
+                best_c = "search_web"
+
             res.append(best_c)
         return res
 

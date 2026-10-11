@@ -89,8 +89,11 @@ public class UltronOfflineAcousticEngine {
 
         // 1. Trim leading and trailing silence so only active speech is compared
         byte[] activeAudio = trimSilence(pcmData);
+        if (activeAudio == null || activeAudio.length < 3200) {
+            return "";
+        }
         float[][] queryMfcc = extractMFCC(activeAudio);
-        if (queryMfcc == null || queryMfcc.length < 6) {
+        if (queryMfcc == null || queryMfcc.length < 10) {
             return "";
         }
 
@@ -110,7 +113,7 @@ public class UltronOfflineAcousticEngine {
                 }
             }
 
-            if (bestUserDist < 12.5f && !bestUserCmd.isEmpty()) {
+            if (bestUserDist < 16.0f && !bestUserCmd.isEmpty()) {
                 logI(TAG, "Matched User Calibrated Voice: '" + bestUserCmd + "' (score: " + bestUserDist + ")");
                 return bestUserCmd;
             }
@@ -133,8 +136,8 @@ public class UltronOfflineAcousticEngine {
 
         logI(TAG, "Best DTW Acoustic Match: '" + bestCommand + "' (score: " + bestDistance + ")");
 
-        // Accept best match within robust distance window
-        if (bestDistance < 46.0f && !bestCommand.isEmpty()) {
+        // Accept best match strictly within valid acoustic threshold (rejects room noise)
+        if (bestDistance < 25.0f && !bestCommand.isEmpty()) {
             return bestCommand;
         }
 
@@ -167,7 +170,10 @@ public class UltronOfflineAcousticEngine {
             if (e > peakE) peakE = e;
         }
 
-        double threshold = Math.max(16.0, peakE * 0.12);
+        double threshold = Math.max(28.0, peakE * 0.16);
+        if (peakE < 35.0) {
+            return new byte[0]; // Pure silence or ambient noise floor
+        }
         int firstVoiced = 0;
         while (firstVoiced < numFrames && energies[firstVoiced] < threshold) {
             firstVoiced++;
@@ -181,12 +187,12 @@ public class UltronOfflineAcousticEngine {
         firstVoiced = Math.max(0, firstVoiced - 4);
         lastVoiced = Math.min(numFrames - 1, lastVoiced + 4);
 
-        if (lastVoiced <= firstVoiced) return pcmData;
+        if (lastVoiced <= firstVoiced) return new byte[0];
 
         int startSample = firstVoiced * frameLen;
         int endSample = Math.min(numSamples, (lastVoiced + 1) * frameLen);
         int trimmedBytes = (endSample - startSample) * 2;
-        if (trimmedBytes < 3200) return pcmData;
+        if (trimmedBytes < 3200) return new byte[0];
 
         byte[] trimmed = new byte[trimmedBytes];
         System.arraycopy(pcmData, startSample * 2, trimmed, 0, trimmedBytes);
@@ -266,8 +272,8 @@ public class UltronOfflineAcousticEngine {
             }
         }
 
-        // Voiced frames: within 60 dB of peak energy
-        double energyFloor = maxEnergy - 60.0;
+        // Voiced frames: within 38 dB of peak energy, with minimum energy floor
+        double energyFloor = Math.max(maxEnergy - 38.0, -42.0);
         double[] meanMfcc = new double[NUM_MFCC];
         int activeFrames = 0;
         for (int f = 0; f < numFrames; f++) {
@@ -279,10 +285,13 @@ public class UltronOfflineAcousticEngine {
             }
         }
 
-        if (activeFrames > 0) {
-            for (int i = 0; i < NUM_MFCC; i++) {
-                meanMfcc[i] /= activeFrames;
-            }
+        // Reject if less than 14 active frames (~140ms) of voiced audio
+        if (activeFrames < 14) {
+            return null;
+        }
+
+        for (int i = 0; i < NUM_MFCC; i++) {
+            meanMfcc[i] /= activeFrames;
         }
 
         List<float[]> activeList = new ArrayList<float[]>();

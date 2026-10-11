@@ -10,13 +10,12 @@ import re
 # Comprehensive regex of phonetic misrecognitions for "Ultron"
 PHONETIC_VARIANTS_PATTERN = (
     r"\b("
-    r"all\s+thrown|all\s+throne|all\s+throw\w*|all\s+thr\w+|"
-    r"all\s+drone|all\s+drown\w*|all\s+drawn|all\s+dr\w+|"
-    r"hall\s+dr\w+|hall\s+thr\w+|hall\s+thrown|"
-    r"all\s+turn|all\s+grown|all\s+crown|all\s+round|all\s+train|all\s+churn|all\s+tone|"
-    r"old\s+run|out\s+run|outrun|el\s+tr\w+|alter\s+on|ultra\s+on|"
-    r"whole\s+turn|hole\s+turn|full\s+turn|"
-    r"altron|ultra|ultran|oltron"
+    r"hey\s+ultron|ok\s+ultron|hi\s+ultron|hello\s+ultron|"
+    r"all\s+thrown|all\s+throne|all\s+drone|all\s+drawn|"
+    r"hall\s+thrown|hall\s+drone|"
+    r"ultra\s+on|alter\s+on|"
+    r"altron|oltron|ultran|eltron|"
+    r"ultron"
     r")\b"
 )
 
@@ -25,6 +24,9 @@ PHONETIC_REGEX = re.compile(PHONETIC_VARIANTS_PATTERN, re.IGNORECASE)
 # Wake words variants
 WAKE_WORDS = [
     "hey ultron",
+    "ok ultron",
+    "hi ultron",
+    "hello ultron",
     "ultron",
     "hey all thrown",
     "all thrown",
@@ -32,17 +34,8 @@ WAKE_WORDS = [
     "all drone",
     "hey altron",
     "altron",
-    "hey ultra",
-    "ultra",
-    "hey out run",
-    "out run",
-    "outrun",
-    "hey old run",
-    "old run",
-    "hey all turn",
-    "all turn",
-    "hey all round",
-    "all round",
+    "ultra on",
+    "hey ultra on",
 ]
 
 # App & keyword phonetic replacements
@@ -197,21 +190,21 @@ def normalize_speech(text: str) -> str:
 
 def is_wake_word(text: str) -> bool:
     """
-    Detects if the input text contains a wake word, either in raw or normalized form.
+    Detects if the input text contains a genuine wake word for Ultron.
+    Avoids false positives on casual mentions or partial words.
     """
     if not text:
         return False
     
-    normalized = normalize_speech(text)
-    
-    if "ultron" in normalized:
-        return True
-        
-    lower = text.lower()
+    cleaned = text.lower().strip()
     for w in WAKE_WORDS:
-        if w in lower:
+        if re.search(rf"\b{re.escape(w)}\b", cleaned):
             return True
             
+    norm = normalize_speech(text)
+    if re.search(r"\bultron\b", norm):
+        return True
+        
     return False
 
 def strip_wake_words(text: str) -> str:
@@ -224,11 +217,11 @@ def strip_wake_words(text: str) -> str:
         
     normalized = normalize_speech(text)
     
-    cleaned = re.sub(r"\bhey\s+ultron\b", " ", normalized)
-    cleaned = re.sub(r"\bultron\b", " ", cleaned)
+    cleaned = re.sub(r"\b(?:hey|ok|hi|hello)\s+ultron\b", " ", normalized, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bultron\b", " ", cleaned, flags=re.IGNORECASE)
     
     for w in WAKE_WORDS:
-        cleaned = re.sub(rf"\b{re.escape(w)}\b", " ", cleaned)
+        cleaned = re.sub(rf"\b{re.escape(w)}\b", " ", cleaned, flags=re.IGNORECASE)
         
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
     return cleaned

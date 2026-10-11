@@ -210,16 +210,25 @@ QUICK_SETTINGS_PHRASES = [
     "expand quick settings", "open control center", "show control center"
 ]
 
-# 8. Web Search Templates & Queries
+# 8. Web Search Templates & Queries (Comprehensive Open-Domain Questions & Words)
 SEARCH_TEMPLATES = [
     "search google for {q}", "search the web for {q}", "search for {q}", "google {q}",
     "look up {q}", "search {q}", "find info on {q}", "search online for {q}",
     "look on google for {q}", "query google for {q}", "can you search for {q}",
-    "please google {q}", "hey ultron search for {q}", "hey all thrown search google for {q}",
-    "ultron search {q}", "find {q} on google", "web search {q}", "look up {q} online",
-    "google search {q}", "search internet for {q}", "find articles on {q}",
-    "what is {q}", "who is {q}", "where is {q}", "how to {q}", "why is {q}",
-    "tell me about {q}", "explain {q}", "define {q}", "meaning of {q}"
+    "please google {q}", "hey ultron search for {q}", "ultron search {q}",
+    "find {q} on google", "web search {q}", "look up {q} online", "google search {q}",
+    "search internet for {q}", "find articles on {q}",
+    "what is {q}", "what are {q}", "who is {q}", "who was {q}", "where is {q}",
+    "where are {q}", "when is {q}", "when was {q}", "why is {q}", "why are {q}",
+    "why do {q}", "why does {q}", "how is {q}", "how to {q}", "how do i {q}",
+    "how can i {q}", "how does {q} work", "which is {q}", "which are {q}",
+    "tell me about {q}", "tell me {q}", "explain {q}", "explain to me {q}",
+    "define {q}", "definition of {q}", "meaning of {q}", "what does {q} mean",
+    "calculate {q}", "solve {q}", "convert {q}", "translate {q}",
+    "weather in {q}", "weather forecast for {q}", "temperature in {q}",
+    "latest news on {q}", "stock price of {q}", "capital of {q}",
+    "population of {q}", "history of {q}", "facts about {q}",
+    "best way to {q}", "tutorials on {q}", "recipes for {q}"
 ]
 
 SEARCH_QUERIES = [
@@ -231,7 +240,21 @@ SEARCH_QUERIES = [
     "offline ai assistants", "crostini linux tips", "html and css",
     "solar system", "speed of light", "dna structure", "gravity", "world history",
     "bitcoin price", "stock market", "healthy food", "best movies", "calculator",
-    "currency converter", "world map", "translate english to french", "einstein"
+    "currency converter", "world map", "translate english to french", "einstein",
+    "photosynthesis", "black holes", "relativity", "quantum mechanics", "global warming",
+    "renewable energy", "electric vehicles", "mars rover", "james webb telescope",
+    "french revolution", "world war 2", "ancient egypt", "roman empire", "great wall of china",
+    "mount everest", "amazon rainforest", "deep sea creatures", "human brain", "immune system",
+    "antibiotics", "cellular respiration", "periodic table", "atomic structure", "thermodynamics",
+    "calculus", "linear algebra", "cryptography", "blockchain", "cybersecurity",
+    "operating systems", "computer networks", "cloud computing", "microservices", "docker",
+    "kubernetes", "database design", "sql queries", "rust programming", "golang",
+    "swift programming", "kotlin android", "flutter dev", "react js", "nodejs",
+    "tokyo", "paris", "london", "new york", "sydney", "berlin", "dubai", "singapore",
+    "apple inc", "google alphabet", "microsoft", "nvidia", "tesla", "spacex",
+    "inflation rate", "interest rates", "world economy", "gdp ranking", "gold prices",
+    "cricket world cup", "fifa world cup", "olympic games", "super bowl", "champions league",
+    "mental health", "meditation", "healthy diet", "intermittent fasting", "strength training"
 ]
 
 # 9. Greeting Phrases

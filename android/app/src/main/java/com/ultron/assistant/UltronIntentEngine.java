@@ -11,22 +11,20 @@ import java.util.regex.Pattern;
  */
 public class UltronIntentEngine {
 
-    // Phonetic variants regex for "Ultron" ("all thrown", "all drone", etc.)
+    // Phonetic variants regex for "Ultron" ("hey ultron", "all thrown", "all drone", etc.)
     private static final Pattern PHONETIC_ULTRON_PATTERN = Pattern.compile(
-        "\\b(all\\s+thrown|all\\s+throne|all\\s+throw\\w*|all\\s+thr\\w+|" +
-        "all\\s+drone|all\\s+drown\\w*|all\\s+drawn|all\\s+dr\\w+|" +
-        "hall\\s+dr\\w+|hall\\s+thr\\w+|hall\\s+thrown|" +
-        "all\\s+turn|all\\s+grown|all\\s+crown|all\\s+round|all\\s+train|all\\s+churn|all\\s+tone|" +
-        "old\\s+run|out\\s+run|outrun|el\\s+tr\\w+|alter\\s+on|ultra\\s+on|" +
-        "whole\\s+turn|hole\\s+turn|full\\s+turn|" +
-        "altron|ultra|ultran|oltron)\\b",
+        "\\b(hey\\s+ultron|ok\\s+ultron|hi\\s+ultron|hello\\s+ultron|" +
+        "all\\s+thrown|all\\s+throne|all\\s+drone|all\\s+drawn|" +
+        "hall\\s+thrown|hall\\s+drone|" +
+        "ultra\\s+on|alter\\s+on|" +
+        "altron|oltron|ultran|eltron)\\b",
         Pattern.CASE_INSENSITIVE
     );
 
     private static final List<String> WAKE_WORDS = Arrays.asList(
-        "hey ultron", "ultron", "hey all thrown", "all thrown", "hey all drone",
-        "all drone", "hey altron", "altron", "hey ultra", "ultra",
-        "hey out run", "out run", "outrun", "hey all turn", "all turn"
+        "hey ultron", "ultron", "ok ultron", "hi ultron", "hello ultron",
+        "hey all thrown", "all thrown", "hey all drone", "all drone",
+        "hey altron", "altron", "ultra on", "hey ultra on"
     );
 
     public static class ActionCommand {
@@ -94,12 +92,12 @@ public class UltronIntentEngine {
      */
     public boolean isWakeWord(String text) {
         if (text == null) return false;
-        String norm = normalizeSpeech(text);
-        if (norm.contains("ultron")) return true;
+        String lower = text.toLowerCase().trim();
         for (String w : WAKE_WORDS) {
-            if (text.toLowerCase().contains(w)) return true;
+            if (lower.matches(".*\\b" + Pattern.quote(w) + "\\b.*")) return true;
         }
-        return false;
+        String norm = normalizeSpeech(text);
+        return norm.matches(".*\\bultron\\b.*");
     }
 
     /**
@@ -108,7 +106,7 @@ public class UltronIntentEngine {
     public String stripWakeWords(String text) {
         if (text == null) return "";
         String norm = normalizeSpeech(text);
-        String cleaned = norm.replaceAll("\\bhey\\s+ultron\\b", " ")
+        String cleaned = norm.replaceAll("\\b(?:hey|ok|hi|hello)\\s+ultron\\b", " ")
                              .replaceAll("\\bultron\\b", " ");
         for (String w : WAKE_WORDS) {
             cleaned = cleaned.replaceAll("\\b" + Pattern.quote(w) + "\\b", " ");
@@ -295,9 +293,11 @@ public class UltronIntentEngine {
 
         // 14. Search Web & Open-Domain Questions
         if (c.matches(".*\\b(search|look up|find on web|google)\\b.*") ||
-            c.matches("^(what is|who is|where is|how to|why does|why is|tell me about|explain|define|meaning of)\\b.*")) {
-            String query = c.replaceAll("^(search the web for|search for|look up|search google for|google|search|find info on|what is|who is|where is|how to|why does|why is|tell me about|explain|define|meaning of)\\b", " ")
+            c.matches("^(what|who|where|when|why|how|which|tell me|explain|define|meaning|calculate|translate|weather|capital|population|news)\\b.*") ||
+            c.endsWith("?")) {
+            String query = c.replaceAll("^(search the web for|search for|look up|search google for|google|search|find info on|what is|who is|where is|how to|why does|why is|tell me about|tell me|explain|define|meaning of)\\b", " ")
                             .replaceAll("\\s+", " ").trim();
+            if (query.isEmpty()) query = c;
             return new ActionCommand("search_web", query, c);
         }
 

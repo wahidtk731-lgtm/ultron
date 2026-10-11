@@ -174,8 +174,10 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                         webView.evaluateJavascript(String.format("if(window.onAssistantCheck) window.onAssistantCheck(%b);", isDefault), null);
                         webView.evaluateJavascript("if(window.updateRecentApps) window.updateRecentApps();", null);
 
-                        if (hasAudioPermission()) {
+                        if (isAssistIntent(getIntent()) && hasAudioPermission()) {
                             startListening();
+                        } else {
+                            updateWebStatus("ready", "Ultron Ready • Tap mic to speak");
                         }
                     }
                 }, 350);
@@ -235,6 +237,14 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             }
         } catch (Exception ignored) {}
         return false;
+    }
+
+    public boolean isAssistIntent(Intent intent) {
+        if (intent == null) return false;
+        String action = intent.getAction();
+        return Intent.ACTION_ASSIST.equals(action) ||
+               "android.intent.action.VOICE_ASSIST".equals(action) ||
+               RecognizerIntent.ACTION_VOICE_SEARCH_HANDS_FREE.equals(action);
     }
 
     public void openDefaultAssistantSettings() {
@@ -608,7 +618,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
             default:
                 boolean ok = appLauncher.launchApp(action.raw);
-                return ok ? "Opening " + action.raw : "I could not find " + action.raw + " installed on your device.";
+                if (!ok) {
+                    appLauncher.searchWeb(action.raw);
+                    return "Searching web for " + action.raw;
+                }
+                return "Opening " + action.raw;
         }
     }
 

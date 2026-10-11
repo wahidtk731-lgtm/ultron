@@ -208,10 +208,10 @@ public class UltronIndependentVoiceInput {
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
 
-        // Responsive silence threshold (1000ms for swift natural turn-taking)
-        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000L);
-        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1000L);
-        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1000L);
+        // Generous silence threshold (2500ms for natural pauses without premature cutoffs)
+        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L);
+        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L);
+        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 2000L);
 
         return intent;
     }
@@ -553,8 +553,9 @@ public class UltronIndependentVoiceInput {
                     long speechStartTime = 0;
                     long lastSpeechTime = 0;
                     boolean heardSpeech = false;
-                    double ambientRms = 20.0;
+                    double ambientRms = 25.0;
                     int frameCount = 0;
+                    int voicedCount = 0;
 
                     while (isFallbackRecording.get() && !Thread.currentThread().isInterrupted()) {
                         int read = recorder.read(buffer, 0, buffer.length);
@@ -570,18 +571,18 @@ public class UltronIndependentVoiceInput {
 
                         double rms = Math.sqrt((double) sum / read);
 
-                        // Adaptive ambient room noise calibration (first 5 frames ~150ms)
-                        if (frameCount < 5) {
+                        // Adaptive ambient room noise calibration (first 6 frames ~180ms)
+                        if (frameCount < 6) {
                             ambientRms = (ambientRms * frameCount + rms) / (frameCount + 1);
                             frameCount++;
                         } else {
                             if (rms < ambientRms * 1.15) {
-                                ambientRms = 0.96 * ambientRms + 0.04 * rms;
+                                ambientRms = 0.95 * ambientRms + 0.05 * rms;
                             }
                         }
 
-                        // Highly responsive speech trigger threshold (ambient + safety delta)
-                        double speechThreshold = Math.max(25.0, ambientRms * 1.25);
+                        // Calibrated robust vocal threshold (requires distinct human vocal energy above ambient floor)
+                        double speechThreshold = Math.max(65.0, ambientRms * 1.70);
 
                         // Visual RMS for HUD stadium capsule glow
                         float visualDb = Math.min(95f, Math.max(0f, (float) ((rms - 10.0) * 1.6)));
@@ -589,20 +590,25 @@ public class UltronIndependentVoiceInput {
 
                         long now = System.currentTimeMillis();
                         if (rms > speechThreshold) {
-                            if (!heardSpeech) {
-                                heardSpeech = true;
-                                speechStartTime = now;
-                                notifyBeginningOfSpeech();
+                            voicedCount++;
+                            if (voicedCount >= 2) {
+                                if (!heardSpeech) {
+                                    heardSpeech = true;
+                                    speechStartTime = now;
+                                    notifyBeginningOfSpeech();
+                                }
+                                lastSpeechTime = now;
                             }
-                            lastSpeechTime = now;
+                        } else {
+                            voicedCount = 0;
                         }
 
-                        // Auto-detect speech end: 950ms silence after speech, or 5.0s maximum total speech
-                        if (heardSpeech && (now - lastSpeechTime > 950 || now - speechStartTime > 5000)) {
+                        // Auto-detect speech end: 1050ms silence after speech, or 6.0s maximum total speech
+                        if (heardSpeech && (now - lastSpeechTime > 1050 || now - speechStartTime > 6000)) {
                             break;
                         }
-                        // Timeout: 4.5s with no speech heard
-                        if (!heardSpeech && (now - startTime > 4500)) {
+                        // Timeout: 5.0s with no speech heard
+                        if (!heardSpeech && (now - startTime > 5000)) {
                             break;
                         }
                     }
@@ -617,9 +623,9 @@ public class UltronIndependentVoiceInput {
 
                     byte[] pcmData = pcmStream.toByteArray();
 
-                    // CRITICAL: If no speech was detected, do NOT attempt recognition on pure silence/noise!
+                    // CRITICAL: If no speech was detected, gracefully reset to ready state without error alert
                     if (!heardSpeech || pcmData.length < 6400) {
-                        notifyError("Didn't hear that. Tap mic to speak.");
+                        notifyError("Ultron Ready • Tap mic to speak");
                         return;
                     }
 
