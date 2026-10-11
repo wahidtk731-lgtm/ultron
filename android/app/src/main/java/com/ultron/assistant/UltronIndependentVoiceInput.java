@@ -46,6 +46,12 @@ public class UltronIndependentVoiceInput {
 
     private static final String TAG = "UltronVoiceInput";
 
+    // Unofficial public Chromium development speech recognition endpoint key.
+    // Isolated here for clarity; used as an optional online fallback for raw PCM audio.
+    private static final String CHROMIUM_SPEECH_API_KEY = "AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw";
+    private static final String CHROMIUM_SPEECH_ENDPOINT =
+        "https://www.google.com/speech-api/v2/recognize?client=chromium&lang=en-US&key=" + CHROMIUM_SPEECH_API_KEY;
+
     public interface VoiceInputListener {
         void onReady();
         void onBeginningOfSpeech();
@@ -702,10 +708,9 @@ public class UltronIndependentVoiceInput {
     }
 
     private String queryChromiumSpeechApi(byte[] pcmData) {
-        String endpoint = "https://www.google.com/speech-api/v2/recognize?client=chromium&lang=en-US&key=AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw";
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(endpoint);
+            URL url = new URL(CHROMIUM_SPEECH_ENDPOINT);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "audio/l16; rate=16000");
