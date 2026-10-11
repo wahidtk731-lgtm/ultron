@@ -150,6 +150,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     }
 
     private void initFloatingHUDView() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Log.w(TAG, "Cannot initialize floating HUD: SYSTEM_ALERT_WINDOW permission not granted");
+            stopSelf();
+            return;
+        }
+
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         int layoutFlag;
@@ -229,7 +235,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                     }
                     try {
                         windowManager.updateViewLayout(floatingView, windowParams);
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed updating dock position layout: " + e.getMessage());
+                    }
                 }
             }
         });
@@ -245,7 +253,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                     windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
                     try {
                         windowManager.updateViewLayout(floatingView, windowParams);
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed updating expand layout: " + e.getMessage());
+                    }
                 }
             }
         });
@@ -280,7 +290,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                     }
                     try {
                         windowManager.updateViewLayout(floatingView, windowParams);
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed updating mini bubble layout: " + e.getMessage());
+                    }
                 }
             }
         });
@@ -689,7 +701,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                     }
                     try {
                         windowManager.updateViewLayout(floatingView, windowParams);
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed updating focus layout: " + e.getMessage());
+                    }
                 }
             }
         });
@@ -700,18 +714,36 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         super.onDestroy();
         instance = null;
 
+        if (mainHandler != null) {
+            mainHandler.removeCallbacksAndMessages(null);
+        }
+
         if (floatingView != null && windowManager != null && isViewAttached) {
             try {
                 windowManager.removeView(floatingView);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.w(TAG, "Failed removing floating view: " + e.getMessage());
+            }
             isViewAttached = false;
         }
+
+        if (webView != null) {
+            try {
+                webView.destroy();
+            } catch (Exception e) {
+                Log.w(TAG, "Failed destroying WebView: " + e.getMessage());
+            }
+            webView = null;
+            floatingView = null;
+        }
+
         if (voiceInput != null) {
             voiceInput.destroy();
             voiceInput = null;
         }
         if (ttsManager != null) {
             ttsManager.shutdown();
+            ttsManager = null;
         }
     }
 
