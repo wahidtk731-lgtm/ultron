@@ -903,5 +903,40 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         public void toggleFloatingOverlay() {
             openFloatingMode();
         }
+
+        @JavascriptInterface
+        public void closeFloatingOverlay() {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    finish();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void minimizeToBubble() {
+            openFloatingMode();
+        }
+
+        @JavascriptInterface
+        public void expandFromBubble() {
+            // No-op in activity mode
+        }
+
+        @JavascriptInterface
+        public void toggleBubbleMode() {
+            openFloatingMode();
+        }
+
+        @JavascriptInterface
+        public void setWindowHeight(int dp) {
+            // No-op in activity mode
+        }
+
+        @JavascriptInterface
+        public void requestInputFocus() {
+            // No-op in activity mode
+        }
     }
 }
