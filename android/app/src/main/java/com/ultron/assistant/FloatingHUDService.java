@@ -26,6 +26,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -306,8 +308,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             @Override
             public void onPartialResult(String partialText) {
                 if (webView != null && partialText != null) {
-                    String safe = partialText.replace("'", "\\'");
-                    webView.evaluateJavascript(String.format("if(window.onPartialSpeech) window.onPartialSpeech('%s');", safe), null);
+                    webView.evaluateJavascript("if(window.onPartialSpeech) window.onPartialSpeech(" + JSONObject.quote(partialText) + ");", null);
                 }
             }
 
@@ -630,7 +631,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             @Override
             public void run() {
                 if (webView != null) {
-                    webView.evaluateJavascript(String.format("window.onStatusUpdate('%s', '%s');", state, message), null);
+                    String s = state != null ? state : "";
+                    String m = message != null ? message : "";
+                    webView.evaluateJavascript("window.onStatusUpdate(" + JSONObject.quote(s) + ", " + JSONObject.quote(m) + ");", null);
                 }
             }
         });
@@ -641,8 +644,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             @Override
             public void run() {
                 if (webView != null) {
-                    webView.evaluateJavascript(String.format("window.onAssistantReply('%s', '%s');", 
-                        query.replace("'", "\\'"), reply.replace("'", "\\'")), null);
+                    String q = query != null ? query : "";
+                    String r = reply != null ? reply : "";
+                    webView.evaluateJavascript("window.onAssistantReply(" + JSONObject.quote(q) + ", " + JSONObject.quote(r) + ");", null);
                 }
             }
         });
