@@ -63,6 +63,7 @@ public class UltronIndependentVoiceInput {
     private final AtomicBoolean isListening = new AtomicBoolean(false);
     private final AtomicBoolean isFallbackRecording = new AtomicBoolean(false);
     private Thread fallbackThread = null;
+    private int fallbackRetryCount = 0;
 
     public UltronIndependentVoiceInput(Context context, VoiceInputListener listener) {
         this.context = context;
@@ -236,6 +237,7 @@ public class UltronIndependentVoiceInput {
                 }
 
                 stopAudioRecordFallback();
+                fallbackRetryCount = 0;
 
                 // 2. If device has no internet, attempt high-accuracy on-device SpeechRecognizer first!
                 // Android 12+ createOnDeviceSpeechRecognizer and downloaded offline voice models
@@ -383,13 +385,28 @@ public class UltronIndependentVoiceInput {
 
             safeDestroyRecognizer();
 
-            // Seamlessly fall back to direct AudioRecord mic capture for ANY recognizer failure
-            mainHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    startAudioRecordFallback();
-                }
-            }, 100);
+            // Handle user/environment conditions with clear UI status and no fallback loop
+            if (error == SpeechRecognizer.ERROR_NO_MATCH ||
+                error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT ||
+                error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ||
+                error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
+                handleRecognizerError(error);
+                return;
+            }
+
+            // For network, client or audio errors, attempt bounded AudioRecord fallback once
+            if (fallbackRetryCount < 1) {
+                fallbackRetryCount++;
+                Log.i(TAG, "Attempting bounded AudioRecord fallback for recognizer error: " + error);
+                mainHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        startAudioRecordFallback();
+                    }
+                }, 100);
+            } else {
+                handleRecognizerError(error);
+            }
         }
 
         @Override
@@ -400,6 +417,7 @@ public class UltronIndependentVoiceInput {
             if (matches != null && !matches.isEmpty()) {
                 String text = matches.get(0).trim();
                 if (!text.isEmpty()) {
+                    fallbackRetryCount = 0;
                     Log.i(TAG, "Speech Recognized: " + text);
                     notifyResult(text);
                     return;
@@ -443,12 +461,15 @@ public class UltronIndependentVoiceInput {
             case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
                 message = "Offline voice pack missing. Tap settings to download.";
                 break;
+            case SpeechRecognizer.ERROR_SERVER:
+                message = "Server error. Tap mic to retry.";
+                break;
             case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
                 message = "Microphone busy. Tap to retry.";
                 break;
             case SpeechRecognizer.ERROR_CLIENT:
             default:
-                message = "Tap mic to speak.";
+                message = "Didn't catch that. Tap mic to speak.";
                 break;
         }
 
