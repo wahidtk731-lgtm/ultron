@@ -58,6 +58,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable throwable) {
@@ -67,11 +68,19 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                     java.io.PrintWriter pw = new java.io.PrintWriter(sw);
                     throwable.printStackTrace(pw);
                     String stack = sw.toString();
-                    java.io.File crashFile = new java.io.File("/storage/emulated/0/Project/ultron_crash.log");
+                    java.io.File dir = getExternalFilesDir(null);
+                    if (dir == null) dir = getFilesDir();
+                    java.io.File crashFile = new java.io.File(dir, "ultron_crash.log");
                     java.io.FileWriter fw = new java.io.FileWriter(crashFile);
                     fw.write("UNCAUGHT_EXCEPTION:\n" + stack);
                     fw.close();
-                } catch (Throwable ignored) {}
+                } catch (Throwable t) {
+                    android.util.Log.w("ULTRON_CRASH", "Failed writing crash log: " + t.getMessage());
+                } finally {
+                    if (defaultHandler != null) {
+                        defaultHandler.uncaughtException(thread, throwable);
+                    }
+                }
             }
         });
 
@@ -91,11 +100,15 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 java.io.StringWriter sw = new java.io.StringWriter();
                 java.io.PrintWriter pw = new java.io.PrintWriter(sw);
                 t.printStackTrace(pw);
-                java.io.File crashFile = new java.io.File("/storage/emulated/0/Project/ultron_crash.log");
+                java.io.File dir = getExternalFilesDir(null);
+                if (dir == null) dir = getFilesDir();
+                java.io.File crashFile = new java.io.File(dir, "ultron_crash.log");
                 java.io.FileWriter fw = new java.io.FileWriter(crashFile);
                 fw.write("ON_CREATE_CRASH:\n" + sw.toString());
                 fw.close();
-            } catch (Throwable ignored) {}
+            } catch (Throwable logEx) {
+                android.util.Log.w("ULTRON_CRASH", "Failed writing onCreate crash log: " + logEx.getMessage());
+            }
             Toast.makeText(this, "Ultron Init: " + t.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
