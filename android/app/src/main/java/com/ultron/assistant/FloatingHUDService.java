@@ -56,6 +56,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     private Handler mainHandler;
 
     private boolean isListening = false;
+    private boolean shouldListenAfterSpeech = false;
     private boolean isExpanded = false;
     private boolean isDockedTop = false;
 
@@ -390,7 +391,17 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         String commandBody = intentEngine.stripWakeWords(normalized);
 
         if (commandBody.isEmpty()) {
+            shouldListenAfterSpeech = true;
             speakReply("Yes, I'm listening. What can I do for you?", "Listening...");
+            mainHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (shouldListenAfterSpeech) {
+                        shouldListenAfterSpeech = false;
+                        startListening();
+                    }
+                }
+            }, 2500);
             return;
         }
 
@@ -644,6 +655,16 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
     @Override
     public void onSpeechCompleted() {
+        if (shouldListenAfterSpeech) {
+            shouldListenAfterSpeech = false;
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    startListening();
+                }
+            });
+            return;
+        }
         updateWebStatus("ready", "Ultron Ready");
         mainHandler.postDelayed(new Runnable() {
             @Override

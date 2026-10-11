@@ -52,6 +52,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     private TTSManager ttsManager;
     private Handler mainHandler;
     private boolean isListening = false;
+    private boolean shouldListenAfterSpeech = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -408,7 +409,17 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         String commandBody = intentEngine.stripWakeWords(normalized);
 
         if (commandBody.isEmpty()) {
+            shouldListenAfterSpeech = true;
             speakReply("Yes, I'm listening. What would you like me to do?", "Listening...");
+            mainHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (shouldListenAfterSpeech) {
+                        shouldListenAfterSpeech = false;
+                        startListening();
+                    }
+                }
+            }, 2500);
             return;
         }
 
@@ -661,6 +672,16 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
     @Override
     public void onSpeechCompleted() {
+        if (shouldListenAfterSpeech) {
+            shouldListenAfterSpeech = false;
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    startListening();
+                }
+            });
+            return;
+        }
         updateWebStatus("ready", "Ready");
     }
 

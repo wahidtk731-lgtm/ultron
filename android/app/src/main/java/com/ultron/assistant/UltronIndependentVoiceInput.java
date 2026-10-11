@@ -194,15 +194,15 @@ public class UltronIndependentVoiceInput {
             intent.putExtra("android.speech.extra.DICTATION_MODE", true);
         }
 
-        // Language: prioritize en-US (universal pre-installed standard)
+        // Language: prioritize device's default locale, with en-US fallback
         String sysLang = Locale.getDefault().toLanguageTag();
         if (sysLang == null || sysLang.isEmpty() || "und".equalsIgnoreCase(sysLang)) {
             sysLang = "en-US";
         }
 
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-US");
-        intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"en-US", sysLang});
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, sysLang);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, sysLang);
+        intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{sysLang, "en-US"});
 
         intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.getPackageName());
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
@@ -377,29 +377,19 @@ public class UltronIndependentVoiceInput {
         }
 
         @Override
-        public void onError(int error) {
+        public void onError(final int error) {
             isListening.set(false);
             Log.w(TAG, "SpeechRecognizer onError: " + error);
 
-            if (error == SpeechRecognizer.ERROR_CLIENT ||
-                error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
-                error == 9 /* ERROR_INSUFFICIENT_PERMISSIONS or ERROR_SERVER_DISCONNECTED on Android 12 */) {
-                safeDestroyRecognizer();
-            }
+            safeDestroyRecognizer();
 
-            // If SpeechRecognizer has any issue, seamlessly capture via on-device AudioRecord
-            if (error == SpeechRecognizer.ERROR_NETWORK ||
-                error == SpeechRecognizer.ERROR_NETWORK_TIMEOUT ||
-                error == SpeechRecognizer.ERROR_CLIENT ||
-                error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
-                error == 9) {
-                Log.i(TAG, "SpeechRecognizer unavailable (error " + error + "), seamlessly switching to AudioRecord capture");
-                safeDestroyRecognizer();
-                startAudioRecordFallback();
-                return;
-            }
-
-            handleRecognizerError(error);
+            // Seamlessly fall back to direct AudioRecord mic capture for ANY recognizer failure
+            mainHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startAudioRecordFallback();
+                }
+            }, 100);
         }
 
         @Override
@@ -521,14 +511,15 @@ public class UltronIndependentVoiceInput {
 
                 AudioRecord recorder = null;
                 int[] audioSources = new int[]{
+                    MediaRecorder.AudioSource.MIC,
                     MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                    MediaRecorder.AudioSource.MIC
+                    MediaRecorder.AudioSource.DEFAULT
                 };
                 for (int src : audioSources) {
                     try {
                         recorder = new AudioRecord(src, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize);
                         if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
-                            Log.i(TAG, "Initialized AudioRecord with source: " + (src == MediaRecorder.AudioSource.VOICE_RECOGNITION ? "VOICE_RECOGNITION" : "MIC"));
+                            Log.i(TAG, "Initialized AudioRecord with source: " + src);
                             break;
                         }
                         recorder.release();
@@ -553,9 +544,8 @@ public class UltronIndependentVoiceInput {
                     long speechStartTime = 0;
                     long lastSpeechTime = 0;
                     boolean heardSpeech = false;
-                    double ambientRms = 25.0;
+                    double ambientRms = 20.0;
                     int frameCount = 0;
-                    int voicedCount = 0;
 
                     while (isFallbackRecording.get() && !Thread.currentThread().isInterrupted()) {
                         int read = recorder.read(buffer, 0, buffer.length);
@@ -571,7 +561,7 @@ public class UltronIndependentVoiceInput {
 
                         double rms = Math.sqrt((double) sum / read);
 
-                        // Adaptive ambient room noise calibration (first 6 frames ~180ms)
+                        // Adaptive ambient room noise calibration
                         if (frameCount < 6) {
                             ambientRms = (ambientRms * frameCount + rms) / (frameCount + 1);
                             frameCount++;
@@ -581,8 +571,8 @@ public class UltronIndependentVoiceInput {
                             }
                         }
 
-                        // Calibrated robust vocal threshold (requires distinct human vocal energy above ambient floor)
-                        double speechThreshold = Math.max(65.0, ambientRms * 1.70);
+                        // Responsive vocal activity threshold
+                        double speechThreshold = Math.max(28.0, ambientRms * 1.25);
 
                         // Visual RMS for HUD stadium capsule glow
                         float visualDb = Math.min(95f, Math.max(0f, (float) ((rms - 10.0) * 1.6)));
@@ -590,25 +580,20 @@ public class UltronIndependentVoiceInput {
 
                         long now = System.currentTimeMillis();
                         if (rms > speechThreshold) {
-                            voicedCount++;
-                            if (voicedCount >= 2) {
-                                if (!heardSpeech) {
-                                    heardSpeech = true;
-                                    speechStartTime = now;
-                                    notifyBeginningOfSpeech();
-                                }
-                                lastSpeechTime = now;
+                            if (!heardSpeech) {
+                                heardSpeech = true;
+                                speechStartTime = now;
+                                notifyBeginningOfSpeech();
                             }
-                        } else {
-                            voicedCount = 0;
+                            lastSpeechTime = now;
                         }
 
-                        // Auto-detect speech end: 1050ms silence after speech, or 6.0s maximum total speech
-                        if (heardSpeech && (now - lastSpeechTime > 1050 || now - speechStartTime > 6000)) {
+                        // Auto-detect speech end: 1200ms silence after speech, or 6.5s maximum total speech
+                        if (heardSpeech && (now - lastSpeechTime > 1200 || now - speechStartTime > 6500)) {
                             break;
                         }
-                        // Timeout: 5.0s with no speech heard
-                        if (!heardSpeech && (now - startTime > 5000)) {
+                        // Timeout: 5.5s with no speech heard
+                        if (!heardSpeech && (now - startTime > 5500)) {
                             break;
                         }
                     }
@@ -623,8 +608,7 @@ public class UltronIndependentVoiceInput {
 
                     byte[] pcmData = pcmStream.toByteArray();
 
-                    // CRITICAL: If no speech was detected, gracefully reset to ready state without error alert
-                    if (!heardSpeech || pcmData.length < 6400) {
+                    if (pcmData.length < 3200) {
                         notifyError("Ultron Ready • Tap mic to speak");
                         return;
                     }
@@ -633,6 +617,7 @@ public class UltronIndependentVoiceInput {
                     if (isNetworkConnected()) {
                         String text = queryChromiumSpeechApi(pcmData);
                         if (text != null && !text.trim().isEmpty()) {
+                            Log.i(TAG, "Chromium speech recognized: " + text);
                             notifyResult(text.trim());
                             return;
                         }
@@ -646,7 +631,7 @@ public class UltronIndependentVoiceInput {
                         return;
                     }
 
-                    notifyError("Didn't catch that. Tap mic to retry.");
+                    notifyError("Didn't catch that. Tap mic to speak.");
 
                 } catch (Exception e) {
                     Log.e(TAG, "AudioRecord fallback error: " + e.getMessage());

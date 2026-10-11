@@ -113,7 +113,7 @@ public class UltronOfflineAcousticEngine {
                 }
             }
 
-            if (bestUserDist < 16.0f && !bestUserCmd.isEmpty()) {
+            if (bestUserDist < 18.0f && !bestUserCmd.isEmpty()) {
                 logI(TAG, "Matched User Calibrated Voice: '" + bestUserCmd + "' (score: " + bestUserDist + ")");
                 return bestUserCmd;
             }
@@ -136,8 +136,8 @@ public class UltronOfflineAcousticEngine {
 
         logI(TAG, "Best DTW Acoustic Match: '" + bestCommand + "' (score: " + bestDistance + ")");
 
-        // Accept best match strictly within valid acoustic threshold (rejects room noise)
-        if (bestDistance < 25.0f && !bestCommand.isEmpty()) {
+        // Accept best match strictly within calibrated acoustic threshold (rejects room noise)
+        if (bestDistance < 35.0f && !bestCommand.isEmpty()) {
             return bestCommand;
         }
 
@@ -170,8 +170,8 @@ public class UltronOfflineAcousticEngine {
             if (e > peakE) peakE = e;
         }
 
-        double threshold = Math.max(28.0, peakE * 0.16);
-        if (peakE < 35.0) {
+        double threshold = Math.max(18.0, peakE * 0.12);
+        if (peakE < 20.0) {
             return new byte[0]; // Pure silence or ambient noise floor
         }
         int firstVoiced = 0;
@@ -272,8 +272,8 @@ public class UltronOfflineAcousticEngine {
             }
         }
 
-        // Voiced frames: within 38 dB of peak energy, with minimum energy floor
-        double energyFloor = Math.max(maxEnergy - 38.0, -42.0);
+        // Voiced frames: within 45 dB of peak energy, with minimum energy floor
+        double energyFloor = Math.max(maxEnergy - 45.0, -50.0);
         double[] meanMfcc = new double[NUM_MFCC];
         int activeFrames = 0;
         for (int f = 0; f < numFrames; f++) {
@@ -285,8 +285,8 @@ public class UltronOfflineAcousticEngine {
             }
         }
 
-        // Reject if less than 14 active frames (~140ms) of voiced audio
-        if (activeFrames < 14) {
+        // Reject if less than 8 active frames (~80ms) of voiced audio
+        if (activeFrames < 8) {
             return null;
         }
 
