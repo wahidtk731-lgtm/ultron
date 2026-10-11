@@ -39,11 +39,15 @@ public class UltronRecognitionService extends RecognitionService {
                     stopDelegate();
 
                     ComponentName sysComp = UltronIndependentVoiceInput.findSystemRecognitionService(UltronRecognitionService.this);
-                    if (sysComp != null) {
-                        delegateRecognizer = SpeechRecognizer.createSpeechRecognizer(UltronRecognitionService.this, sysComp);
-                    } else {
-                        delegateRecognizer = SpeechRecognizer.createSpeechRecognizer(UltronRecognitionService.this);
+                    if (sysComp == null) {
+                        Log.e(TAG, "No underlying system SpeechRecognizer available to delegate to; aborting to prevent recursive loop.");
+                        if (listener != null) {
+                            try { listener.error(SpeechRecognizer.ERROR_CLIENT); } catch (Exception ignored) {}
+                        }
+                        return;
                     }
+
+                    delegateRecognizer = SpeechRecognizer.createSpeechRecognizer(UltronRecognitionService.this, sysComp);
 
                     delegateRecognizer.setRecognitionListener(new RecognitionListener() {
                         @Override
@@ -98,7 +102,6 @@ public class UltronRecognitionService extends RecognitionService {
                     }
                     offlineIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
                     offlineIntent.putExtra("android.speech.extra.PREFER_OFFLINE", true);
-                    offlineIntent.putExtra("android.speech.extra.DICTATION_MODE", true);
 
                     delegateRecognizer.startListening(offlineIntent);
 

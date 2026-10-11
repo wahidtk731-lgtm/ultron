@@ -198,7 +198,6 @@ public class UltronIndependentVoiceInput {
         if (preferOffline) {
             intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
             intent.putExtra("android.speech.extra.PREFER_OFFLINE", true);
-            intent.putExtra("android.speech.extra.DICTATION_MODE", true);
         }
 
         // Language: prioritize device's default locale, with en-US fallback
