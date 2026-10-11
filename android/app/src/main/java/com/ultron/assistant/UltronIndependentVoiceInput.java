@@ -528,19 +528,27 @@ public class UltronIndependentVoiceInput {
                         }
                         recorder.release();
                         recorder = null;
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        Log.w(TAG, "AudioSource " + src + " initialization failed: " + e.getMessage());
+                    }
                 }
 
                 if (recorder == null || recorder.getState() != AudioRecord.STATE_INITIALIZED) {
+                    if (recorder != null) {
+                        try { recorder.release(); } catch (Exception e) { Log.w(TAG, "Failed releasing uninitialized recorder", e); }
+                        recorder = null;
+                    }
                     isFallbackRecording.set(false);
                     isListening.set(false);
                     notifyError("Microphone initialization error.");
                     return;
                 }
 
+                ByteArrayOutputStream pcmStream = new ByteArrayOutputStream();
+                boolean recordedSuccessfully = false;
+
                 try {
                     recorder.startRecording();
-                    ByteArrayOutputStream pcmStream = new ByteArrayOutputStream();
                     short[] buffer = new short[1024];
                     byte[] byteBuffer = new byte[2048];
 
@@ -602,50 +610,63 @@ public class UltronIndependentVoiceInput {
                         }
                     }
 
-                    recorder.stop();
-                    recorder.release();
-                    recorder = null;
-
-                    isFallbackRecording.set(false);
-                    isListening.set(false);
-                    notifyEndOfSpeech();
-
-                    byte[] pcmData = pcmStream.toByteArray();
-
-                    if (pcmData.length < 3200) {
-                        notifyError("Ultron Ready • Tap mic to speak");
-                        return;
-                    }
-
-                    // Tier 1: If online, check Chromium high-precision speech API
-                    if (isNetworkConnected()) {
-                        String text = queryChromiumSpeechApi(pcmData);
-                        if (text != null && !text.trim().isEmpty()) {
-                            Log.i(TAG, "Chromium speech recognized: " + text);
-                            notifyResult(text.trim());
-                            return;
-                        }
-                    }
-
-                    // Tier 2: 100% Offline On-Device Acoustic Command Recognizer
-                    String offlineDecoded = UltronOfflineAcousticEngine.recognizeCommand(context, pcmData);
-                    if (offlineDecoded != null && !offlineDecoded.trim().isEmpty()) {
-                        Log.i(TAG, "Offline Acoustic Engine Decoded: " + offlineDecoded);
-                        notifyResult(offlineDecoded.trim());
-                        return;
-                    }
-
-                    notifyError("Didn't catch that. Tap mic to speak.");
+                    recordedSuccessfully = true;
 
                 } catch (Exception e) {
-                    Log.e(TAG, "AudioRecord fallback error: " + e.getMessage());
+                    Log.e(TAG, "AudioRecord fallback error: " + e.getMessage(), e);
+                    notifyError("Microphone error. Tap to retry.");
+                } finally {
                     if (recorder != null) {
-                        try { recorder.release(); } catch (Exception ignored) {}
+                        try {
+                            if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+                                recorder.stop();
+                            }
+                        } catch (Exception e) {
+                            Log.w(TAG, "Error stopping AudioRecord", e);
+                        }
+                        try {
+                            recorder.release();
+                        } catch (Exception e) {
+                            Log.w(TAG, "Error releasing AudioRecord", e);
+                        }
+                        recorder = null;
                     }
                     isFallbackRecording.set(false);
                     isListening.set(false);
-                    notifyError("Microphone error. Tap to retry.");
                 }
+
+                if (!recordedSuccessfully) {
+                    return;
+                }
+
+                notifyEndOfSpeech();
+
+                byte[] pcmData = pcmStream.toByteArray();
+
+                if (pcmData.length < 3200) {
+                    notifyError("Ultron Ready • Tap mic to speak");
+                    return;
+                }
+
+                // Tier 1: If online, check Chromium high-precision speech API
+                if (isNetworkConnected()) {
+                    String text = queryChromiumSpeechApi(pcmData);
+                    if (text != null && !text.trim().isEmpty()) {
+                        Log.i(TAG, "Chromium speech recognized: " + text);
+                        notifyResult(text.trim());
+                        return;
+                    }
+                }
+
+                // Tier 2: 100% Offline On-Device Acoustic Command Recognizer
+                String offlineDecoded = UltronOfflineAcousticEngine.recognizeCommand(context, pcmData);
+                if (offlineDecoded != null && !offlineDecoded.trim().isEmpty()) {
+                    Log.i(TAG, "Offline Acoustic Engine Decoded: " + offlineDecoded);
+                    notifyResult(offlineDecoded.trim());
+                    return;
+                }
+
+                notifyError("Didn't catch that. Tap mic to speak.");
             }
         });
         fallbackThread.start();
