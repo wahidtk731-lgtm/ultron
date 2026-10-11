@@ -736,12 +736,20 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mainHandler != null) {
+            mainHandler.removeCallbacksAndMessages(null);
+        }
         if (voiceInput != null) {
             voiceInput.destroy();
             voiceInput = null;
         }
         if (ttsManager != null) {
             ttsManager.shutdown();
+            ttsManager = null;
+        }
+        if (webView != null) {
+            webView.destroy();
+            webView = null;
         }
     }
 
