@@ -162,3 +162,33 @@ A complete native Android project is provided in `android/` with a pre-configure
 1. Push your changes: `git push origin main`
 2. GitHub Actions will automatically compile `UltronAssistant.apk` in the cloud.
 3. Download the signed `.apk` from your repository's **Actions** tab and install it via `adb install` or your phone's file manager!
+
+### Option 3: Standalone Local Termux Build (Zero Gradle / Studio)
+Ultron can be packaged entirely inside Termux on device using lightweight command-line tools:
+```bash
+# Generate R.java
+aapt package -f -m -J gen -M android/app/src/main/AndroidManifest.xml -S android/app/src/main/res -I "$HOME/.android-sdk/android.jar"
+# Compile Java classes (Java 7 compatible)
+ecj -cp "$HOME/.android-sdk/android.jar:gen" -d obj $(find android/app/src/main/java gen -name "*.java")
+```
+
+---
+
+## 🏗️ Android Architecture & Capabilities
+
+The native Android app (`com.ultron.assistant`) is organized into:
+- **`MainActivity`:** Edge-to-edge bottom stadium sheet HUD mimicking the modern Google Assistant UI. Triggers via launcher or system default assistant gesture (long press home/power).
+- **`FloatingHUDService`:** Foreground service providing an always-on-top draggable floating pill over other apps with one-tap mic activation and real-time audio waveforms.
+- **`UltronIndependentVoiceInput`:** Hybrid voice input engine using Android's native `SpeechRecognizer` with bounded fallback to raw PCM `AudioRecord` processing.
+- **`UltronRecognitionService`:** Standard Android voice interaction service binding into Android system settings.
+- **`AppLauncherAndroid`:** Zero-dependency app scanner and system settings controller (Wi-Fi, Bluetooth, volume, torch, notifications).
+
+---
+
+## ⚠️ Known Android Limitations
+
+1. **No 24/7 Locked Background Wake Word:** Modern Android OS battery optimization (Doze mode) and microphone privacy rules prevent third-party background services from streaming raw microphone audio continuously 24/7 while the device is locked. Ultron wakes instantly via the system Assistant gesture, notification quick action, or tap-to-speak on the floating capsule overlay.
+2. **Offline Speech Recognition Requirement:** For 100% offline speech recognition, the device must have an offline speech recognition pack installed via **Android Settings -> Google / Language & Input -> Speech Recognition -> Offline Speech Recognition (English)**. If offline packs are not installed, online recognition is used when internet is connected.
+3. **Bluetooth Toggling on Android 12+ (API 31+):** Direct programmatic toggling of Bluetooth without user interaction is restricted by Android OS. Ultron redirects to the system Bluetooth settings panel if `BLUETOOTH_CONNECT` runtime permission is unavailable.
+4. **Scoped Storage Compliance:** File notes and crash dumps are written to app-specific external storage (`context.getExternalFilesDir(null)`) to ensure full compatibility with Android 10+ scoped storage restrictions.
+5. **Java 7 Source Compatibility:** The codebase avoids Java 8+ language features (lambdas, method references, streams, `var`) to ensure seamless compilation with lightweight `ecj` in Termux and Dalvik/D8 runtimes.
