@@ -526,7 +526,9 @@ public class AppLauncherAndroid {
                     obj.put("packageName", app.packageName);
                     arr.put(obj);
                     count++;
-                } catch (Exception ignored) {}
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed serializing recent app entry: " + e.getMessage());
+                }
             }
             return arr.toString();
         }
@@ -537,12 +539,16 @@ public class AppLauncherAndroid {
         try {
             Process p1 = Runtime.getRuntime().exec(new String[]{"input", "keyevent", "187"});
             if (p1.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "Recent apps keyevent 187 failed: " + e.getMessage());
+        }
 
         try {
             Process p2 = Runtime.getRuntime().exec(new String[]{"cmd", "statusbar", "show-recents"});
             if (p2.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "cmd statusbar show-recents failed: " + e.getMessage());
+        }
 
         try {
             Object sbservice = context.getSystemService("statusbar");
@@ -551,13 +557,19 @@ public class AppLauncherAndroid {
                 Method m = statusbarManager.getMethod("toggleRecentApps");
                 m.invoke(sbservice);
                 return true;
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.d(TAG, "StatusBarManager toggleRecentApps failed: " + e.getMessage());
+            }
             try {
                 Method m = statusbarManager.getMethod("showRecentApps");
                 m.invoke(sbservice);
                 return true;
-            } catch (Exception ignored) {}
-        } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.d(TAG, "StatusBarManager showRecentApps failed: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "StatusBarManager recent apps reflection failed: " + e.getMessage());
+        }
 
         // 2. Fallback: launch the most recent user app from list
         synchronized (recentApps) {
@@ -569,7 +581,9 @@ public class AppLauncherAndroid {
                     try {
                         context.startActivity(entry.launchIntent);
                         return true;
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        Log.w(TAG, "Failed launching recent app " + entry.packageName + ": " + e.getMessage());
+                    }
                 }
             }
         }
@@ -675,7 +689,9 @@ public class AppLauncherAndroid {
                 if (am != null) {
                     am.killBackgroundProcesses(pkg);
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.w(TAG, "Failed killing background processes for " + pkg + ": " + e.getMessage());
+            }
         }
 
         try {
@@ -685,6 +701,7 @@ public class AppLauncherAndroid {
             context.startActivity(homeIntent);
             return true;
         } catch (Exception e) {
+            Log.w(TAG, "Failed to launch home intent: " + e.getMessage());
             return false;
         }
     }
@@ -694,12 +711,16 @@ public class AppLauncherAndroid {
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", enable ? "svc wifi enable" : "svc wifi disable"});
             if (p.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "Root svc wifi command failed: " + e.getMessage());
+        }
 
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", enable ? "cmd wifi set-wifi-enabled enabled" : "cmd wifi set-wifi-enabled disabled"});
             if (p.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "Root cmd wifi command failed: " + e.getMessage());
+        }
 
         // 2. Direct WifiManager call (works on Android <= 9, ChromeOS ARC, rooted, system apps)
         try {
@@ -708,18 +729,24 @@ public class AppLauncherAndroid {
                 boolean ok = wm.setWifiEnabled(enable);
                 if (ok) return true;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.w(TAG, "Direct WifiManager.setWifiEnabled failed: " + e.getMessage());
+        }
 
         // 3. Unrooted shell commands fallback
         try {
             Process p1 = Runtime.getRuntime().exec(new String[]{"cmd", "wifi", "set-wifi-enabled", enable ? "enabled" : "disabled"});
             if (p1.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "Unrooted cmd wifi command failed: " + e.getMessage());
+        }
 
         try {
             Process p2 = Runtime.getRuntime().exec(new String[]{"svc", "wifi", enable ? "enable" : "disable"});
             if (p2.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "Unrooted svc wifi command failed: " + e.getMessage());
+        }
 
         // 4. System Internet Connectivity Panel (Android 12+ API 31+)
         if (Build.VERSION.SDK_INT >= 31) {
@@ -728,7 +755,9 @@ public class AppLauncherAndroid {
                 panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(panelIntent);
                 return true;
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.w(TAG, "Failed opening internet connectivity panel: " + e.getMessage());
+            }
         }
 
         // 5. System Wi-Fi Panel (Android 10-11 API 29-30)
@@ -738,7 +767,9 @@ public class AppLauncherAndroid {
                 panelIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(panelIntent);
                 return true;
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.w(TAG, "Failed opening wifi panel: " + e.getMessage());
+            }
         }
 
         // 6. Wi-Fi Settings Intent fallback
@@ -747,7 +778,9 @@ public class AppLauncherAndroid {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
             return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.w(TAG, "Failed opening wifi settings: " + e.getMessage());
+        }
 
         return false;
     }
@@ -780,17 +813,23 @@ public class AppLauncherAndroid {
             }
         } catch (SecurityException se) {
             Log.w(TAG, "SecurityException toggling Bluetooth adapter: " + se.getMessage());
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.w(TAG, "Failed toggling Bluetooth adapter: " + e.getMessage());
+        }
 
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"cmd", "bluetooth_manager", enable ? "enable" : "disable"});
             if (p.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "cmd bluetooth_manager failed: " + e.getMessage());
+        }
 
         try {
             Process p2 = Runtime.getRuntime().exec(new String[]{"svc", "bluetooth", enable ? "enable" : "disable"});
             if (p2.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "svc bluetooth failed: " + e.getMessage());
+        }
 
         try {
             Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
@@ -798,6 +837,7 @@ public class AppLauncherAndroid {
             context.startActivity(intent);
             return true;
         } catch (Exception e) {
+            Log.w(TAG, "Failed launching Bluetooth settings fallback: " + e.getMessage());
             return false;
         }
     }
@@ -809,14 +849,18 @@ public class AppLauncherAndroid {
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"cmd", "notification", "cancel_all"});
             if (p.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "cmd notification cancel_all failed: " + e.getMessage());
+        }
 
         try {
             NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) {
                 nm.cancelAll();
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.w(TAG, "NotificationManager cancelAll failed: " + e.getMessage());
+        }
 
         if (!UltronNotificationService.isPermissionGranted(context)) {
             try {
@@ -824,7 +868,9 @@ public class AppLauncherAndroid {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
                 return true;
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.w(TAG, "Failed launching notification listener settings: " + e.getMessage());
+            }
         }
         return cleared;
     }
@@ -837,6 +883,7 @@ public class AppLauncherAndroid {
             showsb.invoke(sbservice);
             return true;
         } catch (Exception e) {
+            Log.w(TAG, "Failed opening status bar notifications panel: " + e.getMessage());
             return false;
         }
     }
@@ -849,6 +896,7 @@ public class AppLauncherAndroid {
             showsb.invoke(sbservice);
             return true;
         } catch (Exception e) {
+            Log.w(TAG, "Failed opening quick settings panel: " + e.getMessage());
             return false;
         }
     }
@@ -863,15 +911,21 @@ public class AppLauncherAndroid {
                         try {
                             cm.setTorchMode(id, enable);
                             return true;
-                        } catch (Exception ignored) {}
+                        } catch (Exception e) {
+                            Log.d(TAG, "setTorchMode for camera " + id + " failed: " + e.getMessage());
+                        }
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.w(TAG, "CameraManager flashlight access failed: " + e.getMessage());
+            }
         }
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", enable ? "cmd media.camera set-torch 0 1" : "cmd media.camera set-torch 0 0"});
             if (p.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "su torch command failed: " + e.getMessage());
+        }
         return false;
     }
 
@@ -889,7 +943,9 @@ public class AppLauncherAndroid {
                 }
                 return true;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.w(TAG, "Failed adjusting volume: " + e.getMessage());
+        }
         return false;
     }
 
@@ -897,7 +953,9 @@ public class AppLauncherAndroid {
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"input", "keyevent", String.valueOf(keyCode)});
             if (p.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "input keyevent failed: " + e.getMessage());
+        }
         try {
             AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
@@ -908,7 +966,9 @@ public class AppLauncherAndroid {
                 am.dispatchMediaKeyEvent(up);
                 return true;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.w(TAG, "dispatchMediaKeyEvent failed: " + e.getMessage());
+        }
         return false;
     }
 
@@ -916,11 +976,15 @@ public class AppLauncherAndroid {
         try {
             Process p = Runtime.getRuntime().exec(new String[]{"input", "keyevent", "120"});
             if (p.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "input keyevent screenshot failed: " + e.getMessage());
+        }
         try {
             Process p2 = Runtime.getRuntime().exec(new String[]{"screencap", "-p", "/sdcard/screenshot.png"});
             if (p2.waitFor() == 0) return true;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.d(TAG, "screencap screenshot failed: " + e.getMessage());
+        }
         return false;
     }
 
@@ -953,7 +1017,8 @@ public class AppLauncherAndroid {
                 try {
                     Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
                     m.invoke(null);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    Log.d(TAG, "disableDeathOnFileUriExposure unavailable; falling back to empty VmPolicy: " + e.getMessage());
                     StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().build());
                 }
             }

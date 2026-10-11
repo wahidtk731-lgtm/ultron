@@ -84,7 +84,9 @@ public class UltronNotificationService extends NotificationListenerService {
                     }
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Log.w(TAG, "Failed checking notification listener permission: " + e.getMessage());
+        }
         return false;
     }
 }
