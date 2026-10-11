@@ -1,6 +1,8 @@
 package com.ultron.assistant;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
@@ -14,6 +16,7 @@ import java.util.Locale;
 public class TTSManager {
 
     private static final String TAG = "UltronTTS";
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private TextToSpeech tts;
     private boolean isReady = false;
     private final TTSListener listener;
@@ -50,17 +53,32 @@ public class TTSManager {
         tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
             public void onStart(String utteranceId) {
-                if (listener != null) listener.onSpeechStarted();
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (listener != null) listener.onSpeechStarted();
+                    }
+                });
             }
 
             @Override
             public void onDone(String utteranceId) {
-                if (listener != null) listener.onSpeechCompleted();
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (listener != null) listener.onSpeechCompleted();
+                    }
+                });
             }
 
             @Override
             public void onError(String utteranceId) {
-                if (listener != null) listener.onSpeechCompleted();
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (listener != null) listener.onSpeechCompleted();
+                    }
+                });
             }
         });
     }
@@ -94,6 +112,7 @@ public class TTSManager {
     }
 
     public void shutdown() {
+        mainHandler.removeCallbacksAndMessages(null);
         if (tts != null) {
             tts.stop();
             tts.shutdown();
