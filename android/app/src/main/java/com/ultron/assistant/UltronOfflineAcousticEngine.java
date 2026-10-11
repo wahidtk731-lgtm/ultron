@@ -701,7 +701,9 @@ public class UltronOfflineAcousticEngine {
                 prefs.edit().clear().putInt(PREF_VOICE_VER, CURRENT_VOICE_VER).apply();
                 logI(TAG, "Migrated and cleaned voice template preferences to v" + CURRENT_VOICE_VER);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            logI(TAG, "Failed migrating voice prefs: " + e.getMessage());
+        }
     }
 
     public static boolean trainUserVoiceCommand(Context context, String commandName, byte[] pcmData) {

@@ -260,7 +260,9 @@ public class UltronIndependentVoiceInput {
                         if (speechRecognizer != null) {
                             try {
                                 speechRecognizer.cancel();
-                            } catch (Exception ignored) {}
+                            } catch (Exception e) {
+                                Log.d(TAG, "SpeechRecognizer cancel before offline listen: " + e.getMessage());
+                            }
 
                             Intent intent = buildOfflineRecognizerIntent(context);
                             speechRecognizer.startListening(intent);
@@ -290,7 +292,9 @@ public class UltronIndependentVoiceInput {
                     // Reset state
                     try {
                         speechRecognizer.cancel();
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        Log.d(TAG, "SpeechRecognizer cancel before online listen: " + e.getMessage());
+                    }
 
                     Intent intent = buildRecognizerIntent(context, false);
                     speechRecognizer.startListening(intent);
@@ -317,7 +321,9 @@ public class UltronIndependentVoiceInput {
                 if (speechRecognizer != null) {
                     try {
                         speechRecognizer.stopListening();
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        Log.d(TAG, "SpeechRecognizer stopListening: " + e.getMessage());
+                    }
                 }
                 stopAudioRecordFallback();
             }
@@ -345,7 +351,9 @@ public class UltronIndependentVoiceInput {
                 speechRecognizer.stopListening();
                 speechRecognizer.cancel();
                 speechRecognizer.destroy();
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.d(TAG, "SpeechRecognizer destroy: " + e.getMessage());
+            }
             speechRecognizer = null;
         }
     }
@@ -524,7 +532,9 @@ public class UltronIndependentVoiceInput {
                 it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(it);
                 return;
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.d(TAG, "Offline settings candidate intent failed: " + e.getMessage());
+            }
         }
     }
 

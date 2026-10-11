@@ -41,7 +41,7 @@ public class UltronRecognitionService extends RecognitionService {
                     if (sysComp == null) {
                         Log.e(TAG, "No underlying system SpeechRecognizer available to delegate to; aborting to prevent recursive loop.");
                         if (listener != null) {
-                            try { listener.error(SpeechRecognizer.ERROR_CLIENT); } catch (Exception ignored) {}
+                            try { listener.error(SpeechRecognizer.ERROR_CLIENT); } catch (Exception e) { Log.d(TAG, "Listener error notify failed: " + e.getMessage()); }
                         }
                         return;
                     }
@@ -51,44 +51,44 @@ public class UltronRecognitionService extends RecognitionService {
                     delegateRecognizer.setRecognitionListener(new RecognitionListener() {
                         @Override
                         public void onReadyForSpeech(Bundle params) {
-                            try { if (listener != null) listener.readyForSpeech(params); } catch (Exception ignored) {}
+                            try { if (listener != null) listener.readyForSpeech(params); } catch (Exception e) { Log.d(TAG, "readyForSpeech dispatch failed: " + e.getMessage()); }
                         }
 
                         @Override
                         public void onBeginningOfSpeech() {
-                            try { if (listener != null) listener.beginningOfSpeech(); } catch (Exception ignored) {}
+                            try { if (listener != null) listener.beginningOfSpeech(); } catch (Exception e) { Log.d(TAG, "beginningOfSpeech dispatch failed: " + e.getMessage()); }
                         }
 
                         @Override
                         public void onRmsChanged(float rmsdB) {
-                            try { if (listener != null) listener.rmsChanged(rmsdB); } catch (Exception ignored) {}
+                            try { if (listener != null) listener.rmsChanged(rmsdB); } catch (Exception e) { Log.d(TAG, "rmsChanged dispatch failed: " + e.getMessage()); }
                         }
 
                         @Override
                         public void onBufferReceived(byte[] buffer) {
-                            try { if (listener != null) listener.bufferReceived(buffer); } catch (Exception ignored) {}
+                            try { if (listener != null) listener.bufferReceived(buffer); } catch (Exception e) { Log.d(TAG, "bufferReceived dispatch failed: " + e.getMessage()); }
                         }
 
                         @Override
                         public void onEndOfSpeech() {
-                            try { if (listener != null) listener.endOfSpeech(); } catch (Exception ignored) {}
+                            try { if (listener != null) listener.endOfSpeech(); } catch (Exception e) { Log.d(TAG, "endOfSpeech dispatch failed: " + e.getMessage()); }
                         }
 
                         @Override
                         public void onError(int error) {
-                            try { if (listener != null) listener.error(error); } catch (Exception ignored) {}
+                            try { if (listener != null) listener.error(error); } catch (Exception e) { Log.d(TAG, "error dispatch failed: " + e.getMessage()); }
                             stopDelegate();
                         }
 
                         @Override
                         public void onResults(Bundle results) {
-                            try { if (listener != null) listener.results(results); } catch (Exception ignored) {}
+                            try { if (listener != null) listener.results(results); } catch (Exception e) { Log.d(TAG, "results dispatch failed: " + e.getMessage()); }
                             stopDelegate();
                         }
 
                         @Override
                         public void onPartialResults(Bundle partialResults) {
-                            try { if (listener != null) listener.partialResults(partialResults); } catch (Exception ignored) {}
+                            try { if (listener != null) listener.partialResults(partialResults); } catch (Exception e) { Log.d(TAG, "partialResults dispatch failed: " + e.getMessage()); }
                         }
 
                         @Override
@@ -110,7 +110,9 @@ public class UltronRecognitionService extends RecognitionService {
                         if (listener != null) {
                             listener.error(SpeechRecognizer.ERROR_CLIENT);
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ex) {
+                        Log.d(TAG, "Failed notifying listener error: " + ex.getMessage());
+                    }
                     stopDelegate();
                 }
             }
@@ -123,7 +125,9 @@ public class UltronRecognitionService extends RecognitionService {
                 delegateRecognizer.stopListening();
                 delegateRecognizer.cancel();
                 delegateRecognizer.destroy();
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.d(TAG, "delegateRecognizer destroy: " + e.getMessage());
+            }
             delegateRecognizer = null;
         }
     }
@@ -133,7 +137,9 @@ public class UltronRecognitionService extends RecognitionService {
         if (delegateRecognizer != null) {
             try {
                 delegateRecognizer.stopListening();
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Log.d(TAG, "delegateRecognizer stopListening: " + e.getMessage());
+            }
         }
     }
 

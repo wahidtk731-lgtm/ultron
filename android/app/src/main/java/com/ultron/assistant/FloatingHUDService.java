@@ -848,7 +848,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                         windowParams.height = dpToPx(dp);
                         try {
                             windowManager.updateViewLayout(floatingView, windowParams);
-                        } catch (Exception ignored) {}
+                        } catch (Exception e) {
+                            Log.w(TAG, "Failed updating window height layout: " + e.getMessage());
+                        }
                     }
                 }
             });

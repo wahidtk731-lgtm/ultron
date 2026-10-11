@@ -151,7 +151,9 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         if (Build.VERSION.SDK_INT >= 30) {
             try {
                 Window.class.getMethod("setDecorFitsSystemWindows", boolean.class).invoke(window, false);
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                android.util.Log.d("UltronMainActivity", "setDecorFitsSystemWindows unavailable: " + t.getMessage());
+            }
         } else {
             window.getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
@@ -239,7 +241,9 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                             return true;
                         }
                     }
-                } catch (Throwable ignored) {}
+                } catch (Throwable t) {
+                    android.util.Log.d("UltronMainActivity", "RoleManager check unavailable: " + t.getMessage());
+                }
             }
 
             // 4. Secure settings query
@@ -253,7 +257,9 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 prefs.edit().putBoolean("is_default_assistant", true).apply();
                 return true;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            android.util.Log.d("UltronMainActivity", "Secure settings assistant query failed: " + e.getMessage());
+        }
         return false;
     }
 
