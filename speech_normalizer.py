@@ -81,20 +81,97 @@ APP_PHONETIC_REPLACEMENTS = [
     (r"\b(index\s+dot\s+html|index\s+dot\s+h\s+t\s+m\s+l|index\s+html)\b", "index.html"),
     (r"\bdot\s+(py|cpp|js|html|css|txt|json|md|sh|c|java)\b", r".\1"),
     
+    # WhatsApp
+    (r"\b(what\'?s?\s*app|wat[- ]?zap|watsapp|wa)\b", "whatsapp"),
+
+    # Instagram
+    (r"\b(insta|ig|in\s+sta|insta\s+gram)\b", "instagram"),
+
+    # Spotify
+    (r"\b(spot\s*ify|spotty\s*fy|spoti\s*pie|spot\s*fight)\b", "spotify"),
+
+    # Telegram
+    (r"\b(tele\s*gram|tellegram)\b", "telegram"),
+
+    # Flashlight & Torch
+    (r"\b(flash\s*light|flesh\s*light|tour\s*ch|torch)\b", "flashlight"),
+
+    # Volume & Sound
+    (r"\b(valume|vol\s*ume|valyoom|sound\s+level)\b", "volume"),
+
+    # Screenshot
+    (r"\b(screen\s*shot|screan\s*shot|snap\s+screen)\b", "screenshot"),
+
+    # Camera & Photos
+    (r"\b(cam\s*ra|kamra|kamera|cam)\b", "camera"),
+    (r"\b(gel\s*ry|gallary|galery|photoes|photos)\b", "gallery"),
+
+    # Clock & Alarm
+    (r"\b(clok|clack|alaram|alerm)\b", "clock"),
+
+    # Messages
+    (r"\b(text\s+message|sms|massage|massages)\b", "messages"),
+
     # Action verbs
-    (r"\b(right|ride)\s+(hi|hello|text|code|print|something|notes)\b", r"write \2"),
-    (r"\b(claws|clothes|closed)\s+(chrome|sublime|browser|terminal|geany|app)\b", r"close \2"),
-    (r"\b(blue\s*tooth|blue\s*tooths|bluetooths)\b", "bluetooth"),
-    (r"\b(why\s*fi|wi\s*fi|wai\s*fai|wifi|wee\s*fee)\b", "wifi"),
+    (r"\b(right|ride|rite)\s+(hi|hello|text|code|print|something|notes)\b", r"write \2"),
+    (r"\b(claws|clothes|closed)\s+(chrome|sublime|browser|terminal|geany|app|whatsapp|instagram|spotify)\b", r"close \2"),
+    (r"\b(blue\s*tooth|blue\s*tooths|bluetooths|blootooth)\b", "bluetooth"),
+    (r"\b(why\s*fi|wi\s*fi|wai\s*fai|wifi|wee\s*fee|waifai)\b", "wifi"),
+    (r"\b(sirch|soorch|goggle|googel)\b", "search"),
+    (r"\b(hoppen|opun|lunch|lanch)\b", "open"),
     (r"\b(notes|notification|notifications|notif|notifs)\b", "notifications"),
     (r"\b(clear|clean|dismiss|wipe|cancel)\s+(the\s+)?(notifications|notification|notifs)\b", "clear notifications"),
-    (r"\b(insta|ig)\b", "instagram"),
+    (r"\b(quick\s+setting|kwick\s+settings)\b", "quick settings"),
+    (r"\b(status\s+bar|stats\s+bar|notification\s+bar)\b", "status bar"),
     (r"\b(reel\s+section|reels\s+section|reels|reel)\b", "reels"),
     (r"\b(short\s+section|shorts\s+section)\b", "shorts"),
     (r"\b(recent\s+apps?|recently\s+opened\s+apps?|last\s+apps?|switch\s+apps?)\b", "recent apps"),
     (r"\b(make\s+file|create\s+file|new\s+file)\b", "create file"),
     (r"\b(edit\s+file|open\s+file|modify\s+file)\b", "edit file"),
 ]
+
+def soundex(token: str) -> str:
+    """Computes standard American Soundex code for phonetic token matching."""
+    if not token or not token.isalpha():
+        return ""
+    token = token.upper()
+    first = token[0]
+    mapping = {
+        'B': '1', 'F': '1', 'P': '1', 'V': '1',
+        'C': '2', 'G': '2', 'J': '2', 'K': '2', 'Q': '2', 'S': '2', 'X': '2', 'Z': '2',
+        'D': '3', 'T': '3',
+        'L': '4',
+        'M': '5', 'N': '5',
+        'R': '6'
+    }
+    encoded = [first]
+    prev = mapping.get(first, '')
+    for char in token[1:]:
+        code = mapping.get(char, '')
+        if code and code != prev:
+            encoded.append(code)
+        prev = code
+    encoded = [c for c in encoded if c]
+    return (("".join(encoded)) + "000")[:4]
+
+def levenshtein_similarity(s1: str, s2: str) -> float:
+    """Computes normalized Levenshtein similarity [0.0, 1.0] between two strings."""
+    if s1 == s2:
+        return 1.0
+    if not s1 or not s2:
+        return 0.0
+    n, m = len(s1), len(s2)
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(n + 1):
+        dp[i][0] = i
+    for j in range(m + 1):
+        dp[0][j] = j
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            cost = 0 if s1[i - 1] == s2[j - 1] else 1
+            dp[i][j] = min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost)
+    max_len = max(n, m)
+    return 1.0 - (dp[n][m] / max_len)
 
 def normalize_speech(text: str) -> str:
     """

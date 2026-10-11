@@ -498,6 +498,46 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 appLauncher.setBluetooth(false);
                 return "Turning off Bluetooth";
 
+            case "flashlight_on":
+                appLauncher.setFlashlight(true);
+                return "Turning on flashlight";
+
+            case "flashlight_off":
+                appLauncher.setFlashlight(false);
+                return "Turning off flashlight";
+
+            case "volume_up":
+                appLauncher.adjustVolume(1);
+                return "Increasing volume";
+
+            case "volume_down":
+                appLauncher.adjustVolume(-1);
+                return "Decreasing volume";
+
+            case "volume_mute":
+                appLauncher.adjustVolume(0);
+                return "Muting volume";
+
+            case "screenshot":
+                appLauncher.takeScreenshot();
+                return "Taking screenshot";
+
+            case "media_play":
+                appLauncher.sendMediaKey(85);
+                return "Playing music";
+
+            case "media_pause":
+                appLauncher.sendMediaKey(85);
+                return "Pausing music";
+
+            case "media_next":
+                appLauncher.sendMediaKey(87);
+                return "Playing next track";
+
+            case "media_prev":
+                appLauncher.sendMediaKey(88);
+                return "Playing previous track";
+
             case "clear_notifications":
                 appLauncher.clearNotifications();
                 return "Cleared all notifications";

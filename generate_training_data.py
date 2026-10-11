@@ -150,6 +150,66 @@ TIME_PHRASES = [
     "ultron current time", "all thrown what time is it"
 ]
 
+# 7b. Hardware Toggles: Flashlight & Torch
+FLASHLIGHT_ON_PHRASES = [
+    "turn on flashlight", "turn flashlight on", "turn on the flashlight", "switch on flashlight",
+    "enable flashlight", "flashlight on", "torch on", "turn on torch", "turn torch on",
+    "switch on torch", "enable torch", "turn on the torch", "light on", "turn light on"
+]
+FLASHLIGHT_OFF_PHRASES = [
+    "turn off flashlight", "turn flashlight off", "turn off the flashlight", "switch off flashlight",
+    "disable flashlight", "flashlight off", "torch off", "turn off torch", "turn torch off",
+    "switch off torch", "disable torch", "turn off the torch", "light off", "turn light off"
+]
+
+# 7c. Volume Controls
+VOLUME_UP_PHRASES = [
+    "volume up", "increase volume", "louder", "turn up volume", "raise volume",
+    "higher volume", "make it louder", "turn the volume up", "boost volume", "more volume"
+]
+VOLUME_DOWN_PHRASES = [
+    "volume down", "decrease volume", "lower volume", "turn down volume", "quieter",
+    "soft volume", "make it quieter", "turn the volume down", "reduce volume", "less volume"
+]
+VOLUME_MUTE_PHRASES = [
+    "mute volume", "mute sound", "mute audio", "silence volume", "turn volume off",
+    "volume mute", "mute", "silence", "mute the sound", "unmute"
+]
+
+# 7d. Screenshot
+SCREENSHOT_PHRASES = [
+    "take screenshot", "capture screen", "screen shot", "take a screenshot",
+    "screenshot", "snap screen", "capture display", "take a picture of screen"
+]
+
+# 7e. Media Controls
+MEDIA_PLAY_PHRASES = [
+    "play music", "start music", "resume music", "resume song", "play song",
+    "play audio", "continue music", "play track", "start playback"
+]
+MEDIA_PAUSE_PHRASES = [
+    "pause music", "pause song", "stop music", "pause audio", "stop audio",
+    "pause playback", "pause track", "stop song"
+]
+MEDIA_NEXT_PHRASES = [
+    "next song", "next track", "skip song", "skip track", "play next",
+    "next music", "change song", "skip this song"
+]
+MEDIA_PREV_PHRASES = [
+    "previous song", "previous track", "prev song", "prev track",
+    "play previous", "go back song", "restart song"
+]
+
+# 7f. Status Bar & Quick Settings
+STATUS_BAR_PHRASES = [
+    "status bar", "open status bar", "show status bar", "expand status bar",
+    "show notifications panel", "open notification bar", "expand notifications"
+]
+QUICK_SETTINGS_PHRASES = [
+    "quick settings", "open quick settings", "show quick settings",
+    "expand quick settings", "open control center", "show control center"
+]
+
 # 8. Web Search Templates & Queries
 SEARCH_TEMPLATES = [
     "search google for {q}", "search the web for {q}", "search for {q}", "google {q}",
@@ -157,7 +217,9 @@ SEARCH_TEMPLATES = [
     "look on google for {q}", "query google for {q}", "can you search for {q}",
     "please google {q}", "hey ultron search for {q}", "hey all thrown search google for {q}",
     "ultron search {q}", "find {q} on google", "web search {q}", "look up {q} online",
-    "google search {q}", "search internet for {q}", "find articles on {q}"
+    "google search {q}", "search internet for {q}", "find articles on {q}",
+    "what is {q}", "who is {q}", "where is {q}", "how to {q}", "why is {q}",
+    "tell me about {q}", "explain {q}", "define {q}", "meaning of {q}"
 ]
 
 SEARCH_QUERIES = [
@@ -166,7 +228,10 @@ SEARCH_QUERIES = [
     "css flexbox", "github open source", "space news", "quantum computing",
     "latest news", "how to code in python", "data science", "sublime text shortcuts",
     "pcmanfm linux", "bash scripting tutorials", "deep learning models",
-    "offline ai assistants", "crostini linux tips", "html and css"
+    "offline ai assistants", "crostini linux tips", "html and css",
+    "solar system", "speed of light", "dna structure", "gravity", "world history",
+    "bitcoin price", "stock market", "healthy food", "best movies", "calculator",
+    "currency converter", "world map", "translate english to french", "einstein"
 ]
 
 # 9. Greeting Phrases
@@ -364,6 +429,52 @@ def generate_full_dataset():
     for f_generic in ["notes.txt", "todo.txt", "learning.py", "script.py", "test.txt", "demo.py", "app.py"]:
         for cv in create_verbs:
             add_sample(f"{cv} {f_generic}", "create_file")
+
+    # 8b. FLASHLIGHT CONTROLS
+    for p in FLASHLIGHT_ON_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "flashlight_on")
+    for p in FLASHLIGHT_OFF_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "flashlight_off")
+
+    # 8c. VOLUME CONTROLS
+    for p in VOLUME_UP_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "volume_up")
+    for p in VOLUME_DOWN_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "volume_down")
+    for p in VOLUME_MUTE_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "volume_mute")
+
+    # 8d. SCREENSHOT
+    for p in SCREENSHOT_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "screenshot")
+
+    # 8e. MEDIA CONTROLS
+    for p in MEDIA_PLAY_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "media_play")
+    for p in MEDIA_PAUSE_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "media_pause")
+    for p in MEDIA_NEXT_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "media_next")
+    for p in MEDIA_PREV_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "media_prev")
+
+    # 8f. STATUS BAR & QUICK SETTINGS
+    for p in STATUS_BAR_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "status_bar")
+    for p in QUICK_SETTINGS_PHRASES:
+        for prefix in ["", "please", "can you", "hey ultron", "ultron"]:
+            add_sample(f"{prefix} {p}", "quick_settings")
 
     # 11. FLOATING MODE
     floating_phrases = [

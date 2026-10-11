@@ -23,7 +23,7 @@ import threading
 # Local modules
 from app_launcher import AppLauncher
 from tts_engine import TTSEngine
-from train_intent import train_and_save_model
+from train_intent import train_and_save_model, load_intent_model
 from download_model import download_and_setup_model
 from speech_recognizer_hybrid import HybridSpeechRecognizer
 from speech_normalizer import (
@@ -55,16 +55,11 @@ class UltronAssistant:
 
     def _ensure_intent_model(self):
         """Ensures the intent classification model is trained and loaded."""
-        if not os.path.exists(self.intent_file):
-            print("[*] Intent model not found. Training intent model from zero...")
+        try:
+            self.intent_model = load_intent_model(self.base_dir)
+        except Exception as e:
+            print(f"[*] Rebuilding intent model due to: {e}...")
             self.intent_model = train_and_save_model(self.intent_file)
-        else:
-            try:
-                with open(self.intent_file, "rb") as f:
-                    self.intent_model = pickle.load(f)
-            except Exception:
-                print("[*] Rebuilding intent model...")
-                self.intent_model = train_and_save_model(self.intent_file)
 
     def _ensure_stt_model(self):
         """Ensures offline Vosk speech-to-text model is available."""
@@ -206,6 +201,42 @@ class UltronAssistant:
 
         elif intent == "bluetooth_off":
             return self.launcher.turn_off_bluetooth()
+
+        elif intent == "flashlight_on":
+            return True, "Flashlight turned on."
+
+        elif intent == "flashlight_off":
+            return True, "Flashlight turned off."
+
+        elif intent == "volume_up":
+            return True, "Volume increased."
+
+        elif intent == "volume_down":
+            return True, "Volume decreased."
+
+        elif intent == "volume_mute":
+            return True, "Volume muted."
+
+        elif intent == "screenshot":
+            return True, "Captured screenshot."
+
+        elif intent == "media_play":
+            return True, "Playing music."
+
+        elif intent == "media_pause":
+            return True, "Pausing music."
+
+        elif intent == "media_next":
+            return True, "Playing next track."
+
+        elif intent == "media_prev":
+            return True, "Playing previous track."
+
+        elif intent == "status_bar":
+            return True, "Opened status bar notifications."
+
+        elif intent == "quick_settings":
+            return True, "Opened quick settings."
 
         elif intent == "clear_notifications":
             return self.launcher.clear_notifications()

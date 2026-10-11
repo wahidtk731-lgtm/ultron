@@ -23,7 +23,7 @@ public class UltronOfflineAcousticEngine {
     private static final String TAG = "UltronAcousticEngine";
     private static final String PREF_TRAINED_VOICE = "ultron_trained_voice";
     private static final String PREF_VOICE_VER = "ultron_voice_version";
-    private static final int CURRENT_VOICE_VER = 4;
+    private static final int CURRENT_VOICE_VER = 5;
 
     private static final int SAMPLE_RATE = 16000;
     private static final int FRAME_SIZE = 400; // 25ms
@@ -54,6 +54,10 @@ public class UltronOfflineAcousticEngine {
     private static final float[] P_G  = new float[]{-1.2f, 0.4f, 0.7f, -0.4f, 0.5f, -0.3f, 0.2f, -0.2f, 0.1f, -0.1f, 0.1f, -0.0f};
     private static final float[] P_V  = new float[]{0.6f, -0.8f, 0.4f, -0.2f, 0.3f, -0.3f, 0.2f, -0.2f, 0.1f, -0.1f, 0.1f, -0.1f};
     private static final float[] P_Z  = new float[]{1.0f, -1.2f, 0.8f, -0.4f, 0.7f, -0.5f, 0.4f, -0.3f, 0.3f, -0.2f, 0.1f, -0.1f};
+    private static final float[] P_P  = new float[]{-1.4f, 0.5f, -0.9f, 0.3f, -0.5f, 0.3f, -0.2f, 0.1f, -0.1f, 0.1f, -0.1f, 0.0f};
+    private static final float[] P_CH = new float[]{1.4f, -1.5f, -0.6f, 1.2f, -0.4f, 0.8f, -0.3f, 0.2f, -0.2f, 0.3f, -0.1f, 0.1f};
+    private static final float[] P_JH = new float[]{0.9f, -0.9f, -0.4f, 0.8f, -0.3f, 0.5f, -0.2f, 0.2f, -0.1f, 0.2f, -0.1f, 0.1f};
+    private static final float[] P_Y  = new float[]{-1.1f, 2.1f, 1.5f, -0.9f, 0.7f, -0.5f, 0.3f, -0.2f, 0.2f, -0.1f, 0.1f, -0.0f};
 
     // Cache pre-computed Mel filterbanks
     private static double[][] melFilters = null;
@@ -370,7 +374,7 @@ public class UltronOfflineAcousticEngine {
 
         canonicalCache = new ArrayList<AcousticTemplate>();
 
-        // 1. "turn on wifi" & "turn off wifi" (full & short variations)
+        // 1. "turn on wifi" & "turn off wifi"
         canonicalCache.add(new AcousticTemplate("turn on wifi", buildTrajectory(
             new float[][]{P_T, P_R, P_N, P_O, P_N, P_W, P_A, P_I, P_F, P_A, P_I}, 65)));
         canonicalCache.add(new AcousticTemplate("turn off wifi", buildTrajectory(
@@ -380,7 +384,7 @@ public class UltronOfflineAcousticEngine {
         canonicalCache.add(new AcousticTemplate("turn off wifi", buildTrajectory(
             new float[][]{P_W, P_A, P_I, P_F, P_A, P_I, P_O, P_F}, 46)));
 
-        // 2. "turn on bluetooth" & "turn off bluetooth" (full & short variations)
+        // 2. "turn on bluetooth" & "turn off bluetooth"
         canonicalCache.add(new AcousticTemplate("turn on bluetooth", buildTrajectory(
             new float[][]{P_T, P_R, P_N, P_O, P_N, P_B, P_L, P_U, P_T, P_U, P_TH}, 80)));
         canonicalCache.add(new AcousticTemplate("turn off bluetooth", buildTrajectory(
@@ -390,49 +394,167 @@ public class UltronOfflineAcousticEngine {
         canonicalCache.add(new AcousticTemplate("turn off bluetooth", buildTrajectory(
             new float[][]{P_B, P_L, P_U, P_T, P_U, P_TH, P_O, P_F}, 54)));
 
-        // 3. "open settings"
+        // 3. "turn on flashlight" & "turn off flashlight" / torch
+        canonicalCache.add(new AcousticTemplate("turn on flashlight", buildTrajectory(
+            new float[][]{P_T, P_R, P_N, P_O, P_N, P_F, P_L, P_A, P_SH, P_L, P_A, P_I, P_T}, 82)));
+        canonicalCache.add(new AcousticTemplate("turn off flashlight", buildTrajectory(
+            new float[][]{P_T, P_R, P_N, P_O, P_F, P_F, P_L, P_A, P_SH, P_L, P_A, P_I, P_T}, 85)));
+        canonicalCache.add(new AcousticTemplate("turn on flashlight", buildTrajectory(
+            new float[][]{P_F, P_L, P_A, P_SH, P_L, P_A, P_I, P_T, P_O, P_N}, 52)));
+        canonicalCache.add(new AcousticTemplate("turn off flashlight", buildTrajectory(
+            new float[][]{P_F, P_L, P_A, P_SH, P_L, P_A, P_I, P_T, P_O, P_F}, 54)));
+        canonicalCache.add(new AcousticTemplate("turn on flashlight", buildTrajectory(
+            new float[][]{P_T, P_O, P_R, P_CH, P_O, P_N}, 42)));
+        canonicalCache.add(new AcousticTemplate("turn off flashlight", buildTrajectory(
+            new float[][]{P_T, P_O, P_R, P_CH, P_O, P_F}, 44)));
+
+        // 4. Volume controls: "volume up" / "volume down" / "mute volume"
+        canonicalCache.add(new AcousticTemplate("volume up", buildTrajectory(
+            new float[][]{P_V, P_A, P_L, P_Y, P_U, P_M, P_A, P_P}, 55)));
+        canonicalCache.add(new AcousticTemplate("volume down", buildTrajectory(
+            new float[][]{P_V, P_A, P_L, P_Y, P_U, P_M, P_D, P_A, P_U, P_N}, 60)));
+        canonicalCache.add(new AcousticTemplate("mute volume", buildTrajectory(
+            new float[][]{P_M, P_Y, P_U, P_T, P_V, P_A, P_L, P_Y, P_U, P_M}, 62)));
+
+        // 5. "open settings"
         canonicalCache.add(new AcousticTemplate("open settings", buildTrajectory(
-            new float[][]{P_O, P_T, P_E, P_N, P_S, P_E, P_T, P_I, P_N, P_S}, 72)));
+            new float[][]{P_O, P_P, P_E, P_N, P_S, P_E, P_T, P_I, P_N, P_S}, 72)));
         canonicalCache.add(new AcousticTemplate("open settings", buildTrajectory(
             new float[][]{P_S, P_E, P_T, P_I, P_N, P_S}, 44)));
 
-        // 4. "open youtube"
+        // 6. "open youtube" & "shorts"
         canonicalCache.add(new AcousticTemplate("open youtube", buildTrajectory(
-            new float[][]{P_O, P_T, P_E, P_N, P_I, P_U, P_T, P_U, P_T}, 66)));
+            new float[][]{P_O, P_P, P_E, P_N, P_Y, P_U, P_T, P_U, P_B}, 66)));
         canonicalCache.add(new AcousticTemplate("open youtube", buildTrajectory(
-            new float[][]{P_I, P_U, P_T, P_U, P_T}, 40)));
+            new float[][]{P_Y, P_U, P_T, P_U, P_B}, 40)));
+        canonicalCache.add(new AcousticTemplate("shorts", buildTrajectory(
+            new float[][]{P_SH, P_O, P_R, P_T, P_S}, 42)));
 
-        // 5. "open camera"
+        // 7. "open whatsapp"
+        canonicalCache.add(new AcousticTemplate("open whatsapp", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_W, P_A, P_T, P_S, P_A, P_P}, 68)));
+        canonicalCache.add(new AcousticTemplate("open whatsapp", buildTrajectory(
+            new float[][]{P_W, P_A, P_T, P_S, P_A, P_P}, 44)));
+
+        // 8. "open instagram" & "reels"
+        canonicalCache.add(new AcousticTemplate("open instagram", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_I, P_N, P_S, P_T, P_A, P_G, P_R, P_A, P_M}, 82)));
+        canonicalCache.add(new AcousticTemplate("open instagram", buildTrajectory(
+            new float[][]{P_I, P_N, P_S, P_T, P_A}, 44)));
+        canonicalCache.add(new AcousticTemplate("reels", buildTrajectory(
+            new float[][]{P_R, P_I, P_L, P_Z}, 36)));
+
+        // 9. "open camera" & "take photo"
         canonicalCache.add(new AcousticTemplate("open camera", buildTrajectory(
-            new float[][]{P_O, P_T, P_E, P_N, P_K, P_A, P_M, P_R, P_A}, 70)));
+            new float[][]{P_O, P_P, P_E, P_N, P_K, P_A, P_M, P_R, P_A}, 70)));
         canonicalCache.add(new AcousticTemplate("open camera", buildTrajectory(
             new float[][]{P_K, P_A, P_M, P_R, P_A}, 42)));
 
-        // 6. "open chrome"
+        // 10. "open chrome"
         canonicalCache.add(new AcousticTemplate("open chrome", buildTrajectory(
-            new float[][]{P_O, P_T, P_E, P_N, P_K, P_R, P_O, P_M}, 58)));
+            new float[][]{P_O, P_P, P_E, P_N, P_K, P_R, P_O, P_M}, 58)));
         canonicalCache.add(new AcousticTemplate("open chrome", buildTrajectory(
             new float[][]{P_K, P_R, P_O, P_M}, 36)));
 
-        // 7. "recent apps"
+        // 11. "open spotify" & music controls
+        canonicalCache.add(new AcousticTemplate("open spotify", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_S, P_P, P_O, P_T, P_I, P_F, P_A, P_I}, 76)));
+        canonicalCache.add(new AcousticTemplate("open spotify", buildTrajectory(
+            new float[][]{P_S, P_P, P_O, P_T, P_I, P_F, P_A, P_I}, 48)));
+        canonicalCache.add(new AcousticTemplate("play music", buildTrajectory(
+            new float[][]{P_P, P_L, P_E, P_I, P_M, P_Y, P_U, P_Z, P_I, P_K}, 64)));
+        canonicalCache.add(new AcousticTemplate("pause music", buildTrajectory(
+            new float[][]{P_P, P_O, P_Z, P_M, P_Y, P_U, P_Z, P_I, P_K}, 62)));
+        canonicalCache.add(new AcousticTemplate("next song", buildTrajectory(
+            new float[][]{P_N, P_E, P_K, P_S, P_T, P_S, P_O, P_N, P_G}, 56)));
+
+        // 12. "open calculator"
+        canonicalCache.add(new AcousticTemplate("open calculator", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_K, P_A, P_L, P_K, P_Y, P_U, P_L, P_E, P_T, P_R}, 84)));
+        canonicalCache.add(new AcousticTemplate("open calculator", buildTrajectory(
+            new float[][]{P_K, P_A, P_L, P_K}, 34)));
+
+        // 13. "open telegram"
+        canonicalCache.add(new AcousticTemplate("open telegram", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_T, P_E, P_L, P_E, P_G, P_R, P_A, P_M}, 78)));
+
+        // 14. "open maps"
+        canonicalCache.add(new AcousticTemplate("open maps", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_M, P_A, P_P, P_S}, 56)));
+
+        // 15. "open gallery" & "photos"
+        canonicalCache.add(new AcousticTemplate("open gallery", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_G, P_A, P_L, P_R, P_I}, 66)));
+        canonicalCache.add(new AcousticTemplate("open photos", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_F, P_O, P_T, P_O, P_Z}, 64)));
+
+        // 16. "open files"
+        canonicalCache.add(new AcousticTemplate("open files", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_F, P_A, P_I, P_L, P_Z}, 58)));
+
+        // 17. "open clock"
+        canonicalCache.add(new AcousticTemplate("open clock", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_K, P_L, P_O, P_K}, 56)));
+
+        // 18. "open messages"
+        canonicalCache.add(new AcousticTemplate("open messages", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_M, P_E, P_S, P_I, P_JH, P_I, P_Z}, 74)));
+
+        // 19. "open phone"
+        canonicalCache.add(new AcousticTemplate("open phone", buildTrajectory(
+            new float[][]{P_O, P_P, P_E, P_N, P_F, P_O, P_N}, 52)));
+
+        // 20. "recent apps"
         canonicalCache.add(new AcousticTemplate("recent apps", buildTrajectory(
-            new float[][]{P_R, P_I, P_S, P_E, P_N, P_T, P_A, P_T, P_S}, 62)));
+            new float[][]{P_R, P_I, P_S, P_E, P_N, P_T, P_A, P_P, P_S}, 62)));
         canonicalCache.add(new AcousticTemplate("recent apps", buildTrajectory(
             new float[][]{P_R, P_I, P_S, P_E, P_N, P_T, P_S}, 44)));
 
-        // 8. "what time is it"
+        // 21. "quick settings" & "status bar"
+        canonicalCache.add(new AcousticTemplate("quick settings", buildTrajectory(
+            new float[][]{P_K, P_W, P_I, P_K, P_S, P_E, P_T, P_I, P_N, P_S}, 68)));
+        canonicalCache.add(new AcousticTemplate("status bar", buildTrajectory(
+            new float[][]{P_S, P_T, P_A, P_T, P_U, P_S, P_B, P_A, P_R}, 64)));
+
+        // 22. "take screenshot"
+        canonicalCache.add(new AcousticTemplate("take screenshot", buildTrajectory(
+            new float[][]{P_T, P_E, P_I, P_K, P_S, P_K, P_R, P_I, P_N, P_SH, P_O, P_T}, 80)));
+        canonicalCache.add(new AcousticTemplate("screenshot", buildTrajectory(
+            new float[][]{P_S, P_K, P_R, P_I, P_N, P_SH, P_O, P_T}, 58)));
+
+        // 23. "what time is it"
         canonicalCache.add(new AcousticTemplate("what time is it", buildTrajectory(
-            new float[][]{P_W, P_A, P_T, P_T, P_A, P_I, P_M, P_I, P_S, P_I, P_T}, 75)));
+            new float[][]{P_W, P_A, P_T, P_T, P_A, P_I, P_M, P_I, P_Z, P_I, P_T}, 75)));
         canonicalCache.add(new AcousticTemplate("what time is it", buildTrajectory(
             new float[][]{P_T, P_A, P_I, P_M}, 35)));
 
-        // 9. "clear notifications"
-        canonicalCache.add(new AcousticTemplate("clear notifications", buildTrajectory(
-            new float[][]{P_K, P_L, P_I, P_R, P_N, P_O, P_T, P_I, P_F, P_A, P_K, P_E, P_SH, P_N, P_S}, 95)));
+        // 24. "what is the date"
+        canonicalCache.add(new AcousticTemplate("what is the date", buildTrajectory(
+            new float[][]{P_W, P_A, P_T, P_I, P_Z, P_TH, P_E, P_D, P_E, P_I, P_T}, 76)));
+        canonicalCache.add(new AcousticTemplate("what is the date", buildTrajectory(
+            new float[][]{P_D, P_E, P_I, P_T}, 34)));
 
-        // 10. "hey ultron"
+        // 25. "clear notifications"
+        canonicalCache.add(new AcousticTemplate("clear notifications", buildTrajectory(
+            new float[][]{P_K, P_L, P_I, P_R, P_N, P_O, P_T, P_I, P_F, P_A, P_I, P_K, P_E, P_SH, P_N, P_Z}, 95)));
+
+        // 26. "who are you" & "what can you do"
+        canonicalCache.add(new AcousticTemplate("who are you", buildTrajectory(
+            new float[][]{P_W, P_U, P_A, P_R, P_Y, P_U}, 52)));
+        canonicalCache.add(new AcousticTemplate("what can you do", buildTrajectory(
+            new float[][]{P_W, P_A, P_T, P_K, P_A, P_N, P_Y, P_U, P_D, P_U}, 68)));
+
+        // 27. "hey ultron"
         canonicalCache.add(new AcousticTemplate("hey ultron", buildTrajectory(
             new float[][]{P_E, P_I, P_A, P_L, P_T, P_R, P_O, P_N}, 56)));
+        canonicalCache.add(new AcousticTemplate("ultron", buildTrajectory(
+            new float[][]{P_A, P_L, P_T, P_R, P_O, P_N}, 44)));
+
+        // 28. "goodbye" / "exit" / "go to sleep"
+        canonicalCache.add(new AcousticTemplate("goodbye", buildTrajectory(
+            new float[][]{P_G, P_U, P_D, P_B, P_A, P_I}, 48)));
+        canonicalCache.add(new AcousticTemplate("go to sleep", buildTrajectory(
+            new float[][]{P_G, P_O, P_T, P_U, P_S, P_L, P_I, P_P}, 60)));
 
         return canonicalCache;
     }

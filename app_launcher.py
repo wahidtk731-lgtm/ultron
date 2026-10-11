@@ -16,7 +16,37 @@ import subprocess
 import shutil
 import re
 import urllib.parse
-from rapidfuzz import process, fuzz
+try:
+    from rapidfuzz import process, fuzz
+except (ImportError, ModuleNotFoundError):
+    import difflib
+    class DummyFuzz:
+        @staticmethod
+        def token_sort_ratio(s1, s2):
+            w1 = " ".join(sorted(str(s1).split()))
+            w2 = " ".join(sorted(str(s2).split()))
+            return difflib.SequenceMatcher(None, w1, w2).ratio() * 100
+        @staticmethod
+        def partial_ratio(s1, s2):
+            s1, s2 = str(s1), str(s2)
+            if not s1 or not s2: return 0.0
+            if s1 in s2 or s2 in s1: return 100.0
+            return difflib.SequenceMatcher(None, s1, s2).ratio() * 100
+    class DummyProcess:
+        @staticmethod
+        def extractOne(query, choices, scorer=None):
+            if not choices: return None
+            if scorer is None: scorer = DummyFuzz.token_sort_ratio
+            best_choice = None
+            best_score = -1.0
+            for c in choices:
+                score = scorer(query, c)
+                if score > best_score:
+                    best_score = score
+                    best_choice = c
+            return (best_choice, best_score, 0) if best_choice else None
+    process = DummyProcess()
+    fuzz = DummyFuzz()
 
 WORKSPACE_DIR = "/home/wahidtk"
 

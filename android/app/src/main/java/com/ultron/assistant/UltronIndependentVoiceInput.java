@@ -237,9 +237,29 @@ public class UltronIndependentVoiceInput {
 
                 stopAudioRecordFallback();
 
-                // 2. If device has no internet, immediately start on-device AudioRecord capture
+                // 2. If device has no internet, attempt high-accuracy on-device SpeechRecognizer first!
+                // Android 12+ createOnDeviceSpeechRecognizer and downloaded offline voice models
+                // provide full neural acoustic models offline across the complete vocabulary.
                 if (!isNetworkConnected()) {
-                    Log.i(TAG, "No internet: activating on-device AudioRecord listener directly");
+                    try {
+                        ensureRecognizer();
+                        if (speechRecognizer != null) {
+                            try {
+                                speechRecognizer.cancel();
+                            } catch (Exception ignored) {}
+
+                            Intent intent = buildOfflineRecognizerIntent(context);
+                            speechRecognizer.startListening(intent);
+                            isListening.set(true);
+                            notifyReady();
+                            Log.i(TAG, "Successfully activated on-device offline SpeechRecognizer");
+                            return;
+                        }
+                    } catch (Throwable t) {
+                        Log.w(TAG, "On-device offline SpeechRecognizer unavailable: " + t.getMessage());
+                    }
+
+                    Log.i(TAG, "Activating on-device AudioRecord fallback");
                     startAudioRecordFallback();
                     return;
                 }

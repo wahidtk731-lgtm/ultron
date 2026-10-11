@@ -9,6 +9,8 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.hardware.camera2.CameraManager;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -832,6 +834,77 @@ public class AppLauncherAndroid {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public boolean setFlashlight(boolean enable) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                CameraManager cm = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+                if (cm != null) {
+                    String[] ids = cm.getCameraIdList();
+                    for (String id : ids) {
+                        try {
+                            cm.setTorchMode(id, enable);
+                            return true;
+                        } catch (Exception ignored) {}
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", enable ? "cmd media.camera set-torch 0 1" : "cmd media.camera set-torch 0 0"});
+            if (p.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public boolean adjustVolume(int direction) {
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                int flag = AudioManager.FLAG_SHOW_UI | AudioManager.FLAG_PLAY_SOUND;
+                if (direction > 0) {
+                    am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, flag);
+                } else if (direction < 0) {
+                    am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, flag);
+                } else {
+                    am.setStreamVolume(AudioManager.STREAM_MUSIC, 0, flag);
+                }
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public boolean sendMediaKey(int keyCode) {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"input", "keyevent", String.valueOf(keyCode)});
+            if (p.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                long now = android.os.SystemClock.uptimeMillis();
+                android.view.KeyEvent down = new android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, keyCode, 0);
+                android.view.KeyEvent up = new android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, keyCode, 0);
+                am.dispatchMediaKeyEvent(down);
+                am.dispatchMediaKeyEvent(up);
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public boolean takeScreenshot() {
+        try {
+            Process p = Runtime.getRuntime().exec(new String[]{"input", "keyevent", "120"});
+            if (p.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+        try {
+            Process p2 = Runtime.getRuntime().exec(new String[]{"screencap", "-p", "/sdcard/screenshot.png"});
+            if (p2.waitFor() == 0) return true;
+        } catch (Exception ignored) {}
+        return false;
     }
 
     public boolean createFile(String filename) {

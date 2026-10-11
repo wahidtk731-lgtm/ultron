@@ -54,19 +54,37 @@ public class UltronIntentEngine {
         cleaned = PHONETIC_ULTRON_PATTERN.matcher(cleaned).replaceAll("ultron");
 
         // 2. Hardware toggles phonetic fixes
-        cleaned = cleaned.replaceAll("\\b(wi[- ]?fi|why[- ]?fi|wai[- ]?fai|wee[- ]?fee)\\b", "wifi");
-        cleaned = cleaned.replaceAll("\\b(blue[- ]?tooth|bluetooths|blue\\s+tooths)\\b", "bluetooth");
-        cleaned = cleaned.replaceAll("\\b(insta|ig)\\b", "instagram");
+        cleaned = cleaned.replaceAll("\\b(wi[- ]?fi|why[- ]?fi|wai[- ]?fai|wee[- ]?fee|waifai)\\b", "wifi");
+        cleaned = cleaned.replaceAll("\\b(blue[- ]?tooth|bluetooths|blue\\s+tooths|blootooth)\\b", "bluetooth");
+        cleaned = cleaned.replaceAll("\\b(flash[- ]?light|flesh[- ]?light|tour[- ]?ch|torch)\\b", "flashlight");
+        cleaned = cleaned.replaceAll("\\b(valume|vol[- ]?ume|valyoom|sound\\s+level)\\b", "volume");
+        cleaned = cleaned.replaceAll("\\b(screen[- ]?shot|screan[- ]?shot|snap\\s+screen)\\b", "screenshot");
+
+        // 3. Popular apps phonetic fixes
+        cleaned = cleaned.replaceAll("\\b(what\'?s?\\s*app|wat[- ]?zap|watsapp|wa)\\b", "whatsapp");
+        cleaned = cleaned.replaceAll("\\b(insta|ig|in\\s+sta|insta\\s+gram)\\b", "instagram");
+        cleaned = cleaned.replaceAll("\\b(spot\\s*ify|spotty\\s*fy|spoti\\s*pie|spot\\s*fight)\\b", "spotify");
+        cleaned = cleaned.replaceAll("\\b(tele\\s*gram|tellegram)\\b", "telegram");
+        cleaned = cleaned.replaceAll("\\b(cam\\s*ra|kamra|kamera|cam)\\b", "camera");
+        cleaned = cleaned.replaceAll("\\b(gel\\s*ry|gallary|galery|photoes|photos)\\b", "gallery");
         cleaned = cleaned.replaceAll("\\b(reel\\s+section|reels\\s+section|reels|reel)\\b", "reels");
         cleaned = cleaned.replaceAll("\\b(short\\s+section|shorts\\s+section)\\b", "shorts");
+        cleaned = cleaned.replaceAll("\\b(cal\\s*cue?\\s*later|calcu\\s*later|kalkulator)\\b", "calculator");
+        cleaned = cleaned.replaceAll("\\b(you\\s*tube|u\\s*tube|u-tube|yt)\\b", "youtube");
+        cleaned = cleaned.replaceAll("\\b(google\\s+crown|google\\s+crome|google\\s+chrom|browser)\\b", "chrome");
+        cleaned = cleaned.replaceAll("\\b(set\\s+things|sat\\s+things|sad\\s+things|setting\'?s?)\\b", "settings");
+        cleaned = cleaned.replaceAll("\\b(kwick\\s+settings|quick\\s+setting)\\b", "quick settings");
+        cleaned = cleaned.replaceAll("\\b(stats\\s+bar|statas\\s+bar|notification\\s+bar)\\b", "status bar");
+        cleaned = cleaned.replaceAll("\\b(resent\\s+apps?|resunt\\s+apps?|last\\s+apps?|switch\\s+apps?)\\b", "recent apps");
+        cleaned = cleaned.replaceAll("\\b(my\\s+files?|file\\s+manager|explorer)\\b", "files");
+        cleaned = cleaned.replaceAll("\\b(sms|text\\s+message|messages?|massage)\\b", "messages");
+        cleaned = cleaned.replaceAll("\\b(dialer|dial|call|phone\\s+call)\\b", "phone");
 
-        // 3. Common acoustic fixes
-        cleaned = cleaned.replaceAll("\\b(set\\s+things|sat\\s+things|sad\\s+things|setting's)\\b", "settings");
-        cleaned = cleaned.replaceAll("\\b(google\\s+crown|google\\s+crome|google\\s+chrom)\\b", "chrome");
-        cleaned = cleaned.replaceAll("\\b(you\\s+tube|u\\s+tube|u-tube)\\b", "youtube");
-        cleaned = cleaned.replaceAll("\\b(cal\\s+cue\\s+later|calcu\\s+later)\\b", "calculator");
-        cleaned = cleaned.replaceAll("\\b(right|ride)\\s+(note|notes|file|text)\\b", "write $2");
-        cleaned = cleaned.replaceAll("\\b(claws|clothes)\\s+(chrome|app|youtube)\\b", "close $2");
+        // 4. Action verb phonetic fixes
+        cleaned = cleaned.replaceAll("\\b(right|ride|rite)\\s+(note|notes|file|text)\\b", "write $2");
+        cleaned = cleaned.replaceAll("\\b(claws|clothes)\\s+(chrome|app|youtube|settings|whatsapp|instagram)\\b", "close $2");
+        cleaned = cleaned.replaceAll("\\b(sirch|soorch|goggle|googel)\\b", "search");
+        cleaned = cleaned.replaceAll("\\b(hoppen|opun|lunch|lanch)\\b", "open");
 
         return cleaned.replaceAll("\\s+", " ").trim();
     }
@@ -149,6 +167,44 @@ public class UltronIntentEngine {
         }
         if (c.matches(".*\\b(turn off bluetooth|turn bluetooth off|turn off the bluetooth|turn the bluetooth off|switch off bluetooth|switch bluetooth off|disable bluetooth|disable the bluetooth|stop bluetooth|bluetooth off)\\b.*")) {
             return new ActionCommand("bluetooth_off", "", c);
+        }
+
+        // 3b. Hardware Toggles: Flashlight / Torch
+        if (c.matches(".*\\b(turn on flashlight|turn flashlight on|turn on the flashlight|switch on flashlight|enable flashlight|flashlight on|torch on|turn on torch|turn torch on)\\b.*")) {
+            return new ActionCommand("flashlight_on", "", c);
+        }
+        if (c.matches(".*\\b(turn off flashlight|turn flashlight off|turn off the flashlight|switch off flashlight|disable flashlight|flashlight off|torch off|turn off torch|turn torch off)\\b.*")) {
+            return new ActionCommand("flashlight_off", "", c);
+        }
+
+        // 3c. Volume controls
+        if (c.matches(".*\\b(volume up|increase volume|louder|turn up volume|raise volume|higher volume)\\b.*")) {
+            return new ActionCommand("volume_up", "", c);
+        }
+        if (c.matches(".*\\b(volume down|decrease volume|lower volume|turn down volume|quieter|soft volume)\\b.*")) {
+            return new ActionCommand("volume_down", "", c);
+        }
+        if (c.matches(".*\\b(mute volume|mute sound|mute audio|silence volume|turn volume off|volume mute)\\b.*")) {
+            return new ActionCommand("volume_mute", "", c);
+        }
+
+        // 3d. Screenshot
+        if (c.matches(".*\\b(take screenshot|capture screen|screen shot|take a screenshot|screenshot)\\b.*")) {
+            return new ActionCommand("screenshot", "", c);
+        }
+
+        // 3e. Media controls
+        if (c.matches(".*\\b(play music|start music|resume music|resume song|play song)\\b.*")) {
+            return new ActionCommand("media_play", "", c);
+        }
+        if (c.matches(".*\\b(pause music|pause song|stop music|pause audio|stop audio)\\b.*")) {
+            return new ActionCommand("media_pause", "", c);
+        }
+        if (c.matches(".*\\b(next song|next track|skip song|skip track)\\b.*")) {
+            return new ActionCommand("media_next", "", c);
+        }
+        if (c.matches(".*\\b(previous song|previous track|prev song|prev track)\\b.*")) {
+            return new ActionCommand("media_prev", "", c);
         }
 
         // 4. Status Bar & Notifications
@@ -237,9 +293,10 @@ public class UltronIntentEngine {
             return new ActionCommand("open_app", appName, c);
         }
 
-        // 14. Search Web
-        if (c.matches(".*\\b(search|look up|find on web)\\b.*")) {
-            String query = c.replaceAll("\\b(search the web for|search for|look up|search)\\b", " ")
+        // 14. Search Web & Open-Domain Questions
+        if (c.matches(".*\\b(search|look up|find on web|google)\\b.*") ||
+            c.matches("^(what is|who is|where is|how to|why does|why is|tell me about|explain|define|meaning of)\\b.*")) {
+            String query = c.replaceAll("^(search the web for|search for|look up|search google for|google|search|find info on|what is|who is|where is|how to|why does|why is|tell me about|explain|define|meaning of)\\b", " ")
                             .replaceAll("\\s+", " ").trim();
             return new ActionCommand("search_web", query, c);
         }
