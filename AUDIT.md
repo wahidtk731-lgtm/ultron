@@ -81,3 +81,45 @@
   - **ID 11:** Unused imports and unused private fields.
   - **ID 12:** Deprecated non-standard `DICTATION_MODE` extra.
   - **ID 20:** Static instance lifecycle in `UltronNotificationService`.
+
+---
+
+## 3. Implementation Status & Resolution Log
+
+All 33 identified issues have been systematically addressed, verified, and committed:
+
+| ID | Severity | Status | Commit | Summary of Resolution |
+|---|---|---|---|---|
+| 1 | High | Closed | `1ce5881` | Added `ACCESS_NETWORK_STATE` to `AndroidManifest.xml`. |
+| 2 | Medium | Closed | `3b235ec` | Guarded Bluetooth toggle on API 31+ with `BLUETOOTH_CONNECT` check and settings fallback. |
+| 3 | High | Closed | `1ce5881` | Added observable logging in `UltronIndependentVoiceInput.isNetworkConnected`. |
+| 4 | High | Closed | `66ae10e` | Added `Settings.canDrawOverlays` check before `windowManager.addView`. |
+| 5 | Medium | Closed | `93611f6` | Replaced 26 empty catch blocks in `AppLauncherAndroid.java` with observable logging. |
+| 6 | Low | Closed | `93611f6` | Replaced empty catch block in `UltronVoiceSession.java` with `Log.w`. |
+| 7 | Low | Closed | `93611f6` | Replaced empty catch block in `UltronNotificationService.java` with `Log.w`. |
+| 8 | Medium | Closed | `14660b2` | Removed dead `VoiceInputBridgeActivity.java` and removed activity from manifest. |
+| 9 | High | Closed | `df62c2b` | Wired up `handleRecognizerError(error)` to display error cause on HUD. |
+| 10 | Low | Closed | `c585d67` | Documented and logged fixed hybrid engine architecture in `setEngine`. |
+| 11 | Low | Closed | `c585d67` | Removed unused imports and unreferenced private fields (`TAG`, `isListening`, `isExpanded`). |
+| 12 | Low | Closed | `f45b87b` | Removed non-standard `DICTATION_MODE` extra from recognizer intents. |
+| 13 | Critical | Closed | `1a14a28` | Wrapped dynamic JS strings in `JSONObject.quote(...)` in `MainActivity.java`. |
+| 14 | Critical | Closed | `1a14a28` | Wrapped dynamic JS strings in `JSONObject.quote(...)` in `FloatingHUDService.java`. |
+| 15 | High | Closed | `10562ab` | Dispatched `TTSManager` utterance callbacks to `mainHandler` (Looper.getMainLooper()). |
+| 16 | High | Closed | `f514c17` | Removed redundant 2500ms `postDelayed` double-start timer; synced to TTS `onDone`. |
+| 17 | High | Closed | `b535899` | Guaranteed `AudioRecord` release in `finally` block and reset state flags. |
+| 18 | High | Closed | `66ae10e` | Destroyed WebView, cleared handler callbacks, and nulled static instance in `FloatingHUDService.onDestroy()`. |
+| 19 | Medium | Closed | `e8abcdb` | Destroyed WebView and removed handler callbacks in `MainActivity.onDestroy()`. |
+| 20 | Low | Closed | `005538a` | Added `onDestroy()` in `UltronNotificationService.java` to clear static instance. |
+| 21 | High | Closed | `df62c2b` | Bounded fallback attempts to 1 and provided informative user HUD status. |
+| 22 | High | Closed | `bf2eab3` | Added acoustic engine disclaimer header and tightened DTW confidence threshold to < 22.0f. |
+| 23 | High | Closed | `ca381c5` | Isolated Chromium Google Speech API key into named constant `CHROMIUM_SPEECH_API_KEY`. |
+| 24 | Critical | Closed | `1ec930d` | Set `android:exported="false"` on `FloatingHUDService` in `AndroidManifest.xml`. |
+| 25 | High | Closed | `f896a4b` | Scoped-storage-safe crash logging (`getExternalFilesDir`) and chained default exception handler. |
+| 26 | High | Closed | `82b17cf` | Disabled file access (`setAllowFileAccess(false)`) and blocked external navigation in WebView. |
+| 27 | Medium | Closed | Documented | `AndroidManifest.xml` (`targetSdkVersion="28"`) is preserved as authoritative source for Termux toolchain. |
+| 28 | High | Closed | `f45b87b` | Guarded against self-delegation infinite recursion in `UltronRecognitionService`. |
+| 29 | High | Closed | `3b504d3` | Correctly mapped `media_play` to key 126 and `media_pause` to key 127. |
+| 30 | High | Closed | `a3b1048` | Prevented garbage speech input from opening browser and added null/empty entity checks. |
+| 31 | Medium | Closed | Verified | Verified 100% action parity between `MainActivity` and `FloatingHUDService` `executeAction`. |
+| 32 | High | Closed | `aa2d977` | Relaxed StrictMode VM policy in `openFile` to avoid `FileUriExposedException` on API 24+. |
+| 33 | Medium | Closed | `2803db2` | Updated `README.md` with accurate architecture, capabilities, and known limitations. |
