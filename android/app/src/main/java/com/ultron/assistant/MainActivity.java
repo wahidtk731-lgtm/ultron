@@ -614,22 +614,28 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 return secOk ? ("Navigating to " + action.entity) : ("Could not open " + action.entity);
 
             case "create_file":
-                boolean crOk = appLauncher.createFile(action.entity);
-                return crOk ? ("Created file " + action.entity) : "Could not create file";
+                if (action.entity == null || action.entity.trim().isEmpty()) {
+                    return "What should I name the file?";
+                }
+                boolean crOk = appLauncher.createFile(action.entity.trim());
+                return crOk ? ("Created file " + action.entity.trim()) : "Could not create file";
 
             case "edit_file":
-                boolean edOk = appLauncher.openFile(action.entity);
-                return edOk ? ("Opening file " + action.entity) : "Could not open file";
+                if (action.entity == null || action.entity.trim().isEmpty()) {
+                    return "Which file would you like me to open?";
+                }
+                boolean edOk = appLauncher.openFile(action.entity.trim());
+                return edOk ? ("Opening file " + action.entity.trim()) : "Could not open file";
 
             case "search_web":
-                if (action.entity.isEmpty()) return "What would you like me to search for?";
-                appLauncher.searchWeb(action.entity);
-                return "Searching web for " + action.entity;
+                if (action.entity == null || action.entity.trim().isEmpty()) return "What would you like me to search for?";
+                appLauncher.searchWeb(action.entity.trim());
+                return "Searching web for " + action.entity.trim();
 
             case "write_file":
-                if (action.entity.isEmpty()) return "What should I write down?";
-                appLauncher.writeNote(action.entity);
-                return "Saved note: " + action.entity;
+                if (action.entity == null || action.entity.trim().isEmpty()) return "What should I write down?";
+                appLauncher.writeNote(action.entity.trim());
+                return "Saved note: " + action.entity.trim();
 
             case "exit":
                 mainHandler.postDelayed(new Runnable() {
@@ -641,12 +647,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                 return "Going offline. Goodbye!";
 
             default:
-                boolean ok = appLauncher.launchApp(action.raw);
-                if (!ok) {
-                    appLauncher.searchWeb(action.raw);
-                    return "Searching web for " + action.raw;
+                if (action.raw != null && !action.raw.trim().isEmpty()) {
+                    boolean ok = appLauncher.launchApp(action.raw.trim());
+                    if (ok) return "Opening " + action.raw.trim();
                 }
-                return "Opening " + action.raw;
+                return "I didn't quite catch that. Try asking to open an app, adjust settings, or search.";
         }
     }
 
