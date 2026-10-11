@@ -34,6 +34,14 @@ public class UltronNotificationService extends NotificationListenerService {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (instance == this) {
+            instance = null;
+        }
+    }
+
+    @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
         // Can be used for assistant awareness if needed
     }
