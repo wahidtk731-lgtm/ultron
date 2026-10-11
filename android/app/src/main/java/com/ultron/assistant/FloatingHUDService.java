@@ -5,18 +5,13 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.provider.Settings;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -57,9 +52,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     private TTSManager ttsManager;
     private Handler mainHandler;
 
-    private boolean isListening = false;
     private boolean shouldListenAfterSpeech = false;
-    private boolean isExpanded = false;
     private boolean isDockedTop = false;
 
     public static FloatingHUDService getInstance() {
@@ -248,7 +241,6 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             @Override
             public void run() {
                 if (floatingView != null && windowManager != null) {
-                    isExpanded = expand;
                     windowParams.height = dpToPx(expand ? 280 : 140);
                     windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
                     try {
@@ -306,14 +298,12 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         voiceInput = new UltronIndependentVoiceInput(this, new UltronIndependentVoiceInput.VoiceInputListener() {
             @Override
             public void onReady() {
-                isListening = true;
                 expandOverlay(true);
                 updateWebStatus("listening", "Listening for command...");
             }
 
             @Override
             public void onBeginningOfSpeech() {
-                isListening = true;
                 expandOverlay(true);
                 updateWebStatus("listening", "Listening to voice...");
             }
@@ -334,19 +324,16 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
             @Override
             public void onEndOfSpeech() {
-                isListening = false;
                 updateWebStatus("processing", "Thinking...");
             }
 
             @Override
             public void onResult(String recognizedText) {
-                isListening = false;
                 processCommandInternal(recognizedText);
             }
 
             @Override
             public void onError(String errorMessage) {
-                isListening = false;
                 updateWebStatus("ready", errorMessage);
                 mainHandler.postDelayed(new Runnable() {
                     @Override

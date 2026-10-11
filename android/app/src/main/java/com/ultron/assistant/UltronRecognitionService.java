@@ -10,7 +10,6 @@ import android.speech.RecognitionService;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
-import java.util.ArrayList;
 
 /**
  * Native Android RecognitionService for Ultron Assistant.

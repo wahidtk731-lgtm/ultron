@@ -2,7 +2,6 @@ package com.ultron.assistant;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -13,10 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
-import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -42,7 +38,6 @@ import java.util.Locale;
  */
 public class MainActivity extends Activity implements TTSManager.TTSListener {
 
-    private static final String TAG = "UltronMainActivity";
     private static final int PERMISSION_REQ_RECORD_AUDIO = 101;
     private static final int REQ_CODE_VOICE_INTENT = 102;
     private static final int REQ_CODE_OVERLAY_PERM = 103;
@@ -53,7 +48,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     private AppLauncherAndroid appLauncher;
     private TTSManager ttsManager;
     private Handler mainHandler;
-    private boolean isListening = false;
     private boolean shouldListenAfterSpeech = false;
 
     @Override
@@ -329,13 +323,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         voiceInput = new UltronIndependentVoiceInput(this, new UltronIndependentVoiceInput.VoiceInputListener() {
             @Override
             public void onReady() {
-                isListening = true;
                 updateWebStatus("listening", "Listening... Speak your command");
             }
 
             @Override
             public void onBeginningOfSpeech() {
-                isListening = true;
                 updateWebStatus("listening", "Listening to voice...");
             }
 
@@ -355,19 +347,16 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
             @Override
             public void onEndOfSpeech() {
-                isListening = false;
                 updateWebStatus("processing", "Thinking...");
             }
 
             @Override
             public void onResult(String recognizedText) {
-                isListening = false;
                 processCommandInternal(recognizedText);
             }
 
             @Override
             public void onError(String errorMessage) {
-                isListening = false;
                 updateWebStatus("ready", errorMessage);
             }
         });

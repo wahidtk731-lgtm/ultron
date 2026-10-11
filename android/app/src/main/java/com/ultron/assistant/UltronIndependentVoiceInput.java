@@ -89,7 +89,14 @@ public class UltronIndependentVoiceInput {
         return "offline_recognizer";
     }
 
-    public void setEngine(String engine) {}
+    /**
+     * Engine configuration hook. Ultron uses an automated hybrid architecture:
+     * primary offline/online speech recognizer with automatic bounded fallback
+     * to native AudioRecord PCM streaming. Manual engine override is unsupported.
+     */
+    public void setEngine(String engine) {
+        Log.d(TAG, "setEngine requested: " + engine + " (ignored; hybrid engine pipeline is fixed)");
+    }
 
     /**
      * Resolves the device's actual system speech recognition service (Google or OEM)
