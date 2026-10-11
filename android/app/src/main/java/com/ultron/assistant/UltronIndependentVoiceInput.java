@@ -462,7 +462,11 @@ public class UltronIndependentVoiceInput {
                 NetworkInfo info = cm.getActiveNetworkInfo();
                 return info != null && info.isConnected();
             }
-        } catch (Exception ignored) {}
+        } catch (SecurityException e) {
+            Log.w(TAG, "Cannot check network state: ACCESS_NETWORK_STATE permission missing or denied", e);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to determine network connectivity: " + e.getMessage());
+        }
         return false;
     }
 
