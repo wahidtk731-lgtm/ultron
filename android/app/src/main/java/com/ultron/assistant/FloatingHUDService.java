@@ -179,11 +179,19 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
-        settings.setAllowFileAccess(true);
+        settings.setAllowFileAccess(false);
 
         webView.addJavascriptInterface(new FloatingWebAppInterface(), "AndroidUltron");
 
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url != null && url.startsWith("file:///android_asset/hud.html")) {
+                    return false;
+                }
+                return true;
+            }
+
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
