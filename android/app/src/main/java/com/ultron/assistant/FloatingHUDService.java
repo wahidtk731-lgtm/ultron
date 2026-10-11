@@ -546,11 +546,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 return "Taking screenshot";
 
             case "media_play":
-                appLauncher.sendMediaKey(85);
+                appLauncher.sendMediaKey(126); // KEYCODE_MEDIA_PLAY
                 return "Playing music";
 
             case "media_pause":
-                appLauncher.sendMediaKey(85);
+                appLauncher.sendMediaKey(127); // KEYCODE_MEDIA_PAUSE
                 return "Pausing music";
 
             case "media_next":
