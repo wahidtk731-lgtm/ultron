@@ -22,6 +22,7 @@ public class UltronVoiceSession extends VoiceInteractionSession {
         super.onShow(args, showFlags);
         try {
             Intent intent = new Intent(getContext(), MainActivity.class);
+            intent.setAction(Intent.ACTION_ASSIST);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             getContext().startActivity(intent);
         } catch (Exception e) {

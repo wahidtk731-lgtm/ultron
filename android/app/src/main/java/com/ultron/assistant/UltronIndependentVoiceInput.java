@@ -24,7 +24,6 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -37,14 +36,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 
  * Features:
  * 1. Background SpeechRecognizer with RecognitionListener (ZERO Google popup dialogs/overlays).
- * 2. Pure On-Device Speech Recognition (Android 12+ createOnDeviceSpeechRecognizer via reflection).
+ * 2. System recognizer delegation prioritizing Google speech service.
  * 3. Enforces EXTRA_PREFER_OFFLINE and PREFER_OFFLINE directives with universal en-US offline model targeting.
- * 4. Dual-mode fallback if network is available, and clear direct guidance to 1-click offline pack download.
- * 5. AudioRecord mic capture with live RMS waveform feedback.
+ * 4. Resilient watchdog, generation-stamped callbacks, and bounded retry architecture.
+ * 5. AudioRecord mic capture with live RMS waveform feedback as last-resort fallback.
  */
 public class UltronIndependentVoiceInput {
 
     private static final String TAG = "UltronVoiceInput";
+    private static final int MAX_ATTEMPTS = 4;
+    private static final long READY_TIMEOUT_MS = 6000;
 
     // Unofficial public Chromium development speech recognition endpoint key.
     // Isolated here for clarity; used as an optional online fallback for raw PCM audio.
@@ -69,7 +70,14 @@ public class UltronIndependentVoiceInput {
     private final AtomicBoolean isListening = new AtomicBoolean(false);
     private final AtomicBoolean isFallbackRecording = new AtomicBoolean(false);
     private Thread fallbackThread = null;
-    private int fallbackRetryCount = 0;
+
+    private int generation = 0;
+    private int totalAttempts = 0;
+    private boolean onDeviceMode = false;
+    private boolean forceEnglishUs = false;
+    private volatile String lastPartial = "";
+    private Runnable readyWatchdog = null;
+    private Runnable retryRunnable = null;
 
     public UltronIndependentVoiceInput(Context context, VoiceInputListener listener) {
         this.context = context;
@@ -99,8 +107,25 @@ public class UltronIndependentVoiceInput {
     }
 
     /**
-     * Resolves the device's actual system speech recognition service (Google or OEM)
-     * while explicitly avoiding Ultron's own RecognitionService to prevent recursive loops.
+     * Checks if Ultron itself is configured as the active system default voice recognition service.
+     */
+    public static boolean isDefaultRecognizerOurs(Context context) {
+        try {
+            String defaultRec = android.provider.Settings.Secure.getString(
+                    context.getContentResolver(), "voice_recognition_service");
+            if (defaultRec != null && defaultRec.startsWith(context.getPackageName() + "/")) {
+                return true;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed checking default recognizer: " + t.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Resolves the device's system speech recognition service.
+     * Prefers package "com.google.android.googlequicksearchbox", then any other "google"
+     * package, then any non-Ultron service. Never picks Ultron's own package.
      */
     public static ComponentName findSystemRecognitionService(Context context) {
         try {
@@ -108,11 +133,13 @@ public class UltronIndependentVoiceInput {
             Intent intent = new Intent(RecognitionService.SERVICE_INTERFACE);
             List<ResolveInfo> services = pm.queryIntentServices(intent, 0);
             if (services == null || services.isEmpty()) {
+                UltronDebugLog.log(TAG, "findSystemRecognitionService: no services found");
                 return null;
             }
 
             String myPackage = context.getPackageName();
-            ResolveInfo googleService = null;
+            ResolveInfo mainGoogleService = null;
+            ResolveInfo otherGoogleService = null;
             ResolveInfo otherService = null;
 
             for (int i = 0; i < services.size(); i++) {
@@ -125,80 +152,66 @@ public class UltronIndependentVoiceInput {
                     continue;
                 }
 
-                if (pkg.toLowerCase(Locale.US).contains("google")) {
-                    googleService = info;
+                if ("com.google.android.googlequicksearchbox".equals(pkg)) {
+                    mainGoogleService = info;
                     break;
-                }
-                if (otherService == null) {
-                    otherService = info;
+                } else if (pkg.toLowerCase(Locale.US).contains("google")) {
+                    if (otherGoogleService == null) {
+                        otherGoogleService = info;
+                    }
+                } else {
+                    if (otherService == null) {
+                        otherService = info;
+                    }
                 }
             }
 
-            ResolveInfo chosen = (googleService != null) ? googleService : otherService;
+            ResolveInfo chosen = (mainGoogleService != null) ? mainGoogleService :
+                    ((otherGoogleService != null) ? otherGoogleService : otherService);
+
             if (chosen != null && chosen.serviceInfo != null) {
-                return new ComponentName(chosen.serviceInfo.packageName, chosen.serviceInfo.name);
+                ComponentName comp = new ComponentName(chosen.serviceInfo.packageName, chosen.serviceInfo.name);
+                UltronDebugLog.log(TAG, "findSystemRecognitionService resolved: " + comp.flattenToShortString());
+                Log.i(TAG, "findSystemRecognitionService resolved: " + comp.flattenToShortString());
+                return comp;
             }
         } catch (Exception e) {
+            UltronDebugLog.log(TAG, "findSystemRecognitionService error: " + e.getMessage());
             Log.w(TAG, "Error resolving system speech recognition service: " + e.getMessage());
         }
         return null;
     }
 
     /**
-     * Attempts to create an on-device, 100% offline speech recognizer.
-     * Uses Android 12+ createOnDeviceSpeechRecognizer via reflection,
-     * or standard SpeechRecognizer bound to system engine.
+     * Creates a recognizer instance according to default engine routing rules.
      */
     private synchronized void ensureRecognizer() {
-        if (speechRecognizer != null) {
-            return;
-        }
-
-        // Tier 1: Android 12+ (API 31+) Native On-Device Recognizer (Pure Offline)
-        if (Build.VERSION.SDK_INT >= 31) {
-            try {
-                Method isAvailableMethod = SpeechRecognizer.class.getMethod("isOnDeviceRecognitionAvailable", Context.class);
-                Boolean isAvail = (Boolean) isAvailableMethod.invoke(null, context);
-                if (isAvail != null && isAvail.booleanValue()) {
-                    Method createOnDeviceMethod = SpeechRecognizer.class.getMethod("createOnDeviceSpeechRecognizer", Context.class);
-                    speechRecognizer = (SpeechRecognizer) createOnDeviceMethod.invoke(null, context);
-                    Log.i(TAG, "Initialized pure On-Device SpeechRecognizer (100% Offline)");
-                }
-            } catch (Throwable t) {
-                Log.w(TAG, "On-device SpeechRecognizer reflection not available: " + t.getMessage());
-            }
-        }
-
-        // Tier 2: System Speech Recognition Engine
-        if (speechRecognizer == null) {
-            try {
+        safeDestroyRecognizer();
+        try {
+            if (isDefaultRecognizerOurs(context)) {
                 ComponentName comp = findSystemRecognitionService(context);
                 if (comp != null) {
-                    Log.i(TAG, "Binding SpeechRecognizer to system engine: " + comp.flattenToShortString());
+                    UltronDebugLog.log(TAG, "Binding explicitly to system recognizer: " + comp.flattenToShortString());
                     speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context, comp);
-                } else {
-                    speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
-                }
-            } catch (Exception e) {
-                try {
-                    speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
-                } catch (Exception ex) {
-                    speechRecognizer = null;
+                    return;
                 }
             }
-        }
-
-        if (speechRecognizer != null) {
-            speechRecognizer.setRecognitionListener(new InternalRecognitionListener());
+            UltronDebugLog.log(TAG, "Creating standard SpeechRecognizer");
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
+        } catch (Throwable t) {
+            UltronDebugLog.log(TAG, "ensureRecognizer failed: " + t.getMessage());
+            speechRecognizer = null;
         }
     }
 
     /**
      * Builds speech recognition intent.
-     * When preferOffline is true, requests on-device offline speech recognition.
-     * When false (online), allows Google Cloud STT for 99.9% recognition accuracy.
      */
     public static Intent buildRecognizerIntent(Context context, boolean preferOffline) {
+        return buildRecognizerIntent(context, preferOffline, false);
+    }
+
+    public static Intent buildRecognizerIntent(Context context, boolean preferOffline, boolean forceEnglishUs) {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 
@@ -207,21 +220,27 @@ public class UltronIndependentVoiceInput {
             intent.putExtra("android.speech.extra.PREFER_OFFLINE", true);
         }
 
-        // Language: prioritize device's default locale, with en-US fallback
-        String sysLang = Locale.getDefault().toLanguageTag();
-        if (sysLang == null || sysLang.isEmpty() || "und".equalsIgnoreCase(sysLang)) {
-            sysLang = "en-US";
+        String lang;
+        if (forceEnglishUs) {
+            lang = "en-US";
+        } else {
+            String sysLang = Locale.getDefault().toLanguageTag();
+            if (sysLang == null || sysLang.isEmpty() || "und".equalsIgnoreCase(sysLang)) {
+                lang = "en-US";
+            } else {
+                lang = sysLang;
+            }
         }
 
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, sysLang);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, sysLang);
-        intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{sysLang, "en-US"});
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, lang);
+        intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{lang, "en-US"});
 
         intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.getPackageName());
         intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
 
-        // Generous silence threshold (2500ms for natural pauses without premature cutoffs)
+        // Silence thresholds (2500ms for natural pauses without premature cutoffs)
         intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L);
         intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L);
         intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 2000L);
@@ -230,84 +249,174 @@ public class UltronIndependentVoiceInput {
     }
 
     public static Intent buildOfflineRecognizerIntent(Context context) {
-        return buildRecognizerIntent(context, true);
+        return buildRecognizerIntent(context, true, false);
+    }
+
+    private String formatDiag(int errorCode) {
+        return " [E" + errorCode + " dev=" + onDeviceMode + " en=" + forceEnglishUs + "]";
     }
 
     /**
-     * Begins listening for speech strictly in-app (Offline First).
+     * Begins listening for speech.
      */
     public void startListening() {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                // 1. Verify microphone permission
+                UltronDebugLog.log(TAG, "startListening requested");
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                        notifyError("Microphone permission required. Tap to grant.");
+                        notifyError("Microphone permission required. Tap to grant." + formatDiag(SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS));
                         return;
                     }
                 }
 
                 stopAudioRecordFallback();
-                fallbackRetryCount = 0;
+                totalAttempts = 0;
+                forceEnglishUs = false;
+                onDeviceMode = !isNetworkConnected();
 
-                // 2. If device has no internet, attempt high-accuracy on-device SpeechRecognizer first!
-                // Android 12+ createOnDeviceSpeechRecognizer and downloaded offline voice models
-                // provide full neural acoustic models offline across the complete vocabulary.
-                if (!isNetworkConnected()) {
-                    try {
-                        ensureRecognizer();
-                        if (speechRecognizer != null) {
-                            try {
-                                speechRecognizer.cancel();
-                            } catch (Exception e) {
-                                Log.d(TAG, "SpeechRecognizer cancel before offline listen: " + e.getMessage());
-                            }
-
-                            Intent intent = buildOfflineRecognizerIntent(context);
-                            speechRecognizer.startListening(intent);
-                            isListening.set(true);
-                            notifyReady();
-                            Log.i(TAG, "Successfully activated on-device offline SpeechRecognizer");
-                            return;
-                        }
-                    } catch (Throwable t) {
-                        Log.w(TAG, "On-device offline SpeechRecognizer unavailable: " + t.getMessage());
-                    }
-
-                    Log.i(TAG, "Activating on-device AudioRecord fallback");
-                    startAudioRecordFallback();
-                    return;
-                }
-
-                try {
-                    ensureRecognizer();
-
-                    if (speechRecognizer == null) {
-                        Log.w(TAG, "SpeechRecognizer unavailable, activating AudioRecord fallback");
-                        startAudioRecordFallback();
-                        return;
-                    }
-
-                    // Reset state
-                    try {
-                        speechRecognizer.cancel();
-                    } catch (Exception e) {
-                        Log.d(TAG, "SpeechRecognizer cancel before online listen: " + e.getMessage());
-                    }
-
-                    Intent intent = buildRecognizerIntent(context, false);
-                    speechRecognizer.startListening(intent);
-                    isListening.set(true);
-                    notifyReady();
-
-                } catch (Exception e) {
-                    Log.e(TAG, "Error starting speech recognizer: " + e.getMessage(), e);
-                    safeDestroyRecognizer();
-                    startAudioRecordFallback();
-                }
+                beginRecognition();
             }
         });
+    }
+
+    private void beginRecognition() {
+        generation++;
+        totalAttempts++;
+        final int currentGen = generation;
+        lastPartial = "";
+
+        UltronDebugLog.log(TAG, "beginRecognition gen=" + currentGen + " attempt=" + totalAttempts +
+                " onDevice=" + onDeviceMode + " forceEn=" + forceEnglishUs);
+
+        safeDestroyRecognizer();
+
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            UltronDebugLog.log(TAG, "SpeechRecognizer.isRecognitionAvailable is false");
+            notifyError("No speech service found. Install/enable the Google app." + formatDiag(0));
+            startAudioRecordFallback();
+            return;
+        }
+
+        ensureRecognizer();
+
+        if (speechRecognizer == null) {
+            UltronDebugLog.log(TAG, "ensureRecognizer failed, speechRecognizer is null");
+            notifyError("Speech engine not responding. Check the Google app..." + formatDiag(SpeechRecognizer.ERROR_CLIENT));
+            return;
+        }
+
+        try {
+            speechRecognizer.setRecognitionListener(new InternalRecognitionListener(currentGen));
+            Intent intent = buildRecognizerIntent(context, onDeviceMode, forceEnglishUs);
+            speechRecognizer.startListening(intent);
+            isListening.set(true);
+
+            if (readyWatchdog != null) {
+                mainHandler.removeCallbacks(readyWatchdog);
+            }
+            readyWatchdog = new Runnable() {
+                @Override
+                public void run() {
+                    UltronDebugLog.log(TAG, "readyWatchdog timeout for gen=" + currentGen);
+                    if (currentGen == generation) {
+                        handleRecognizerError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT);
+                    }
+                }
+            };
+            mainHandler.postDelayed(readyWatchdog, READY_TIMEOUT_MS);
+
+        } catch (Throwable t) {
+            UltronDebugLog.log(TAG, "startListening threw exception: " + t.getMessage());
+            safeDestroyRecognizer();
+            notifyError("Speech engine not responding. Check the Google app..." + formatDiag(SpeechRecognizer.ERROR_CLIENT));
+        }
+    }
+
+    private void scheduleRetry(long delayMs, final int error) {
+        if (totalAttempts < MAX_ATTEMPTS) {
+            UltronDebugLog.log(TAG, "Scheduling retry attempt " + (totalAttempts + 1) + "/" + MAX_ATTEMPTS + " in " + delayMs + "ms");
+            if (retryRunnable != null) {
+                mainHandler.removeCallbacks(retryRunnable);
+            }
+            retryRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    beginRecognition();
+                }
+            };
+            mainHandler.postDelayed(retryRunnable, delayMs);
+        } else {
+            UltronDebugLog.log(TAG, "Max retry attempts (" + MAX_ATTEMPTS + ") reached for error " + error);
+            String msg;
+            if (error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
+                msg = "Microphone busy. Tap to retry.";
+            } else if (error == SpeechRecognizer.ERROR_AUDIO) {
+                msg = "Audio recording error. Tap mic to retry.";
+            } else {
+                msg = "Speech recognition unavailable. Tap mic to retry.";
+            }
+            notifyError(msg + formatDiag(error));
+        }
+    }
+
+    private void handleRecognizerError(int error) {
+        UltronDebugLog.log(TAG, "handleRecognizerError error=" + error + " attempt=" + totalAttempts);
+        switch (error) {
+            case SpeechRecognizer.ERROR_NO_MATCH:
+            case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
+                if (lastPartial != null && !lastPartial.trim().isEmpty()) {
+                    String rescued = lastPartial.trim();
+                    UltronDebugLog.log(TAG, "Rescued partial on error " + error + ": " + rescued);
+                    notifyResult(rescued);
+                } else {
+                    notifyError("I didn't catch that. Tap the mic and try again." + formatDiag(error));
+                }
+                break;
+
+            case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
+                notifyError("Microphone permission required." + formatDiag(error));
+                break;
+
+            case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+            case SpeechRecognizer.ERROR_CLIENT:
+            case SpeechRecognizer.ERROR_AUDIO:
+                scheduleRetry(500, error);
+                break;
+
+            // Literal 12, 13 (Language not supported / unavailable on API 33+)
+            case 12:
+            case 13:
+                if (!forceEnglishUs) {
+                    forceEnglishUs = true;
+                    scheduleRetry(200, error);
+                } else if (onDeviceMode) {
+                    onDeviceMode = false;
+                    scheduleRetry(200, error);
+                } else {
+                    notifyError("Language pack missing. Check speech settings." + formatDiag(error));
+                }
+                break;
+
+            case SpeechRecognizer.ERROR_NETWORK:
+            case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
+            case SpeechRecognizer.ERROR_SERVER:
+            // Literal 10 (ERROR_CANNOT_CHECK_AUTHORIZATION), 11 (ERROR_TOO_MANY_REQUESTS)
+            case 10:
+            case 11:
+                if (!onDeviceMode) {
+                    onDeviceMode = true;
+                    scheduleRetry(200, error);
+                } else {
+                    notifyError("Offline voice pack missing. Tap settings to download." + formatDiag(error));
+                }
+                break;
+
+            default:
+                notifyError("Speech recognition error (" + error + ")." + formatDiag(error));
+                break;
+        }
     }
 
     /**
@@ -317,14 +426,9 @@ public class UltronIndependentVoiceInput {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
+                UltronDebugLog.log(TAG, "stopListening requested");
                 isListening.set(false);
-                if (speechRecognizer != null) {
-                    try {
-                        speechRecognizer.stopListening();
-                    } catch (Exception e) {
-                        Log.d(TAG, "SpeechRecognizer stopListening: " + e.getMessage());
-                    }
-                }
+                safeDestroyRecognizer();
                 stopAudioRecordFallback();
             }
         });
@@ -337,6 +441,7 @@ public class UltronIndependentVoiceInput {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
+                UltronDebugLog.log(TAG, "destroy requested");
                 isListening.set(false);
                 stopAudioRecordFallback();
                 safeDestroyRecognizer();
@@ -346,6 +451,14 @@ public class UltronIndependentVoiceInput {
     }
 
     private synchronized void safeDestroyRecognizer() {
+        if (readyWatchdog != null) {
+            mainHandler.removeCallbacks(readyWatchdog);
+            readyWatchdog = null;
+        }
+        if (retryRunnable != null) {
+            mainHandler.removeCallbacks(retryRunnable);
+            retryRunnable = null;
+        }
         if (speechRecognizer != null) {
             try {
                 speechRecognizer.stopListening();
@@ -362,22 +475,39 @@ public class UltronIndependentVoiceInput {
      * RecognitionListener that pipes audio events directly into Ultron HUD.
      */
     private class InternalRecognitionListener implements RecognitionListener {
+        private final int gen;
+
+        InternalRecognitionListener(int gen) {
+            this.gen = gen;
+        }
+
+        private boolean isStale() {
+            return gen != generation;
+        }
+
         @Override
         public void onReadyForSpeech(Bundle params) {
-            Log.i(TAG, "SpeechRecognizer onReadyForSpeech (Offline)");
+            UltronDebugLog.log(TAG, "onReadyForSpeech gen=" + gen);
+            if (isStale()) return;
+            if (readyWatchdog != null) {
+                mainHandler.removeCallbacks(readyWatchdog);
+                readyWatchdog = null;
+            }
             isListening.set(true);
             notifyReady();
         }
 
         @Override
         public void onBeginningOfSpeech() {
-            Log.i(TAG, "SpeechRecognizer onBeginningOfSpeech");
+            UltronDebugLog.log(TAG, "onBeginningOfSpeech gen=" + gen);
+            if (isStale()) return;
             isListening.set(true);
             notifyBeginningOfSpeech();
         }
 
         @Override
         public void onRmsChanged(float rmsdB) {
+            if (isStale()) return;
             float normalizedDb;
             if (rmsdB < 0f) {
                 normalizedDb = (rmsdB + 2.0f) * 15.0f;
@@ -389,70 +519,71 @@ public class UltronIndependentVoiceInput {
         }
 
         @Override
-        public void onBufferReceived(byte[] buffer) {}
+        public void onBufferReceived(byte[] buffer) {
+            if (isStale()) return;
+        }
 
         @Override
         public void onEndOfSpeech() {
-            Log.i(TAG, "SpeechRecognizer onEndOfSpeech");
+            UltronDebugLog.log(TAG, "onEndOfSpeech gen=" + gen);
+            if (isStale()) return;
             isListening.set(false);
             notifyEndOfSpeech();
         }
 
         @Override
         public void onError(final int error) {
+            UltronDebugLog.log(TAG, "onError gen=" + gen + " error=" + error);
+            if (isStale()) return;
+            if (readyWatchdog != null) {
+                mainHandler.removeCallbacks(readyWatchdog);
+                readyWatchdog = null;
+            }
             isListening.set(false);
-            Log.w(TAG, "SpeechRecognizer onError: " + error);
-
             safeDestroyRecognizer();
-
-            // Handle user/environment conditions with clear UI status and no fallback loop
-            if (error == SpeechRecognizer.ERROR_NO_MATCH ||
-                error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT ||
-                error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ||
-                error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY) {
-                handleRecognizerError(error);
-                return;
-            }
-
-            // For network, client or audio errors, attempt bounded AudioRecord fallback once
-            if (fallbackRetryCount < 1) {
-                fallbackRetryCount++;
-                Log.i(TAG, "Attempting bounded AudioRecord fallback for recognizer error: " + error);
-                mainHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        startAudioRecordFallback();
-                    }
-                }, 100);
-            } else {
-                handleRecognizerError(error);
-            }
+            handleRecognizerError(error);
         }
 
         @Override
         public void onResults(Bundle results) {
+            UltronDebugLog.log(TAG, "onResults gen=" + gen);
+            if (isStale()) return;
+            if (readyWatchdog != null) {
+                mainHandler.removeCallbacks(readyWatchdog);
+                readyWatchdog = null;
+            }
             isListening.set(false);
+            safeDestroyRecognizer();
+
             ArrayList<String> matches = (results != null) ?
                     results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) : null;
             if (matches != null && !matches.isEmpty()) {
                 String text = matches.get(0).trim();
                 if (!text.isEmpty()) {
-                    fallbackRetryCount = 0;
-                    Log.i(TAG, "Speech Recognized: " + text);
+                    UltronDebugLog.log(TAG, "Speech recognized: " + text);
                     notifyResult(text);
                     return;
                 }
             }
-            notifyError("Didn't catch that. Tap mic to retry.");
+            if (lastPartial != null && !lastPartial.trim().isEmpty()) {
+                String rescued = lastPartial.trim();
+                UltronDebugLog.log(TAG, "Rescued partial from empty results: " + rescued);
+                notifyResult(rescued);
+            } else {
+                notifyError("Didn't catch that. Tap mic to retry." + formatDiag(SpeechRecognizer.ERROR_NO_MATCH));
+            }
         }
 
         @Override
         public void onPartialResults(Bundle partialResults) {
+            if (isStale()) return;
             ArrayList<String> partial = (partialResults != null) ?
                     partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) : null;
             if (partial != null && !partial.isEmpty()) {
                 String text = partial.get(0).trim();
                 if (!text.isEmpty()) {
+                    lastPartial = text;
+                    UltronDebugLog.log(TAG, "Partial: " + text);
                     notifyPartialResult(text);
                 }
             }
@@ -460,40 +591,6 @@ public class UltronIndependentVoiceInput {
 
         @Override
         public void onEvent(int eventType, Bundle params) {}
-    }
-
-    private void handleRecognizerError(int error) {
-        String message;
-        switch (error) {
-            case SpeechRecognizer.ERROR_NO_MATCH:
-                message = "Didn't hear that. Tap mic to speak.";
-                break;
-            case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                message = "Listening timed out. Tap mic to speak.";
-                break;
-            case SpeechRecognizer.ERROR_AUDIO:
-                message = "Audio recording error. Tap mic to retry.";
-                break;
-            case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-                message = "Microphone permission required.";
-                break;
-            case SpeechRecognizer.ERROR_NETWORK:
-            case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                message = "Offline voice pack missing. Tap settings to download.";
-                break;
-            case SpeechRecognizer.ERROR_SERVER:
-                message = "Server error. Tap mic to retry.";
-                break;
-            case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                message = "Microphone busy. Tap to retry.";
-                break;
-            case SpeechRecognizer.ERROR_CLIENT:
-            default:
-                message = "Didn't catch that. Tap mic to speak.";
-                break;
-        }
-
-        notifyError(message);
     }
 
     private boolean isNetworkConnected() {
@@ -505,6 +602,7 @@ public class UltronIndependentVoiceInput {
             }
         } catch (SecurityException e) {
             Log.w(TAG, "Cannot check network state: ACCESS_NETWORK_STATE permission missing or denied", e);
+            return true;
         } catch (Exception e) {
             Log.w(TAG, "Failed to determine network connectivity: " + e.getMessage());
         }
@@ -552,6 +650,7 @@ public class UltronIndependentVoiceInput {
         fallbackThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                UltronDebugLog.log(TAG, "Starting AudioRecord fallback recording loop");
                 int sampleRate = 16000;
                 int minBuf = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
                 int bufferSize = Math.max(minBuf, 4096);
@@ -562,7 +661,8 @@ public class UltronIndependentVoiceInput {
                     MediaRecorder.AudioSource.VOICE_RECOGNITION,
                     MediaRecorder.AudioSource.DEFAULT
                 };
-                for (int src : audioSources) {
+                for (int i = 0; i < audioSources.length; i++) {
+                    int src = audioSources[i];
                     try {
                         recorder = new AudioRecord(src, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize);
                         if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
@@ -583,7 +683,7 @@ public class UltronIndependentVoiceInput {
                     }
                     isFallbackRecording.set(false);
                     isListening.set(false);
-                    notifyError("Microphone initialization error.");
+                    notifyError("Microphone initialization error." + formatDiag(SpeechRecognizer.ERROR_AUDIO));
                     return;
                 }
 
@@ -629,7 +729,7 @@ public class UltronIndependentVoiceInput {
                         // Responsive vocal activity threshold
                         double speechThreshold = Math.max(28.0, ambientRms * 1.25);
 
-                        // Visual RMS for HUD stadium capsule glow
+                        // Visual RMS for HUD
                         float visualDb = Math.min(95f, Math.max(0f, (float) ((rms - 10.0) * 1.6)));
                         notifyRms(visualDb);
 
@@ -643,7 +743,7 @@ public class UltronIndependentVoiceInput {
                             lastSpeechTime = now;
                         }
 
-                        // Auto-detect speech end: 1200ms silence after speech, or 6.5s maximum total speech
+                        // Auto-detect speech end
                         if (heardSpeech && (now - lastSpeechTime > 1200 || now - speechStartTime > 6500)) {
                             break;
                         }
@@ -657,7 +757,7 @@ public class UltronIndependentVoiceInput {
 
                 } catch (Exception e) {
                     Log.e(TAG, "AudioRecord fallback error: " + e.getMessage(), e);
-                    notifyError("Microphone error. Tap to retry.");
+                    notifyError("Microphone error. Tap to retry." + formatDiag(SpeechRecognizer.ERROR_AUDIO));
                 } finally {
                     if (recorder != null) {
                         try {
@@ -691,11 +791,11 @@ public class UltronIndependentVoiceInput {
                     return;
                 }
 
-                // Tier 1: If online, check Chromium high-precision speech API
+                // Tier 1: If online, check Chromium speech API
                 if (isNetworkConnected()) {
                     String text = queryChromiumSpeechApi(pcmData);
                     if (text != null && !text.trim().isEmpty()) {
-                        Log.i(TAG, "Chromium speech recognized: " + text);
+                        UltronDebugLog.log(TAG, "Chromium speech recognized: " + text);
                         notifyResult(text.trim());
                         return;
                     }
@@ -704,12 +804,12 @@ public class UltronIndependentVoiceInput {
                 // Tier 2: 100% Offline On-Device Acoustic Command Recognizer
                 String offlineDecoded = UltronOfflineAcousticEngine.recognizeCommand(context, pcmData);
                 if (offlineDecoded != null && !offlineDecoded.trim().isEmpty()) {
-                    Log.i(TAG, "Offline Acoustic Engine Decoded: " + offlineDecoded);
+                    UltronDebugLog.log(TAG, "Offline Acoustic Engine Decoded: " + offlineDecoded);
                     notifyResult(offlineDecoded.trim());
                     return;
                 }
 
-                notifyError("Didn't catch that. Tap mic to speak.");
+                notifyError("Didn't catch that. Tap mic to speak." + formatDiag(SpeechRecognizer.ERROR_NO_MATCH));
             }
         });
         fallbackThread.start();
@@ -773,6 +873,7 @@ public class UltronIndependentVoiceInput {
 
     // Helper notification dispatchers on Main Thread
     private void notifyReady() {
+        UltronDebugLog.log(TAG, "notifyReady");
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -782,6 +883,7 @@ public class UltronIndependentVoiceInput {
     }
 
     private void notifyBeginningOfSpeech() {
+        UltronDebugLog.log(TAG, "notifyBeginningOfSpeech");
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -809,6 +911,7 @@ public class UltronIndependentVoiceInput {
     }
 
     private void notifyEndOfSpeech() {
+        UltronDebugLog.log(TAG, "notifyEndOfSpeech");
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -818,6 +921,7 @@ public class UltronIndependentVoiceInput {
     }
 
     private void notifyResult(final String result) {
+        UltronDebugLog.log(TAG, "notifyResult: " + result);
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -827,6 +931,7 @@ public class UltronIndependentVoiceInput {
     }
 
     private void notifyError(final String error) {
+        UltronDebugLog.log(TAG, "notifyError: " + error);
         mainHandler.post(new Runnable() {
             @Override
             public void run() {

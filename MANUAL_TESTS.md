@@ -1,131 +1,161 @@
 # Ultron Android Manual Test Suite
 
-This document defines the manual testing procedures for verifying the Ultron Android voice assistant (`com.ultron.assistant`) across hardware, OS versions (Android 7.0 through Android 14+), and edge-case operational states.
+This document defines the manual hardware and field testing procedures for verifying the Ultron Android voice assistant (`com.ultron.assistant`).
+
+Every test case lists the **Preconditions / Action Steps**, the **Expected HUD State & Text**, and the **Expected Line in `/storage/emulated/0/Project/ultron_voice.log`**.
 
 ---
 
-## Pre-requisites & Test Setup
-1. **Device:** Physical Android device or Android Emulator (API 24 to API 34).
-2. **Build and Install:**
-   ```bash
-   # From Termux:
-   aapt package -f -m -J gen -M android/app/src/main/AndroidManifest.xml -S android/app/src/main/res -I "$HOME/.android-sdk/android.jar"
-   ecj -cp "$HOME/.android-sdk/android.jar:gen" -d obj $(find android/app/src/main/java gen -name "*.java")
-   # Package and install apk via adb or package manager
-   ```
+## Diagnostics Log Location
+```bash
+/storage/emulated/0/Project/ultron_voice.log
+```
+To tail live diagnostics during manual tests in Termux:
+```bash
+tail -f /storage/emulated/0/Project/ultron_voice.log
+```
 
 ---
 
-## Test Cases
+## 1. Microphone Permission Denied vs Granted
 
-### 1. Microphone Permission Denied vs Granted
-* **Objective:** Ensure the app handles microphone permission cleanly without crashing or hanging in an invalid state.
+### 1A: Mic Permission Denied
 * **Steps:**
-  1. Go to **Android Settings -> Apps -> Ultron Assistant -> Permissions -> Microphone** and set to **Don't Allow**.
-  2. Launch Ultron Assistant (`MainActivity`).
-  3. Verify the system permission request dialog appears.
-  4. Tap **Deny**.
-  5. Tap the microphone icon on the stadium capsule HUD.
-  6. Verify the HUD displays `Microphone permission required` and does not crash.
-  7. Return to app permissions, grant **Allow while using app**.
-  8. Re-open Ultron and tap the microphone icon.
-* **Expected Result:** Audio waveform glows cyan/red pulse and listening begins immediately without error.
+  1. Revoke microphone permission: **Settings -> Apps -> Ultron Assistant -> Permissions -> Microphone -> Don't allow**.
+  2. Launch Ultron Assistant.
+  3. When prompted by Android system dialog, tap **Deny**.
+  4. Tap the stadium capsule microphone button.
+* **Expected HUD State & Text:**
+  - Status indicator changes to error state.
+  - Text displayed: `Microphone permission required. [E9 dev=... en=...]`
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceInput] handleRecognizerError error=9 attempt=1`
+  - *(or `[UltronVoiceInput] startListening requested` followed by permission guard failure log)*
 
----
-
-### 2. Airplane Mode / Offline vs Online State
-* **Objective:** Verify offline speech recognition behavior and automatic fallback mechanisms.
-* **Test 2A: Offline with Offline Speech Pack Installed**
-  1. Ensure English offline voice model is downloaded (**Android Settings -> Google -> Settings for Google Apps -> Search, Assistant & Voice -> Voice -> Offline speech recognition**).
-  2. Enable **Airplane Mode** (Wi-Fi and mobile data OFF).
-  3. Tap Ultron microphone.
-  4. Speak command: *"Open Calculator"*.
-* **Expected Result:** Ultron processes speech locally via on-device `SpeechRecognizer`, replies *"Opening Calculator"*, and launches the Calculator app.
-
-* **Test 2B: Offline without Offline Speech Pack Installed**
-  1. In Airplane mode on a device lacking offline voice packs.
-  2. Tap Ultron microphone.
-  3. Speak command.
-* **Expected Result:** App cleanly catches the network/speech engine error, HUD displays `"Didn't catch that. Tap mic to retry."` or falls back to bounded `AudioRecord` (max 1 fallback attempt), without crash or infinite recursion loop.
-
----
-
-### 3. Tap-to-Speak & Single Utterance Flow
-* **Objective:** Verify standard primary interaction loop.
+### 1B: Mic Permission Granted
 * **Steps:**
-  1. Open Ultron Assistant from home screen or long-press Home/Power assist gesture.
-  2. Tap the glowing center microphone button.
-  3. Say *"What time is it?"*.
-* **Expected Result:**
-  - HUD status updates from `Listening...` -> `Thinking...`.
-  - Ultron speaks the current time via offline `TTSManager`.
-  - HUD displays query and assistant response without syntax errors.
+  1. Enable microphone permission: **Settings -> Apps -> Ultron Assistant -> Permissions -> Microphone -> Allow only while using the app**.
+  2. Launch Ultron Assistant.
+* **Expected HUD State & Text:**
+  - Status indicator glows cyan/blue waveform.
+  - Text displayed: `Listening... Speak your command`
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceInput] onReadyForSpeech gen=1`
 
 ---
 
-### 4. Floating Overlay Capsule & Window Management
-* **Objective:** Verify always-on-top draggable capsule behavior across external applications.
+## 2. Airplane Mode With & Without Offline Voice Pack
+
+### 2A: Airplane Mode with Offline Voice Pack
 * **Steps:**
-  1. In Ultron settings, enable **Floating Capsule Overlay** (or execute command *"Turn on floating mode"*).
+  1. Ensure an offline speech recognition language pack (e.g., English US) is installed via **Settings -> Google -> Settings for Google apps -> Search, Assistant & Voice -> Voice -> Offline speech recognition**.
+  2. Turn on **Airplane Mode** (Wi-Fi and Cellular data turned OFF).
+  3. Open Ultron Assistant and speak: *"Turn on flashlight"*.
+* **Expected HUD State & Text:**
+  - HUD displays recognized query: `"turn on flashlight"`
+  - Status transitions from `Listening...` to `Thinking...` and then replies: `"Turning flashlight on"`
+  - Flashlight illuminates.
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceInput] beginRecognition gen=1 attempt=1 onDevice=true forceEn=false`
+  - `[UltronVoiceInput] onReadyForSpeech gen=1`
+  - `[UltronVoiceInput] Speech recognized: turn on flashlight`
+
+### 2B: Airplane Mode without Offline Voice Pack
+* **Steps:**
+  1. In **Airplane Mode**, uninstall or remove offline voice data (or test on device with no offline Greco models).
+  2. Open Ultron Assistant.
+  3. Speak any phrase or remain silent until recognizer returns network/offline pack error.
+* **Expected HUD State & Text:**
+  - Status updates to retry / informative offline prompt.
+  - Text displayed: `Offline voice pack missing. Tap settings to download. [E2 dev=true en=false]`
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceInput] handleRecognizerError error=2 attempt=...` (or error=1 / error=10)
+
+---
+
+## 3. Open From Launcher (Must Auto-Listen)
+
+* **Steps:**
+  1. Ensure microphone permission is granted.
+  2. Force-stop Ultron Assistant from recent apps or application settings.
+  3. Tap the Ultron Assistant app icon from the home screen launcher.
+  4. Do not touch or tap the screen.
+* **Expected HUD State & Text:**
+  - As soon as the WebView HUD finishes rendering, listening starts automatically without any manual tap.
+  - Center stadium capsule illuminates with active RMS audio level glow.
+  - Text displayed: `Listening... Speak your command`
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceInput] startListening requested`
+  - `[UltronVoiceInput] onReadyForSpeech gen=1`
+
+---
+
+## 4. Assist Gesture (Must Auto-Listen on FIRST Invocation)
+
+* **Steps:**
+  1. Set Ultron as device default assistant: **Settings -> Apps -> Default apps -> Digital assistant app -> Ultron Assistant**.
+  2. Ensure Ultron is not running in the foreground (switch to home screen).
+  3. Trigger the assistant gesture: long-press the **Home button** or hold the **Power button** (or swipe up from screen corner on gesture navigation).
+  4. Observe initial display state.
+* **Expected HUD State & Text:**
+  - Ultron HUD launches immediately from the gesture.
+  - Auto-listening begins on the **FIRST** invocation (no need for a second gesture trigger or a screen tap).
+  - Text displayed: `Listening... Speak your command`
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceSession] onShow` (invoked with `Intent.ACTION_ASSIST`)
+  - `[UltronVoiceInput] startListening requested`
+  - `[UltronVoiceInput] onReadyForSpeech gen=1`
+
+---
+
+## 5. Voice Query: Say "What time is it"
+
+* **Steps:**
+  1. Open Ultron Assistant.
+  2. Clearly speak: *"What time is it?"*.
+  3. Wait for assistant processing and response.
+* **Expected HUD State & Text:**
+  - Partial speech appears while speaking: `"what time is it"`
+  - HUD displays query: `"what time is it"`
+  - Assistant responds with current local time (e.g. `"The time is 11:05 AM"`).
+  - Status updates to `Ultron Ready • Tap mic to speak` after TTS playback finishes.
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceInput] onBeginningOfSpeech gen=1`
+  - `[UltronVoiceInput] Partial: what time is it`
+  - `[UltronVoiceInput] onEndOfSpeech gen=1`
+  - `[UltronVoiceInput] Speech recognized: what time is it`
+
+---
+
+## 6. The Apostrophe Test ("I didn't catch that" Recovery)
+
+* **Steps:**
+  1. Open Ultron Assistant.
+  2. Stay completely silent or murmur unintelligibly until recognizer times out.
+  3. Observe HUD display and verify it does NOT freeze or stay stuck on "Thinking...".
+  4. Immediately tap the center microphone button again.
+* **Expected HUD State & Text:**
+  - HUD text cleanly renders: `I didn't catch that. Tap the mic and try again. [E7 dev=... en=...]` (or `[E6 ...]`)
+  - No JavaScript `Uncaught SyntaxError` appears in WebConsole/logcat.
+  - The mic button remains fully interactive and immediately starts listening again on tap.
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceInput] onError gen=1 error=7` (or `error=6`)
+  - `[UltronVoiceInput] handleRecognizerError error=7 attempt=1`
+
+---
+
+## 7. Floating Overlay Mic
+
+* **Steps:**
+  1. In Ultron settings, enable **Floating Capsule Overlay** (or trigger command *"Turn on floating mode"*).
   2. Ensure **Display over other apps** permission is granted.
-  3. Open an external application (e.g., Google Chrome or YouTube).
-  4. Tap the floating capsule on the screen.
-  5. Speak *"Turn on flashlight"*.
-  6. Drag the floating capsule to a new screen corner.
-  7. Tap the capsule again and speak *"Close floating mode"*.
-* **Expected Result:**
-  - The capsule floats steadily over external apps without flickering.
-  - Flashlight turns on and voice confirmation speaks.
-  - Drag gesture moves the capsule smoothly.
-  - Close command tears down `FloatingHUDService` and removes overlay window from `WindowManager`.
-
----
-
-### 5. TTS Voice Output & Conversation Re-Listen Sync
-* **Objective:** Ensure no double-activation race condition between TTS completion and speech input.
-* **Steps:**
-  1. Trigger an interactive assistant command (e.g. asking for confirmation).
-  2. Observe the microphone activation timing while TTS speaks.
-* **Expected Result:**
-  - Ultron does NOT open the microphone while it is actively speaking through the speaker (no audio feedback loop).
-  - The microphone opens cleanly only *after* the TTS utterance completion event (`onSpeechCompleted`) fires.
-  - No 2500ms blind timeout collision occurs.
-
----
-
-### 6. Screen Rotation & Configuration Changes
-* **Objective:** Verify WebView state and microphone recording survive screen orientation shifts.
-* **Steps:**
-  1. Open Ultron in portrait mode.
-  2. Tap mic to begin listening.
-  3. Rotate device to landscape mode.
-  4. Complete speech command.
-* **Expected Result:**
-  - Activity does not leak window context.
-  - Speech recognizer completes utterance or recovers gracefully without crashing.
-  - HUD remains properly centered at bottom edge.
-
----
-
-### 7. Process Kill / Abrupt Exit Mid-Listen
-* **Objective:** Ensure hardware microphone hardware resources and services are released without leaking.
-* **Steps:**
-  1. Tap microphone to enter active listening state.
-  2. While waveform is oscillating, immediately press device **Back** button or swipe app away from Recent Apps.
-  3. Open Android Camera or Voice Recorder app and record audio.
-* **Expected Result:**
-  - Camera/Recorder accesses microphone with zero `AudioRecord in use` hardware errors.
-  - `MainActivity.onDestroy()` correctly releases `AudioRecord`, shuts down `TTSManager`, and cancels `mainHandler` callbacks.
-
----
-
-### 8. Apostrophe & Special Character String Injection ("Didn't catch that")
-* **Objective:** Verify JavaScript evaluation is immune to quotation and apostrophe breaking.
-* **Steps:**
-  1. Mumble or remain completely silent until recognizer times out.
-  2. Observe HUD error message: *"Didn't catch that. Tap mic to speak."*.
-  3. Speak a query with quotes or apostrophes: *"Search for what's the weather today"*.
-* **Expected Result:**
-  - The HUD displays `"Didn't catch that"` smoothly.
-  - No JavaScript uncaught syntax error (`Uncaught SyntaxError: Unexpected identifier`) occurs.
-  - The WebView HUD remains fully responsive.
+  3. Navigate to an external application (e.g. Settings, Chrome, or Launcher).
+  4. Tap the floating microphone capsule over the other application.
+  5. Speak: *"Open Camera"*.
+* **Expected HUD State & Text:**
+  - Floating pill animates with live RMS sound level waves over the third-party application.
+  - HUD displays `"Opening Camera"` and camera application is brought to foreground.
+* **Expected Log Line in `ultron_voice.log`:**
+  - `[UltronVoiceInput] startListening requested`
+  - `[UltronVoiceInput] onReadyForSpeech gen=...`
+  - `[UltronVoiceInput] Speech recognized: open camera`

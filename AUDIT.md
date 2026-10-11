@@ -123,3 +123,30 @@ All 33 identified issues have been systematically addressed, verified, and commi
 | 31 | Medium | Closed | Verified | Verified 100% action parity between `MainActivity` and `FloatingHUDService` `executeAction`. |
 | 32 | High | Closed | `aa2d977` | Relaxed StrictMode VM policy in `openFile` to avoid `FileUriExposedException` on API 24+. |
 | 33 | Medium | Closed | `2803db2` | Updated `README.md` with accurate architecture, capabilities, and known limitations. |
+
+---
+
+## 4. Secondary Issues (Reported Only; Pending Approval)
+
+The following secondary architectural observations were noted during audit and are documented here without code modification pending stakeholder decision:
+
+1. **UltronOfflineAcousticEngine DTW Distance Threshold & Action Triggering:**
+   - *Observation:* The acoustic template matcher uses dynamic time warping over MFCC phoneme vectors. While threshold tightening has occurred, any acoustic match can directly execute actions (launch apps, change system state) from ambient background noise.
+   - *Recommendation:* Require an explicit confirmation step (HUD dialog or audible confirmation) before executing destructive or state-changing actions derived from acoustic fallback matches.
+
+2. **Unofficial Chromium Speech Recognition API Endpoint:**
+   - *Observation:* `queryChromiumSpeechApi()` submits raw PCM audio to `https://www.google.com/speech-api/v2/recognize?client=chromium...` with an embedded Google developer key. This is an unofficial, undocumented API key that may be subject to deprecation or rate limiting.
+   - *Recommendation:* Isolate behind configurable cloud provider settings or remove in favor of pure system speech services.
+
+3. **UltronIntentEngine Aggressive Normalization:**
+   - *Observation:* `UltronIntentEngine.normalizeSpeech` aggressively normalizes common phonetically similar words (`"wa"` -> `whatsapp`, `"cam"` -> `camera`, `"lunch"` -> `open`, `"call"` -> `phone`, `"browser"` -> `chrome`), which can rewrite unintentional words into actionable intents.
+   - *Recommendation:* Refine normalization rules with contextual token matching to prevent unintended overrides.
+
+4. **Media Key Code Mappings:**
+   - *Observation:* Previous implementations mapped `media_play` and `media_pause` both to keycode 85 (`KEYCODE_MEDIA_PLAY_PAUSE`), causing pause commands to toggle playback instead of forcing a pause state. (Now mapped to 126 and 127 in code).
+   - *Recommendation:* Retain discrete keycodes and verify behavior across external OEM media players.
+
+5. **Storage Paths & Scoped Storage:**
+   - *Observation:* Diagnostics logging to `/storage/emulated/0/Project/ultron_voice.log` requires external storage write access and fails on Android 10+ devices enforcing scoped storage without legacy storage flags.
+   - *Recommendation:* In production, transition all diagnostics and crash outputs to `context.getExternalFilesDir(null)` or internal app storage.
+

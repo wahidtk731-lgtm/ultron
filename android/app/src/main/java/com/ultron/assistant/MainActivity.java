@@ -41,6 +41,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     private static final int PERMISSION_REQ_RECORD_AUDIO = 101;
     private static final int REQ_CODE_VOICE_INTENT = 102;
     private static final int REQ_CODE_OVERLAY_PERM = 103;
+    private static final boolean AUTO_LISTEN_ON_OPEN = true;
 
     private WebView webView;
     private UltronIndependentVoiceInput voiceInput;
@@ -49,6 +50,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     private TTSManager ttsManager;
     private Handler mainHandler;
     private boolean shouldListenAfterSpeech = false;
+    private boolean autoListenStarted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,8 +196,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                         webView.evaluateJavascript(String.format("if(window.onAssistantCheck) window.onAssistantCheck(%b);", isDefault), null);
                         webView.evaluateJavascript("if(window.updateRecentApps) window.updateRecentApps();", null);
 
-                        if (isAssistIntent(getIntent()) && hasAudioPermission()) {
-                            startListening();
+                        if ((isAssistIntent(getIntent()) || AUTO_LISTEN_ON_OPEN) && hasAudioPermission()) {
+                            if (!autoListenStarted) {
+                                autoListenStarted = true;
+                                startListening();
+                            }
                         } else {
                             updateWebStatus("ready", "Ultron Ready • Tap mic to speak");
                         }
@@ -931,6 +936,11 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
         @JavascriptInterface
         public void setWindowHeight(int dp) {
+            // No-op in activity mode
+        }
+
+        @JavascriptInterface
+        public void requestInputFocus(boolean focus) {
             // No-op in activity mode
         }
 

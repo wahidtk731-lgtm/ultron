@@ -31,6 +31,7 @@ public class UltronRecognitionService extends RecognitionService {
 
     @Override
     protected void onStartListening(final Intent recognizerIntent, final Callback listener) {
+        UltronDebugLog.log(TAG, "onStartListening requested");
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -39,6 +40,7 @@ public class UltronRecognitionService extends RecognitionService {
 
                     ComponentName sysComp = UltronIndependentVoiceInput.findSystemRecognitionService(UltronRecognitionService.this);
                     if (sysComp == null) {
+                        UltronDebugLog.log(TAG, "No underlying system SpeechRecognizer available to delegate to");
                         Log.e(TAG, "No underlying system SpeechRecognizer available to delegate to; aborting to prevent recursive loop.");
                         if (listener != null) {
                             try { listener.error(SpeechRecognizer.ERROR_CLIENT); } catch (Exception e) { Log.d(TAG, "Listener error notify failed: " + e.getMessage()); }
@@ -46,16 +48,19 @@ public class UltronRecognitionService extends RecognitionService {
                         return;
                     }
 
+                    UltronDebugLog.log(TAG, "Delegating to system recognizer: " + sysComp.flattenToShortString());
                     delegateRecognizer = SpeechRecognizer.createSpeechRecognizer(UltronRecognitionService.this, sysComp);
 
                     delegateRecognizer.setRecognitionListener(new RecognitionListener() {
                         @Override
                         public void onReadyForSpeech(Bundle params) {
+                            UltronDebugLog.log(TAG, "delegate onReadyForSpeech");
                             try { if (listener != null) listener.readyForSpeech(params); } catch (Exception e) { Log.d(TAG, "readyForSpeech dispatch failed: " + e.getMessage()); }
                         }
 
                         @Override
                         public void onBeginningOfSpeech() {
+                            UltronDebugLog.log(TAG, "delegate onBeginningOfSpeech");
                             try { if (listener != null) listener.beginningOfSpeech(); } catch (Exception e) { Log.d(TAG, "beginningOfSpeech dispatch failed: " + e.getMessage()); }
                         }
 
@@ -71,23 +76,27 @@ public class UltronRecognitionService extends RecognitionService {
 
                         @Override
                         public void onEndOfSpeech() {
+                            UltronDebugLog.log(TAG, "delegate onEndOfSpeech");
                             try { if (listener != null) listener.endOfSpeech(); } catch (Exception e) { Log.d(TAG, "endOfSpeech dispatch failed: " + e.getMessage()); }
                         }
 
                         @Override
                         public void onError(int error) {
+                            UltronDebugLog.log(TAG, "delegate onError: " + error);
                             try { if (listener != null) listener.error(error); } catch (Exception e) { Log.d(TAG, "error dispatch failed: " + e.getMessage()); }
                             stopDelegate();
                         }
 
                         @Override
                         public void onResults(Bundle results) {
+                            UltronDebugLog.log(TAG, "delegate onResults");
                             try { if (listener != null) listener.results(results); } catch (Exception e) { Log.d(TAG, "results dispatch failed: " + e.getMessage()); }
                             stopDelegate();
                         }
 
                         @Override
                         public void onPartialResults(Bundle partialResults) {
+                            UltronDebugLog.log(TAG, "delegate onPartialResults");
                             try { if (listener != null) listener.partialResults(partialResults); } catch (Exception e) { Log.d(TAG, "partialResults dispatch failed: " + e.getMessage()); }
                         }
 
@@ -121,6 +130,7 @@ public class UltronRecognitionService extends RecognitionService {
 
     private void stopDelegate() {
         if (delegateRecognizer != null) {
+            UltronDebugLog.log(TAG, "stopDelegate destroying recognizer");
             try {
                 delegateRecognizer.stopListening();
                 delegateRecognizer.cancel();
