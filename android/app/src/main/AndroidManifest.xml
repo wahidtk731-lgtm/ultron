@@ -72,12 +72,8 @@
         <service
             android:name=".FloatingHUDService"
             android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="microphone">
-            <intent-filter>
-                <action android:name="com.ultron.assistant.ACTION_ASSIST_TRIGGER" />
-            </intent-filter>
-        </service>
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
 
         <!-- Notification Listener Service for Clearing Notifications -->
         <service
