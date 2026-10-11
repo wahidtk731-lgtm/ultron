@@ -4,19 +4,20 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Ultra High-Accuracy On-Device Speech Recognizer for Ultron Assistant.
- * 
- * Features:
- * 1. 13-dimensional Mel-Frequency Cepstral Coefficients (MFCC) with dynamic peak Cepstral Mean Subtraction.
- * 2. Automatic silence boundary trimming (eliminates trailing delay and background noise bias).
- * 3. Dynamic Time Warping (DTW) with Sakoe-Chiba band alignment against phonetic formant trajectories.
- * 4. Multi-template pre-trained acoustic library for all core Ultron offline commands.
- * 5. Persistent User Voice Calibration: users can train custom voice commands for 99.9% personal accuracy.
+ * LIMITATIONS & DESIGN INTENT:
+ * UltronOfflineAcousticEngine implements Dynamic Time Warping (DTW) over hand-typed
+ * phonetic MFCC trajectory vectors. It is a lightweight keyword spotter designed for
+ * small sets of known phrases when no cloud or neural engine is available. It is NOT
+ * a full speech recognition engine (such as Vosk, Whisper, or Google Speech) and cannot
+ * decode arbitrary open-domain vocabulary.
+ *
+ * To prevent unintended executions from ambient noise or low-confidence matches:
+ * - Match thresholds are strictly calibrated (<= 22.0f for canonical templates).
+ * - Low-confidence matches (< 28.0f) are rejected with a log warning.
  */
 public class UltronOfflineAcousticEngine {
 
@@ -137,8 +138,11 @@ public class UltronOfflineAcousticEngine {
         logI(TAG, "Best DTW Acoustic Match: '" + bestCommand + "' (score: " + bestDistance + ")");
 
         // Accept best match strictly within calibrated acoustic threshold (rejects room noise)
-        if (bestDistance < 35.0f && !bestCommand.isEmpty()) {
+        if (bestDistance < 22.0f && !bestCommand.isEmpty()) {
             return bestCommand;
+        }
+        if (bestDistance < 35.0f && !bestCommand.isEmpty()) {
+            logI(TAG, "Low-confidence acoustic match rejected: '" + bestCommand + "' (score: " + bestDistance + ")");
         }
 
         return "";
