@@ -14,6 +14,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.StrictMode;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -931,6 +932,14 @@ public class AppLauncherAndroid {
             File file = new File(dir, name);
             if (!file.exists()) {
                 file.createNewFile();
+            }
+            if (Build.VERSION.SDK_INT >= 24) {
+                try {
+                    Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
+                    m.invoke(null);
+                } catch (Exception ignored) {
+                    StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().build());
+                }
             }
             Intent viewIntent = new Intent(Intent.ACTION_VIEW);
             viewIntent.setDataAndType(Uri.fromFile(file), "text/plain");
