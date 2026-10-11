@@ -412,15 +412,6 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         if (commandBody.isEmpty()) {
             shouldListenAfterSpeech = true;
             speakReply("Yes, I'm listening. What would you like me to do?", "Listening...");
-            mainHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (shouldListenAfterSpeech) {
-                        shouldListenAfterSpeech = false;
-                        startListening();
-                    }
-                }
-            }, 2500);
             return;
         }
 

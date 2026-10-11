@@ -394,15 +394,6 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         if (commandBody.isEmpty()) {
             shouldListenAfterSpeech = true;
             speakReply("Yes, I'm listening. What can I do for you?", "Listening...");
-            mainHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (shouldListenAfterSpeech) {
-                        shouldListenAfterSpeech = false;
-                        startListening();
-                    }
-                }
-            }, 2500);
             return;
         }
 
