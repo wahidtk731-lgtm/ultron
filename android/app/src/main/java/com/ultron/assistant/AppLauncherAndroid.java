@@ -753,6 +753,20 @@ public class AppLauncherAndroid {
     }
 
     public boolean setBluetooth(boolean enable) {
+        if (Build.VERSION.SDK_INT >= 31) {
+            if (context.checkSelfPermission("android.permission.BLUETOOTH_CONNECT") != PackageManager.PERMISSION_GRANTED) {
+                Log.w(TAG, "BLUETOOTH_CONNECT not granted on API 31+; redirecting to Bluetooth settings");
+                try {
+                    Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                    return true;
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed launching Bluetooth settings", e);
+                    return false;
+                }
+            }
+        }
         try {
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter != null) {
@@ -764,6 +778,8 @@ public class AppLauncherAndroid {
                     if (ok) return true;
                 }
             }
+        } catch (SecurityException se) {
+            Log.w(TAG, "SecurityException toggling Bluetooth adapter: " + se.getMessage());
         } catch (Exception ignored) {}
 
         try {
