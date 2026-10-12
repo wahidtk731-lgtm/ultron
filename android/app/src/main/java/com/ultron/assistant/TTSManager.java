@@ -230,10 +230,10 @@ public class TTSManager {
 
             if (chosenVoice != null) {
                 tts.setVoice(chosenVoice);
-                Log.i(TAG, "Selected offline TTS voice: " + chosenVoice.getName());
+                UltronDebugLog.log(TAG, "TTS voice chosen: " + chosenVoice.getName() + " (locale=" + chosenVoice.getLocale() + ", maleHint=" + isMaleVoiceHint(chosenVoice.getName()) + ")");
             } else {
                 offlineVoiceMissing = true;
-                Log.w(TAG, "No suitable offline voice found for language " + targetLocale.getLanguage());
+                UltronDebugLog.log(TAG, "TTS no offline voice found for language " + targetLocale.getLanguage());
             }
 
         } catch (Throwable t) {
@@ -645,7 +645,7 @@ public class TTSManager {
                     for (Voice v : voices) {
                         if (v.getName().equalsIgnoreCase(voiceName)) {
                             tts.setVoice(v);
-                            Log.i(TAG, "Active TTS voice switched to: " + voiceName);
+                            UltronDebugLog.log(TAG, "TTS voice chosen by user: " + voiceName);
                             break;
                         }
                     }

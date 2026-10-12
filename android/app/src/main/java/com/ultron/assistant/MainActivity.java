@@ -83,6 +83,15 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         super.onCreate(savedInstanceState);
 
         try {
+            UltronDebugLog.init(this);
+            String ver = "1.0";
+            try {
+                android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+                ver = pi.versionName + " (" + pi.versionCode + ")";
+            } catch (Throwable ignored) {}
+            UltronDebugLog.log("UltronApp", "MainActivity onCreate - Ultron v" + ver + " on SDK " + Build.VERSION.SDK_INT);
+            UltronDebugLog.log("UltronPermission", "RECORD_AUDIO permission state: " + hasAudioPermission());
+
             mainHandler = new Handler(Looper.getMainLooper());
             intentEngine = new UltronIntentEngine();
             appLauncher = new AppLauncherAndroid(this);
@@ -317,7 +326,9 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQ_RECORD_AUDIO) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            UltronDebugLog.log("UltronPermission", "RECORD_AUDIO request result: granted=" + granted);
+            if (granted) {
                 initVoiceInput();
                 startListening();
             } else {
@@ -868,6 +879,33 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         @JavascriptInterface
         public String getVoiceStatusNote() {
             return ttsManager != null ? ttsManager.getOfflineVoiceNotice() : null;
+        }
+
+        @JavascriptInterface
+        public String getDebugLog() {
+            return UltronDebugLog.getLastLines(80);
+        }
+
+        @JavascriptInterface
+        public void clearDebugLog() {
+            UltronDebugLog.clear();
+        }
+
+        @JavascriptInterface
+        public void copyToClipboard(final String text) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                        android.content.ClipData clip = android.content.ClipData.newPlainText("Ultron Debug Log", text != null ? text : "");
+                        clipboard.setPrimaryClip(clip);
+                        android.widget.Toast.makeText(MainActivity.this, "Log copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                    } catch (Throwable t) {
+                        android.util.Log.w("UltronBridge", "Failed to copy to clipboard: " + t.getMessage());
+                    }
+                }
+            });
         }
 
         @JavascriptInterface

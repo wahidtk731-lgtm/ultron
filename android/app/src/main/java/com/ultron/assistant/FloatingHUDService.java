@@ -73,6 +73,17 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         super.onCreate();
         instance = this;
 
+        UltronDebugLog.init(this);
+        String ver = "1.0";
+        try {
+            android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            ver = pi.versionName + " (" + pi.versionCode + ")";
+        } catch (Throwable ignored) {}
+        UltronDebugLog.log("UltronApp", "FloatingHUDService onCreate - Ultron v" + ver + " on SDK " + Build.VERSION.SDK_INT);
+        boolean micGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        UltronDebugLog.log("UltronPermission", "FloatingHUDService RECORD_AUDIO permission state: " + micGranted);
+
         mainHandler = new Handler(Looper.getMainLooper());
         intentEngine = new UltronIntentEngine();
         appLauncher = new AppLauncherAndroid(this);
@@ -900,6 +911,33 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         @JavascriptInterface
         public String getVoiceStatusNote() {
             return ttsManager != null ? ttsManager.getOfflineVoiceNotice() : null;
+        }
+
+        @JavascriptInterface
+        public String getDebugLog() {
+            return UltronDebugLog.getLastLines(80);
+        }
+
+        @JavascriptInterface
+        public void clearDebugLog() {
+            UltronDebugLog.clear();
+        }
+
+        @JavascriptInterface
+        public void copyToClipboard(final String text) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                        android.content.ClipData clip = android.content.ClipData.newPlainText("Ultron Debug Log", text != null ? text : "");
+                        clipboard.setPrimaryClip(clip);
+                        android.widget.Toast.makeText(FloatingHUDService.this, "Log copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                    } catch (Throwable t) {
+                        android.util.Log.w("UltronBridge", "Failed to copy to clipboard: " + t.getMessage());
+                    }
+                }
+            });
         }
 
         @JavascriptInterface

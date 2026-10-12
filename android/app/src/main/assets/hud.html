@@ -631,6 +631,20 @@
       margin-top: 6px;
       line-height: 1.3;
     }
+    .debug-log-view {
+      max-height: 180px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--gemini-border);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 10px;
+      font-family: monospace;
+      color: #A3E635;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -746,6 +760,18 @@
             <button class="btn-setting-action" onclick="toggleFloating()">🫧 Floating Bubble Mode (Over other apps)</button>
             <button class="btn-setting-action" onclick="setAsDefaultAssistant()">⚙️ Change Default Assistant (Center Button)</button>
             <button class="btn-setting-action" onclick="refreshAppsIndex()">🔄 Re-train Installed Apps</button>
+            <button class="btn-setting-action" onclick="toggleDebugLogPanel()">📋 Diagnostics & Debug Log</button>
+            <div id="debugLogContainer" style="display: none; margin-top: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; color: var(--text-dim);">Recent Logs</span>
+                <div style="display: flex; gap: 6px;">
+                  <button class="voice-btn" style="padding: 3px 8px; font-size: 11px;" onclick="refreshDebugLog()">🔄 Refresh</button>
+                  <button class="voice-btn" style="padding: 3px 8px; font-size: 11px;" onclick="copyDebugLog()">📋 Copy</button>
+                  <button class="voice-btn" style="padding: 3px 8px; font-size: 11px; color: #EF4444;" onclick="clearDebugLog()">🗑️ Clear</button>
+                </div>
+              </div>
+              <pre id="debugLogText" class="debug-log-view"></pre>
+            </div>
             <button class="btn-setting-action" id="btnDockToggle" onclick="toggleDockPosition()" style="display: none;">📌 Move HUD to Top / Bottom</button>
             <button class="btn-setting-action" id="btnOverlayClose" onclick="closeOverlayAction()" style="display: none;">❌ Close Floating Overlay</button>
           </div>
@@ -1153,6 +1179,53 @@
             noticeDiv.style.display = "none";
           }
         }
+      }
+    }
+
+    function toggleDebugLogPanel() {
+      const container = document.getElementById("debugLogContainer");
+      if (!container) return;
+      if (container.style.display === "none") {
+        container.style.display = "block";
+        refreshDebugLog();
+      } else {
+        container.style.display = "none";
+      }
+    }
+
+    function refreshDebugLog() {
+      const logView = document.getElementById("debugLogText");
+      if (!logView) return;
+      if (hasAndroidBridge && window.AndroidUltron.getDebugLog) {
+        const text = window.AndroidUltron.getDebugLog();
+        logView.textContent = text || "No log entries recorded yet.";
+      } else {
+        logView.textContent = "Debug log is only available in Android runtime.";
+      }
+      logView.scrollTop = logView.scrollHeight;
+    }
+
+    function copyDebugLog() {
+      const logView = document.getElementById("debugLogText");
+      const text = logView ? logView.textContent : "";
+      if (hasAndroidBridge && window.AndroidUltron.copyToClipboard) {
+        window.AndroidUltron.copyToClipboard(text);
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert("Log copied to clipboard");
+        }).catch(err => {
+          console.error(err);
+        });
+      }
+    }
+
+    function clearDebugLog() {
+      if (hasAndroidBridge && window.AndroidUltron.clearDebugLog) {
+        window.AndroidUltron.clearDebugLog();
+      }
+      const logView = document.getElementById("debugLogText");
+      if (logView) {
+        logView.textContent = "Log cleared.";
       }
     }
 
