@@ -60,6 +60,10 @@ jobs:
           fi
           echo "Using Android Jar: $ANDROID_JAR"
           
+          # 0. Fetch Voice Assets (Vosk + JNA + Model)
+          echo "Step 0: Fetching Voice Assets..."
+          bash scripts/fetch_voice_assets.sh
+
           # 1. Generate R.java
           echo "Step 1: Generating R.java..."
           aapt package -f -m \
@@ -70,25 +74,40 @@ jobs:
 
           # 2. Compile Java classes (Target Java 11 for Android D8 compatibility)
           echo "Step 2: Compiling Java classes..."
-          javac -source 11 -target 11 -d obj -cp "$ANDROID_JAR:gen" \
+          EXTRA_CP="vendor/vosk/classes.jar:vendor/jna/classes.jar"
+          javac -source 11 -target 11 -d obj -cp "$ANDROID_JAR:gen:$EXTRA_CP" \
             $(find android/app/src/main/java gen -name "*.java")
 
           # 3. Create DEX bytecode
           echo "Step 3: Creating DEX bytecode..."
-          d8 --output bin/ $(find obj -name "*.class")
+          d8 --lib "$ANDROID_JAR" --output bin/ $(find obj -name "*.class") vendor/vosk/classes.jar vendor/jna/classes.jar
 
-          # 4. Package resources and assets into unaligned APK
-          echo "Step 4: Packaging APK resources & assets..."
+          # 4. Package resources and assets (including bundled Vosk model)
+          echo "Step 4: Staging assets and packaging APK..."
+          rm -rf build/assets-stage
+          mkdir -p build/assets-stage/vosk-model
+          cp -r android/app/src/main/assets/* build/assets-stage/
+          cp -r vendor/model/vosk-model-small-en-us-0.15/* build/assets-stage/vosk-model/
+          echo "vosk-model-small-en-us-0.15" > build/assets-stage/vosk-model/ULTRON_MODEL_VERSION
+
           aapt package -f \
             -M android/app/src/main/AndroidManifest.xml \
             -S android/app/src/main/res \
-            -A android/app/src/main/assets \
+            -A build/assets-stage \
             -I "$ANDROID_JAR" \
             -F bin/UltronAssistant-unaligned.apk
 
           # 5. Add classes.dex into root of APK
-          echo "Step 5: Adding classes.dex to APK root..."
+          echo "Step 5: Adding classes.dex and native libraries to APK..."
           (cd bin && aapt add UltronAssistant-unaligned.apk classes.dex)
+
+          rm -rf build/native-stage
+          mkdir -p build/native-stage/lib/arm64-v8a build/native-stage/lib/armeabi-v7a
+          cp vendor/native/arm64-v8a/*.so build/native-stage/lib/arm64-v8a/
+          cp vendor/native/armeabi-v7a/*.so build/native-stage/lib/armeabi-v7a/
+          (cd build/native-stage && aapt add ../../bin/UltronAssistant-unaligned.apk \
+            lib/arm64-v8a/libvosk.so lib/arm64-v8a/libjnidispatch.so \
+            lib/armeabi-v7a/libvosk.so lib/armeabi-v7a/libjnidispatch.so)
 
           # 6. Align APK
           echo "Step 6: Running zipalign..."

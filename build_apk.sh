@@ -14,6 +14,9 @@ echo "=================================================================="
 
 mkdir -p bin obj gen ~/.android-sdk
 
+# 0. Fetch Voice Assets (Vosk + JNA + Model) if needed
+bash scripts/fetch_voice_assets.sh
+
 # 1. Locate android.jar
 ANDROID_JAR="$HOME/.android-sdk/android.jar"
 if [ ! -f "$ANDROID_JAR" ]; then
@@ -32,35 +35,52 @@ aapt package -f -m \
 # 3. Compile Java sources
 echo "[2/6] Compiling Java classes..."
 rm -rf obj/*
+EXTRA_CP="vendor/vosk/classes.jar:vendor/jna/classes.jar"
 if [ "${USE_JAVAC:-0}" = "1" ] && command -v javac >/dev/null 2>&1; then
-    javac -source 7 -target 7 -d obj -cp "$ANDROID_JAR:gen" \
+    javac -source 7 -target 7 -d obj -cp "$ANDROID_JAR:gen:$EXTRA_CP" \
         $(find android/app/src/main/java gen -name "*.java")
 else
     # Termux dalvikvm + ecj compiler (Target Java 7 for 100% reliable Dalvik bytecode on Android 9+)
     dalvikvm -Xmx256m -cp /data/data/com.termux/files/usr/share/dex/ecj.jar \
         org.eclipse.jdt.internal.compiler.batch.Main -proc:none -7 \
-        -cp "$ANDROID_JAR:gen" -d obj \
+        -cp "$ANDROID_JAR:gen:$EXTRA_CP" -d obj \
         $(find android/app/src/main/java gen -name "*.java")
 fi
 
 # 4. Dex bytecode
 echo "[3/6] Converting classes to DEX bytecode..."
 if command -v d8 >/dev/null 2>&1; then
-    d8 --min-api 21 --output bin/ $(find obj -name "*.class")
+    d8 --min-api 21 --lib "$ANDROID_JAR" --output bin/ $(find obj -name "*.class") vendor/vosk/classes.jar vendor/jna/classes.jar
 else
-    dx --dex --output=bin/classes.dex obj
+    dx --dex --output=bin/classes.dex obj vendor/vosk/classes.jar vendor/jna/classes.jar
 fi
 
-# 5. Package resources and assets
-echo "[4/6] Packaging resources and assets..."
+# 5. Package resources and assets (including bundled Vosk model)
+echo "[4/6] Staging assets and packaging APK..."
+rm -rf build/assets-stage
+mkdir -p build/assets-stage/vosk-model
+cp -r android/app/src/main/assets/* build/assets-stage/
+cp -r vendor/model/vosk-model-small-en-us-0.15/* build/assets-stage/vosk-model/
+echo "vosk-model-small-en-us-0.15" > build/assets-stage/vosk-model/ULTRON_MODEL_VERSION
+
 aapt package -f \
     -M android/app/src/main/AndroidManifest.xml \
     -S android/app/src/main/res \
-    -A android/app/src/main/assets \
+    -A build/assets-stage \
     -I "$ANDROID_JAR" \
     -F bin/UltronAssistant-unaligned.apk
 
 (cd bin && aapt add UltronAssistant-unaligned.apk classes.dex)
+
+# Add native libraries (arm64-v8a and armeabi-v7a)
+echo "Adding native libraries (arm64-v8a, armeabi-v7a)..."
+rm -rf build/native-stage
+mkdir -p build/native-stage/lib/arm64-v8a build/native-stage/lib/armeabi-v7a
+cp vendor/native/arm64-v8a/*.so build/native-stage/lib/arm64-v8a/
+cp vendor/native/armeabi-v7a/*.so build/native-stage/lib/armeabi-v7a/
+(cd build/native-stage && aapt add ../../bin/UltronAssistant-unaligned.apk \
+    lib/arm64-v8a/libvosk.so lib/arm64-v8a/libjnidispatch.so \
+    lib/armeabi-v7a/libvosk.so lib/armeabi-v7a/libjnidispatch.so)
 
 # 6. Sign APK
 echo "[5/6] Signing APK (v1 JAR SHA-256 + SHA-1)..."

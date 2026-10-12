@@ -17,116 +17,103 @@ tail -f /storage/emulated/0/Project/ultron_voice.log
 
 ## Test Cases
 
-### a) Online: Speak "what time is it"
-* **Preconditions:** Wi-Fi or mobile cellular data enabled and validated (`NET_CAPABILITY_VALIDATED` is true).
+#### a) Airplane Mode from Start: Preparing -> Offline Voice Ready -> Speak Command
+* **Preconditions:**
+  1. Airplane Mode turned ON before launching app.
+  2. First launch of Ultron Assistant with bundled offline model.
 * **Steps:**
-  1. Open Ultron Assistant.
-  2. Tap the mic button (or allow auto-listen on launch).
-  3. Clearly speak: *"what time is it"*.
+  1. Launch Ultron Assistant.
+  2. Observe slim banner: `Preparing offline voice engine (N%)...` with progress bar.
+  3. Wait a few seconds until banner shows `Offline voice ready`.
+  4. Tap mic button and speak a command: *"what time is it"*.
 * **Expected HUD State & Text:**
-  - Status glows cyan/blue waveform: `Listening... Speak your command`
-  - Partial updates display as words are spoken.
-  - Assistant responds with the current time (e.g. `"The time is 11:05 AM"`).
-  - Status resets to `Ultron Ready • Tap mic to speak`.
+  - Banner updates progressively: `Preparing offline voice engine (N%)...` -> `Offline voice ready`.
+  - Mic activates immediately without network.
+  - Command is transcribed via local Vosk engine and Ultron speaks reply offline.
 * **Expected Log Line in `ultron_voice.log`:**
-  - `[UltronVoiceInput] startListening requested (online=true)`
-  - `[UltronVoiceInput] Starting recognizer with step STEP_SYSTEM_ONLINE(0)`
-  - `[UltronVoiceInput] onReadyForSpeech gen=1`
-  - `[UltronVoiceInput] onBeginningOfSpeech gen=1`
-  - `[UltronVoiceInput] Speech recognized: what time is it`
+  - `[UltronVoiceSetup] State changed to: PREPARING (N%)`
+  - `[UltronVoiceSetup] State changed to: READY (100%) Offline voice ready`
+  - `[UltronVoskEngine] Vosk Model loaded successfully into memory`
+  - `[UltronVoiceInput] Starting Vosk engine for STEP_VOSK`
 
 ---
 
-### b) Airplane Mode, No Offline Pack (Phase 1)
-* **Preconditions:**
-  1. Airplane Mode turned ON (Wi-Fi and mobile data OFF).
-  2. No Google offline speech recognition pack installed (or language set to unsupported locale).
+### b) Kill App During First-Launch Copy -> Reopen -> Clean Restart
+* **Preconditions:** Fresh install or cleared data (`pm clear com.ultron.assistant`).
 * **Steps:**
-  1. Open Ultron Assistant in Airplane Mode.
-  2. Tap the stadium capsule mic button.
-  3. Wait as the engine steps through the offline plan:
-     `{STEP_ONDEVICE_API -> STEP_SYSTEM_OFFLINE -> STEP_SYSTEM_OFFLINE_EN_US -> STEP_SYSTEM_ONLINE}`.
+  1. Launch Ultron Assistant so model copy starts.
+  2. Immediately swipe away / force stop the app mid-copy (around 30-50%).
+  3. Reopen Ultron Assistant.
 * **Expected HUD State & Text:**
-  - HUD displays informative message:
-    `No internet and no offline voice pack found. Download English in Settings > Google > Voice > Offline speech recognition. [E<code>]`
-  - Mic button remains interactive and ready for user interaction.
+  - No crash, no broken state from partial temp files.
+  - Installer cleanly wipes stale `vosk-model-tmp` and restarts copy cleanly from 0% to 100%.
+  - Once completed, shows `Offline voice ready`.
 * **Expected Log Line in `ultron_voice.log`:**
-  - `[UltronVoiceInput] startListening requested (online=false)`
-  - `[UltronVoiceInput] Evaluating plan step index=...`
-  - `[UltronVoiceInput] advanceOrFail called with error=...`
-  - `[UltronVoiceInput] Final failure notified: error=... online=false`
+  - `[UltronVoiceSetup] Starting offline voice model unpack from APK assets`
+  - Clean restart without unhandled file corruption exceptions.
 
 ---
 
-### c) Airplane Mode With Google Offline English Pack
-* **Preconditions:**
-  1. Google offline speech recognition English pack installed via:
-     **Settings -> Google -> Settings for Google apps -> Search, Assistant & Voice -> Voice -> Offline speech recognition**.
-  2. Airplane Mode turned ON (Wi-Fi and mobile data OFF).
+### c) Storage Almost Full (< 250 MB Free) -> "Free up storage" + Retry
+* **Preconditions:** Internal storage free space under 250 MB.
 * **Steps:**
-  1. Open Ultron Assistant in Airplane Mode.
-  2. Tap the mic button and speak: *"what time is it"* (or *"turn on flashlight"*).
+  1. Launch Ultron Assistant on device with < 250 MB free space.
 * **Expected HUD State & Text:**
-  - Mic activates immediately with audio waveform feedback.
-  - Recognized query is displayed.
-  - Assistant processes command and speaks reply offline.
+  - Setup detects insufficient disk space and displays:
+    `Offline voice setup failed: Free up storage (requires at least 250 MB free, found X MB)`
+  - Banner presents interactive `[Retry]` button.
+  - Tapping `[Retry]` re-checks space and retries safely.
 * **Expected Log Line in `ultron_voice.log`:**
-  - `[UltronVoiceInput] startListening requested (online=false)`
-  - `[UltronVoiceInput] Starting recognizer with step STEP_SYSTEM_OFFLINE(2)` (or `STEP_ONDEVICE_API(1)`)
-  - `[UltronVoiceInput] onReadyForSpeech gen=1`
-  - `[UltronVoiceInput] Speech recognized: what time is it`
+  - `[UltronVoiceSetup] Free up storage (requires at least 250 MB free, found ...)`
+  - `[UltronVoiceSetup] State changed to: FAILED (0%)`
 
 ---
 
-### d) Airplane Mode With Bundled Vosk (Phase 3)
+### d) Offline-Only Mode with Wi-Fi ON Still Uses Vosk
 * **Preconditions:**
-  1. APK built with bundled Vosk engine (Phase 3).
-  2. Airplane Mode turned ON.
+  1. Phone connected to high-speed Wi-Fi with active internet.
+  2. In Ultron Settings, set Voice Engine to `Offline only`.
 * **Steps:**
-  1. Fresh launch of Ultron Assistant.
-  2. On first run, observe asset decompression.
-  3. Speak a voice command offline.
+  1. Tap mic button.
+  2. Speak: *"what time is it"*.
 * **Expected HUD State & Text:**
-  - First run displays HUD status: `Preparing offline voice engine...`
-  - Subsequent runs listen immediately without external pack dependencies.
-  - Command is transcribed and executed 100% offline.
+  - Speech is decoded via offline Vosk engine despite active internet.
+  - Google online recognizer is bypassed completely.
 * **Expected Log Line in `ultron_voice.log`:**
-  - `[UltronVoskEngine] Unpacking bundled Vosk model...`
-  - `[UltronVoiceInput] Starting recognizer with step STEP_VOSK`
-  - `[UltronVoskEngine] Speech recognized: ...`
+  - `[UltronVoiceInput] Evaluating plan step index=0: STEP_VOSK(4)`
+  - `[UltronVoiceInput] Starting Vosk engine for STEP_VOSK`
+  - No calls made to `STEP_SYSTEM_ONLINE`.
 
 ---
 
-### e) Wi-Fi Connected But No Data (Captive / Dead Portal)
+### e) Auto Mode: Online Uses Google First, Wi-Fi Off Mid-Session -> Next Tap Uses Vosk
 * **Preconditions:**
-  1. Connect phone to a Wi-Fi router or hotspot with WAN/internet disconnected (or a captive portal with no data access).
-  2. Android network status indicates "Connected, no internet" (`NET_CAPABILITY_VALIDATED` is false).
+  1. In Ultron Settings, Voice Engine is set to `Auto` (default).
+  2. Wi-Fi connected and online.
 * **Steps:**
-  1. Open Ultron Assistant.
-  2. Tap the mic button.
+  1. Tap mic and speak a command -> Transcribes via Google (`STEP_SYSTEM_ONLINE`).
+  2. Turn off Wi-Fi and mobile data (or enable Airplane Mode).
+  3. Tap mic and speak a command.
 * **Expected HUD State & Text:**
-  - App detects lack of internet validation immediately without stalling for network HTTP timeouts.
-  - Routes directly to offline recognition plan.
-  - If offline pack or Vosk is available, recognizes speech seamlessly.
+  - First tap uses online recognition smoothly.
+  - Second tap detects offline immediately without delay and seamlessly routes to Vosk (`STEP_VOSK`).
 * **Expected Log Line in `ultron_voice.log`:**
-  - `[UltronVoiceInput] startListening requested (online=false)`
-  - Recognizer selects offline step sequence `{STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, ...}` rather than hanging on online speech servers.
+  - First tap: `[UltronVoiceInput] Starting recognizer with step STEP_SYSTEM_ONLINE(0)`
+  - Second tap: `[UltronVoiceInput] startListening requested (online=false)`
+  - `[UltronVoiceInput] Evaluating plan step index=0: STEP_VOSK(4)`
+  - `[UltronVoiceInput] Starting Vosk engine for STEP_VOSK`
 
 ---
 
-### f) Microphone Permission Denied
-* **Preconditions:**
-  1. Revoke microphone permission:
-     **Settings -> Apps -> Ultron Assistant -> Permissions -> Microphone -> Don't allow**.
+### f) Tap Mic While PREPARING -> "Offline voice is still preparing, N%"
+* **Preconditions:** Fresh install while asset unpacking is actively in progress (e.g. at 35%).
 * **Steps:**
-  1. Open Ultron Assistant.
-  2. Tap the mic button (or decline runtime permission prompt).
+  1. While the banner indicates preparation is ongoing, tap the mic button.
 * **Expected HUD State & Text:**
-  - Status updates to error state:
-    `Microphone permission required. Tap to grant. [E9]`
-  - App does not crash.
+  - If in `Offline only` mode: Status shows `Offline voice is still preparing, 35%`.
+  - Does not crash or deadlock.
 * **Expected Log Line in `ultron_voice.log`:**
-  - `[UltronVoiceInput] notifyError: Microphone permission required. Tap to grant. [E9]`
+  - `[UltronVoiceInput] STEP_VOSK: still preparing (35%)`
 
 ---
 

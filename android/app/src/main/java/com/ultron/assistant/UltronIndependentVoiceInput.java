@@ -23,10 +23,7 @@ import android.speech.SpeechRecognizer;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -36,11 +33,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 100% Offline-Capable In-App Speech Recognition Engine for Ultron Assistant.
  * 
  * Features:
- * 1. Background SpeechRecognizer with RecognitionListener (ZERO Google popup dialogs/overlays).
- * 2. System recognizer delegation prioritizing Google speech service.
- * 3. Enforces EXTRA_PREFER_OFFLINE and PREFER_OFFLINE directives with universal en-US offline model targeting.
- * 4. Resilient watchdog, generation-stamped callbacks, and bounded retry architecture.
- * 5. AudioRecord mic capture with live RMS waveform feedback as last-resort fallback.
+ * 1. Bundled Kaldi Vosk neural engine for 100% offline speech recognition without network.
+ * 2. Background SpeechRecognizer with RecognitionListener (ZERO Google popup dialogs/overlays).
+ * 3. System recognizer delegation prioritizing Google speech service.
+ * 4. Enforces EXTRA_PREFER_OFFLINE and PREFER_OFFLINE directives with universal en-US offline model targeting.
+ * 5. Resilient watchdog, generation-stamped callbacks, and bounded retry architecture.
  */
 public class UltronIndependentVoiceInput {
 
@@ -51,12 +48,9 @@ public class UltronIndependentVoiceInput {
     public static final int STEP_ONDEVICE_API = 1;
     public static final int STEP_SYSTEM_OFFLINE = 2;
     public static final int STEP_SYSTEM_OFFLINE_EN_US = 3;
+    public static final int STEP_VOSK = 4;
 
-    // Unofficial public Chromium development speech recognition endpoint key.
-    // Isolated here for clarity; used as an optional online fallback for raw PCM audio.
-    private static final String CHROMIUM_SPEECH_API_KEY = "AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw";
-    private static final String CHROMIUM_SPEECH_ENDPOINT =
-        "https://www.google.com/speech-api/v2/recognize?client=chromium&lang=en-US&key=" + CHROMIUM_SPEECH_API_KEY;
+    private static final boolean ENABLE_DTW_LAST_RESORT = false;
 
     public interface VoiceInputListener {
         void onReady();
@@ -194,6 +188,7 @@ public class UltronIndependentVoiceInput {
             case STEP_ONDEVICE_API: return "STEP_ONDEVICE_API(1)";
             case STEP_SYSTEM_OFFLINE: return "STEP_SYSTEM_OFFLINE(2)";
             case STEP_SYSTEM_OFFLINE_EN_US: return "STEP_SYSTEM_OFFLINE_EN_US(3)";
+            case STEP_VOSK: return "STEP_VOSK(4)";
             default: return "STEP_UNKNOWN(" + step + ")";
         }
     }
@@ -302,7 +297,7 @@ public class UltronIndependentVoiceInput {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                isOnline = isNetworkConnected();
+                isOnline = isNetworkConnected(context);
                 UltronDebugLog.log(TAG, "startListening requested (online=" + isOnline + ")");
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -312,17 +307,27 @@ public class UltronIndependentVoiceInput {
                 }
 
                 stopAudioRecordFallback();
-                if (isOnline) {
-                    plan = new int[]{STEP_SYSTEM_ONLINE, STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US};
-                } else {
-                    plan = new int[]{STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US, STEP_SYSTEM_ONLINE};
-                }
+                plan = buildPlan(isOnline);
                 planIndex = 0;
                 stepRetried = false;
 
                 beginRecognition();
             }
         });
+    }
+
+    private int[] buildPlan(boolean isOnline) {
+        String engineMode = context.getSharedPreferences("ultron_prefs", Context.MODE_PRIVATE)
+                .getString("voice_engine_mode", "auto");
+        boolean offlineOnly = "offline_only".equals(engineMode);
+
+        if (offlineOnly) {
+            return new int[]{STEP_VOSK};
+        } else if (isOnline) {
+            return new int[]{STEP_SYSTEM_ONLINE, STEP_VOSK, STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US};
+        } else {
+            return new int[]{STEP_VOSK, STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US};
+        }
     }
 
     private void beginRecognition() {
@@ -333,11 +338,7 @@ public class UltronIndependentVoiceInput {
         safeDestroyRecognizer();
 
         if (plan == null) {
-            if (isOnline) {
-                plan = new int[]{STEP_SYSTEM_ONLINE, STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US};
-            } else {
-                plan = new int[]{STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US, STEP_SYSTEM_ONLINE};
-            }
+            plan = buildPlan(isOnline);
         }
 
         SpeechRecognizer candidate = null;
@@ -347,7 +348,78 @@ public class UltronIndependentVoiceInput {
         while (planIndex < plan.length) {
             currentStep = plan[planIndex];
             UltronDebugLog.log(TAG, "Evaluating plan step index=" + planIndex + ": " + stepName(currentStep) + " gen=" + currentGen);
-            if (currentStep == STEP_ONDEVICE_API) {
+            if (currentStep == STEP_VOSK) {
+                UltronVoiceSetup setup = UltronVoiceSetup.get(context);
+                if (UltronVoiceSetup.STATE_PREPARING.equals(setup.getState())) {
+                    if (plan.length == 1) {
+                        notifyError("Offline voice is still preparing, " + setup.getPercent() + "%");
+                        return;
+                    } else {
+                        UltronDebugLog.log(TAG, "STEP_VOSK skipped: still preparing (" + setup.getPercent() + "%)");
+                        stepRetried = false;
+                        planIndex++;
+                        continue;
+                    }
+                }
+
+                if (!UltronVoskEngine.isReady(context)) {
+                    if (plan.length == 1) {
+                        notifyError("Offline voice not ready: " + setup.getMessage());
+                        return;
+                    } else {
+                        UltronDebugLog.log(TAG, "STEP_VOSK skipped: not ready");
+                        stepRetried = false;
+                        planIndex++;
+                        continue;
+                    }
+                }
+
+                UltronDebugLog.log(TAG, "Starting Vosk engine for STEP_VOSK gen=" + currentGen);
+                isListening.set(true);
+
+                UltronVoskEngine.get(context).startListening(new UltronVoskEngine.Listener() {
+                    @Override
+                    public void onReady() {
+                        if (currentGen == generation) {
+                            notifyReady();
+                        }
+                    }
+
+                    @Override
+                    public void onPartialResult(String partialText) {
+                        if (currentGen == generation) {
+                            lastPartial = partialText;
+                            notifyPartialResult(partialText);
+                        }
+                    }
+
+                    @Override
+                    public void onResult(String finalText) {
+                        if (currentGen == generation) {
+                            isListening.set(false);
+                            notifyResult(finalText);
+                        }
+                    }
+
+                    @Override
+                    public void onError(int errorCode, String errorMessage) {
+                        if (currentGen == generation) {
+                            isListening.set(false);
+                            UltronDebugLog.log(TAG, "Vosk error code=" + errorCode + " (" + errorMessage + ")");
+                            if (errorCode == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || errorCode == SpeechRecognizer.ERROR_NO_MATCH) {
+                                if (lastPartial != null && !lastPartial.trim().isEmpty()) {
+                                    notifyResult(lastPartial.trim());
+                                } else {
+                                    notifyError(errorMessage != null ? errorMessage : "I didn't catch that. Tap the mic and speak.");
+                                }
+                            } else {
+                                advanceOrFail(errorCode);
+                            }
+                        }
+                    }
+                });
+                return;
+            } else if (currentStep == STEP_ONDEVICE_API) {
                 if (Build.VERSION.SDK_INT >= 31 && isOnDeviceRecognitionAvailable(context)) {
                     candidate = createOnDeviceSpeechRecognizer();
                     if (candidate != null) {
@@ -390,17 +462,10 @@ public class UltronIndependentVoiceInput {
 
         if (candidate == null) {
             UltronDebugLog.log(TAG, "No recognizer could be created for remaining plan steps");
-            if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-                UltronDebugLog.log(TAG, "SpeechRecognizer.isRecognitionAvailable is false; starting AudioRecord fallback");
-                notifyError("No speech service found. Install/enable the Google app. [E0]");
-                startAudioRecordFallback();
+            if (!isOnline) {
+                notifyError("Offline speech recognition unavailable. [Check Settings]");
             } else {
-                UltronDebugLog.log(TAG, "SpeechRecognizer available but no candidate created in plan; notifying final error");
-                if (!isOnline) {
-                    notifyError("No internet and no offline voice pack found. Download English in Settings > Google > Voice > Offline speech recognition. [E0]");
-                } else {
-                    notifyError("Speech recognition unavailable. Check the Google app or microphone settings. [E0]");
-                }
+                notifyError("Speech recognition unavailable. Check the Google app or microphone settings. [E0]");
             }
             return;
         }
@@ -543,6 +608,7 @@ public class UltronIndependentVoiceInput {
     }
 
     private synchronized void safeDestroyRecognizer() {
+        UltronVoskEngine.get(context).stopListening();
         if (readyWatchdog != null) {
             mainHandler.removeCallbacks(readyWatchdog);
             readyWatchdog = null;
@@ -688,7 +754,8 @@ public class UltronIndependentVoiceInput {
         }
     }
 
-    private boolean isNetworkConnected() {
+    public static boolean isNetworkConnected(Context context) {
+        if (context == null) return false;
         try {
             ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             if (cm != null) {
@@ -892,22 +959,14 @@ public class UltronIndependentVoiceInput {
                     return;
                 }
 
-                // Tier 1: If online, check Chromium speech API
-                if (isNetworkConnected()) {
-                    String text = queryChromiumSpeechApi(pcmData);
-                    if (text != null && !text.trim().isEmpty()) {
-                        UltronDebugLog.log(TAG, "Chromium speech recognized: " + text);
-                        notifyResult(text.trim());
+                // Offline fallback - DTW keyword spotting is disabled by default (Phase 4 requirement)
+                if (ENABLE_DTW_LAST_RESORT) {
+                    String offlineDecoded = UltronOfflineAcousticEngine.recognizeCommand(context, pcmData);
+                    if (offlineDecoded != null && !offlineDecoded.trim().isEmpty()) {
+                        UltronDebugLog.log(TAG, "Offline Acoustic Engine Decoded: " + offlineDecoded);
+                        notifyResult(offlineDecoded.trim());
                         return;
                     }
-                }
-
-                // Tier 2: 100% Offline On-Device Acoustic Command Recognizer
-                String offlineDecoded = UltronOfflineAcousticEngine.recognizeCommand(context, pcmData);
-                if (offlineDecoded != null && !offlineDecoded.trim().isEmpty()) {
-                    UltronDebugLog.log(TAG, "Offline Acoustic Engine Decoded: " + offlineDecoded);
-                    notifyResult(offlineDecoded.trim());
-                    return;
                 }
 
                 notifyError("Didn't catch that. Tap mic to speak." + formatDiag(SpeechRecognizer.ERROR_NO_MATCH));
@@ -922,54 +981,6 @@ public class UltronIndependentVoiceInput {
             fallbackThread.interrupt();
             fallbackThread = null;
         }
-    }
-
-    private String queryChromiumSpeechApi(byte[] pcmData) {
-        HttpURLConnection conn = null;
-        try {
-            URL url = new URL(CHROMIUM_SPEECH_ENDPOINT);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "audio/l16; rate=16000");
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
-            conn.setConnectTimeout(4000);
-            conn.setReadTimeout(5000);
-            conn.setDoOutput(true);
-
-            DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
-            dos.write(pcmData);
-            dos.flush();
-            dos.close();
-
-            int code = conn.getResponseCode();
-            if (code == 200) {
-                InputStream is = conn.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = is.read(buf)) != -1) {
-                    baos.write(buf, 0, len);
-                }
-                String resp = baos.toString("UTF-8").trim();
-                for (String line : resp.split("\n")) {
-                    line = line.trim();
-                    if (line.isEmpty()) continue;
-                    if (line.contains("\"transcript\":")) {
-                        int idx = line.indexOf("\"transcript\":");
-                        int start = line.indexOf("\"", idx + 13);
-                        int end = line.indexOf("\"", start + 1);
-                        if (start != -1 && end != -1 && end > start) {
-                            return line.substring(start + 1, end).trim();
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "Speech API error: " + e.getMessage());
-        } finally {
-            if (conn != null) conn.disconnect();
-        }
-        return null;
     }
 
     // Helper notification dispatchers on Main Thread

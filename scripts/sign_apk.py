@@ -39,9 +39,17 @@ def sign_apk(in_apk, out_apk):
         for info in zin.infolist():
             if info.filename.startswith("META-INF/"):
                 continue
-            data = zin.read(info.filename)
-            sha1 = base64.b64encode(hashlib.sha1(data).digest()).decode('ascii')
-            sha256 = base64.b64encode(hashlib.sha256(data).digest()).decode('ascii')
+            h_sha1 = hashlib.sha1()
+            h_sha256 = hashlib.sha256()
+            with zin.open(info.filename, 'r') as f_entry:
+                while True:
+                    chunk = f_entry.read(65536)
+                    if not chunk:
+                        break
+                    h_sha1.update(chunk)
+                    h_sha256.update(chunk)
+            sha1 = base64.b64encode(h_sha1.digest()).decode('ascii')
+            sha256 = base64.b64encode(h_sha256.digest()).decode('ascii')
             entries_digests_sha1[info.filename] = sha1
             entries_digests_sha256[info.filename] = sha256
             
@@ -99,12 +107,16 @@ def sign_apk(in_apk, out_apk):
             zout.writestr("META-INF/CERT.SF", sf_content)
             zout.writestr("META-INF/CERT.RSA", rsa_content)
             
-            # Write all other entries
+            # Write all other entries by streaming
             for info in zin.infolist():
                 if info.filename.startswith("META-INF/"):
                     continue
-                data = zin.read(info.filename)
-                zout.writestr(info, data)
+                with zin.open(info.filename, 'r') as src, zout.open(info, 'w') as dst:
+                    while True:
+                        buf = src.read(65536)
+                        if not buf:
+                            break
+                        dst.write(buf)
                 
     print(f"Successfully signed APK -> {out_apk}")
 

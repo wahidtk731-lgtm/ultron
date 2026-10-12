@@ -100,6 +100,24 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
             configureEdgeToEdgeWindow();
             setupWebView();
             checkPermissionsAndInit();
+
+            UltronVoiceSetup.get(this).ensureReady();
+            UltronVoiceSetup.get(this).addListener(new UltronVoiceSetup.Listener() {
+                @Override
+                public void onStateChanged(final String state, final int percent, final String message) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (webView != null) {
+                                String js = String.format(Locale.US,
+                                    "if (window.onVoiceSetupUpdate) window.onVoiceSetupUpdate(%s, %d, %s);",
+                                    JSONObject.quote(state), percent, JSONObject.quote(message));
+                                webView.evaluateJavascript(js, null);
+                            }
+                        }
+                    });
+                }
+            });
         } catch (Throwable t) {
             try {
                 java.io.StringWriter sw = new java.io.StringWriter();
@@ -640,6 +658,9 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
             case "search_web":
                 if (action.entity == null || action.entity.trim().isEmpty()) return "What would you like me to search for?";
+                if (!UltronIndependentVoiceInput.isNetworkConnected(this)) {
+                    return "No internet connection.";
+                }
                 appLauncher.searchWeb(action.entity.trim());
                 return "Searching web for " + action.entity.trim();
 
@@ -879,6 +900,40 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         @JavascriptInterface
         public String getVoiceStatusNote() {
             return ttsManager != null ? ttsManager.getOfflineVoiceNotice() : null;
+        }
+
+        @JavascriptInterface
+        public String getVoiceSetupStatus() {
+            UltronVoiceSetup setup = UltronVoiceSetup.get(MainActivity.this);
+            try {
+                JSONObject obj = new JSONObject();
+                obj.put("state", setup.getState());
+                obj.put("percent", setup.getPercent());
+                obj.put("message", setup.getMessage());
+                return obj.toString();
+            } catch (Exception e) {
+                return "{\"state\":\"NOT_STARTED\",\"percent\":0,\"message\":\"\"}";
+            }
+        }
+
+        @JavascriptInterface
+        public String getVoiceEngineMode() {
+            return getSharedPreferences("ultron_prefs", MODE_PRIVATE)
+                .getString("voice_engine_mode", "auto");
+        }
+
+        @JavascriptInterface
+        public void setVoiceEngineMode(String mode) {
+            if (mode != null && (mode.equals("auto") || mode.equals("offline_only"))) {
+                getSharedPreferences("ultron_prefs", MODE_PRIVATE).edit()
+                    .putString("voice_engine_mode", mode).apply();
+                UltronDebugLog.log("UltronBridge", "Voice engine mode set to: " + mode);
+            }
+        }
+
+        @JavascriptInterface
+        public void retryVoiceSetup() {
+            UltronVoiceSetup.get(MainActivity.this).retry();
         }
 
         @JavascriptInterface

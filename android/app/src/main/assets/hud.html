@@ -751,12 +751,22 @@
           </div>
         </div>
 
+        <!-- Voice Engine Mode -->
+        <div class="setting-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label>Voice Engine</label>
+            <span id="voiceEngineStatus" style="font-size: 11px; color: var(--accent-color);">Offline (Ready)</span>
+          </div>
+          <div class="voice-options" style="margin-top: 6px;">
+            <button class="voice-btn active" id="engineAuto" onclick="setVoiceEngineMode('auto')">Auto</button>
+            <button class="voice-btn" id="engineOffline" onclick="setVoiceEngineMode('offline_only')">Offline only</button>
+          </div>
+        </div>
+
         <!-- System Shortcuts -->
         <div class="setting-item">
           <label>Device & System Settings</label>
           <div class="shortcut-buttons">
-            <button class="btn-setting-action" onclick="openOfflineSpeechSettings()">📥 Download Offline Voice Pack (100% Offline)</button>
-            <button class="btn-setting-action" onclick="openVoiceInputDeviceSettings()">🎙️ Voice Input in Device Settings</button>
             <button class="btn-setting-action" onclick="toggleFloating()">🫧 Floating Bubble Mode (Over other apps)</button>
             <button class="btn-setting-action" onclick="setAsDefaultAssistant()">⚙️ Change Default Assistant (Center Button)</button>
             <button class="btn-setting-action" onclick="refreshAppsIndex()">🔄 Re-train Installed Apps</button>
@@ -823,6 +833,15 @@
     </div>
 
     <div class="status-text" id="statusLabel">Ultron AI Assistant • 100% Offline</div>
+
+    <!-- Offline Voice Setup Slim Banner -->
+    <div id="voiceSetupBanner" style="display: none; margin-top: 6px; padding: 6px 12px; background: rgba(30, 41, 59, 0.95); border: 1px solid var(--border-color); border-radius: 8px; font-size: 11px; text-align: center;">
+      <div id="voiceSetupText" style="color: var(--text-color); margin-bottom: 4px;">Preparing offline voice engine (0%)...</div>
+      <div id="voiceSetupProgressContainer" style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; display: none;">
+        <div id="voiceSetupProgressBar" style="width: 0%; height: 100%; background: var(--accent-color); transition: width 0.3s ease;"></div>
+      </div>
+      <button id="voiceSetupRetryBtn" style="display: none; margin-top: 4px; padding: 2px 10px; font-size: 10px; background: var(--accent-color); color: #000; border: none; border-radius: 4px; cursor: pointer;" onclick="retryVoiceSetup()">Retry</button>
+    </div>
   </div>
 
   <script>
@@ -1049,21 +1068,63 @@
       }
     }
 
-    function openOfflineSpeechSettings() {
-      if (hasAndroidBridge && window.AndroidUltron.openOfflineSpeechSettings) {
-        window.AndroidUltron.openOfflineSpeechSettings();
-      } else {
-        openVoiceInputDeviceSettings();
+    function setVoiceEngineMode(mode) {
+      updateVoiceEngineUI(mode);
+      if (hasAndroidBridge && window.AndroidUltron.setVoiceEngineMode) {
+        window.AndroidUltron.setVoiceEngineMode(mode);
       }
     }
 
-    function openVoiceInputDeviceSettings() {
-      if (hasAndroidBridge && window.AndroidUltron.openVoiceInputSettings) {
-        window.AndroidUltron.openVoiceInputSettings();
-      } else if (hasAndroidBridge && window.AndroidUltron.openDefaultAssistantSettings) {
-        window.AndroidUltron.openDefaultAssistantSettings();
+    function updateVoiceEngineUI(mode) {
+      const btnAuto = document.getElementById("engineAuto");
+      const btnOffline = document.getElementById("engineOffline");
+      if (btnAuto) btnAuto.classList.toggle("active", mode === "auto");
+      if (btnOffline) btnOffline.classList.toggle("active", mode === "offline_only");
+    }
+
+    function retryVoiceSetup() {
+      if (hasAndroidBridge && window.AndroidUltron.retryVoiceSetup) {
+        window.AndroidUltron.retryVoiceSetup();
       }
     }
+
+    window.onVoiceSetupUpdate = function(state, percent, message) {
+      const banner = document.getElementById("voiceSetupBanner");
+      const text = document.getElementById("voiceSetupText");
+      const pContainer = document.getElementById("voiceSetupProgressContainer");
+      const pBar = document.getElementById("voiceSetupProgressBar");
+      const retryBtn = document.getElementById("voiceSetupRetryBtn");
+      const engineStatus = document.getElementById("voiceEngineStatus");
+
+      if (!banner || !text) return;
+
+      if (state === "PREPARING") {
+        banner.style.display = "block";
+        text.textContent = "Preparing offline voice engine (" + percent + "%)...";
+        if (pContainer) pContainer.style.display = "block";
+        if (pBar) pBar.style.width = percent + "%";
+        if (retryBtn) retryBtn.style.display = "none";
+        if (engineStatus) engineStatus.textContent = "Preparing (" + percent + "%)";
+      } else if (state === "FAILED") {
+        banner.style.display = "block";
+        text.textContent = "Offline voice setup failed: " + (message || "Error");
+        if (pContainer) pContainer.style.display = "none";
+        if (retryBtn) retryBtn.style.display = "inline-block";
+        if (engineStatus) engineStatus.textContent = "Setup Failed";
+      } else if (state === "READY") {
+        if (pContainer) pContainer.style.display = "none";
+        if (retryBtn) retryBtn.style.display = "none";
+        text.textContent = "Offline voice ready";
+        if (engineStatus) engineStatus.textContent = "Offline (Ready)";
+        setTimeout(function() {
+          if (banner && text.textContent === "Offline voice ready") {
+            banner.style.display = "none";
+          }
+        }, 3000);
+      } else {
+        banner.style.display = "none";
+      }
+    };
 
     function setAsDefaultAssistant() {
       localStorage.setItem("assistant_configured", "true");
@@ -1358,6 +1419,20 @@
         setVoiceSpeed(savedSpeed);
       } else {
         setVoiceSpeed(1.05);
+      }
+
+      if (hasAndroidBridge && window.AndroidUltron.getVoiceEngineMode) {
+        try {
+          const mode = window.AndroidUltron.getVoiceEngineMode();
+          updateVoiceEngineUI(mode);
+        } catch (e) {}
+      }
+      if (hasAndroidBridge && window.AndroidUltron.getVoiceSetupStatus) {
+        try {
+          const stStr = window.AndroidUltron.getVoiceSetupStatus();
+          const st = JSON.parse(stStr);
+          window.onVoiceSetupUpdate(st.state, st.percent, st.message);
+        } catch (e) {}
       }
 
       setTimeout(updateRecentApps, 150);

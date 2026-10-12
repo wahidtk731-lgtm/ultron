@@ -18,6 +18,25 @@ public class VoiceDspCli {
         boolean allPassed = true;
 
         try {
+            // Test 0: Path safety checks (zip/path traversal guard)
+            System.out.print("[Test 0] Path traversal guard checks... ");
+            if (UltronVoiceSetup.isValidRelativePath("../evil")) {
+                throw new AssertionError("Failed to reject ../evil");
+            }
+            if (UltronVoiceSetup.isValidRelativePath("/etc/passwd")) {
+                throw new AssertionError("Failed to reject /etc/passwd");
+            }
+            if (UltronVoiceSetup.isValidRelativePath("am/../../root")) {
+                throw new AssertionError("Failed to reject am/../../root");
+            }
+            if (!UltronVoiceSetup.isValidRelativePath("am/final.mdl")) {
+                throw new AssertionError("Failed to accept am/final.mdl");
+            }
+            if (!UltronVoiceSetup.isValidRelativePath("graph/Gr.fst")) {
+                throw new AssertionError("Failed to accept graph/Gr.fst");
+            }
+            System.out.println("PASSED (properly rejected ../evil and absolute paths)");
+
             // Test 1: RIFF WAV generation with extra metadata chunks (LIST) and verification
             System.out.print("[Test 1] Parsing WAV with extra chunks (LIST, JUNK)... ");
             byte[] syntheticWavWithList = createWavWithExtraChunks(22050, 4410); // 0.2s of audio
