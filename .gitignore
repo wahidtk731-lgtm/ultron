@@ -80,3 +80,4 @@ obj/
 gen/
 *.apk
 *.keystore
+vendor/

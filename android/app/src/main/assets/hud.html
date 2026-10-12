@@ -614,6 +614,23 @@
       text-align: left;
       cursor: pointer;
     }
+    .voice-select {
+      width: 100%;
+      background: var(--gemini-pill-btn);
+      border: 1px solid var(--gemini-border);
+      color: var(--text-white);
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-top: 4px;
+      outline: none;
+    }
+    .voice-notice {
+      font-size: 11px;
+      color: #FBBF24;
+      margin-top: 6px;
+      line-height: 1.3;
+    }
   </style>
 </head>
 <body>
@@ -680,12 +697,29 @@
           </div>
         </div>
 
-        <!-- Voice Sound & Pitch -->
+        <!-- Voice Sound & Style -->
         <div class="setting-item">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label>Voice Pitch</label>
+            <label>Voice Style</label>
             <button class="btn-test-voice" onclick="testVoiceSound()">🔊 Test Voice</button>
           </div>
+          <div class="voice-options">
+            <button class="voice-btn active" id="styleUltron" onclick="setVoiceStyle('ultron')">Ultron</button>
+            <button class="voice-btn" id="styleDeep" onclick="setVoiceStyle('clean_deep')">Deep</button>
+            <button class="voice-btn" id="styleNatural" onclick="setVoiceStyle('natural')">Natural</button>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <label>Voice</label>
+          <select id="voiceSelect" class="voice-select" onchange="onVoiceSelected(this.value)">
+            <option value="">Default Voice</option>
+          </select>
+          <div id="voiceNotice" class="voice-notice" style="display: none;"></div>
+        </div>
+
+        <div class="setting-item">
+          <label>Voice Pitch</label>
           <div class="voice-options">
             <button class="voice-btn" id="pitchDeep" onclick="setVoicePitch(0.8)">Deep</button>
             <button class="voice-btn active" id="pitchNatural" onclick="setVoicePitch(0.95)">Natural</button>
@@ -1028,7 +1062,7 @@
     }
 
     function testVoiceSound() {
-      const phrase = "Hello! Ultron voice calibrated. I am online and ready.";
+      const phrase = "Systems online. I am listening.";
       if (hasAndroidBridge && window.AndroidUltron.testVoice) {
         window.AndroidUltron.testVoice(phrase);
       } else if (hasAndroidBridge && window.AndroidUltron.saveVoiceSettings) {
@@ -1038,6 +1072,87 @@
         u.pitch = currentPitch;
         u.rate = currentSpeed;
         window.speechSynthesis.speak(u);
+      }
+    }
+
+    function setVoiceStyle(style) {
+      document.querySelectorAll(".voice-btn").forEach(b => {
+        if (b.id && b.id.startsWith("style")) b.classList.remove("active");
+      });
+      if (style === "clean_deep") {
+        const btn = document.getElementById("styleDeep");
+        if (btn) btn.classList.add("active");
+      } else if (style === "natural") {
+        const btn = document.getElementById("styleNatural");
+        if (btn) btn.classList.add("active");
+      } else {
+        const btn = document.getElementById("styleUltron");
+        if (btn) btn.classList.add("active");
+        style = "ultron";
+      }
+
+      if (hasAndroidBridge && window.AndroidUltron.setVoiceStyle) {
+        window.AndroidUltron.setVoiceStyle(style);
+      }
+      localStorage.setItem("ultron_voice_style", style);
+    }
+
+    function onVoiceSelected(voiceName) {
+      if (hasAndroidBridge && window.AndroidUltron.setVoiceName) {
+        window.AndroidUltron.setVoiceName(voiceName);
+      }
+      localStorage.setItem("ultron_voice_name", voiceName);
+    }
+
+    function loadVoiceOptions() {
+      if (!hasAndroidBridge) return;
+      const select = document.getElementById("voiceSelect");
+      if (!select) return;
+
+      if (window.AndroidUltron.getVoiceStyle) {
+        const curStyle = window.AndroidUltron.getVoiceStyle();
+        if (curStyle) setVoiceStyle(curStyle);
+      }
+
+      if (window.AndroidUltron.getVoiceOptions) {
+        try {
+          const raw = window.AndroidUltron.getVoiceOptions();
+          const list = JSON.parse(raw || "[]");
+          select.textContent = "";
+          if (list.length === 0) {
+            const opt = document.createElement("option");
+            opt.value = "";
+            opt.textContent = "Default System Voice";
+            select.appendChild(opt);
+          } else {
+            for (let i = 0; i < list.length; i++) {
+              const item = list[i];
+              const opt = document.createElement("option");
+              opt.value = item.name;
+              opt.textContent = item.display;
+              if (item.selected) {
+                opt.selected = true;
+              }
+              select.appendChild(opt);
+            }
+          }
+        } catch (e) {
+          console.error("Error loading voice options: " + e);
+        }
+      }
+
+      if (window.AndroidUltron.getVoiceStatusNote) {
+        const note = window.AndroidUltron.getVoiceStatusNote();
+        const noticeDiv = document.getElementById("voiceNotice");
+        if (noticeDiv) {
+          if (note && note.length > 0) {
+            noticeDiv.textContent = note;
+            noticeDiv.style.display = "block";
+          } else {
+            noticeDiv.textContent = "";
+            noticeDiv.style.display = "none";
+          }
+        }
       }
     }
 
@@ -1155,6 +1270,8 @@
     window.addEventListener("DOMContentLoaded", () => {
       const savedTheme = localStorage.getItem("ultron_theme");
       if (savedTheme) setTheme(savedTheme);
+
+      loadVoiceOptions();
 
       const savedPitch = parseFloat(localStorage.getItem("ultron_pitch"));
       if (!isNaN(savedPitch)) {

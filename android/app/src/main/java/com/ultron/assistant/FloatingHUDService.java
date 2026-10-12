@@ -868,8 +868,38 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         @JavascriptInterface
         public void testVoice(String text) {
             if (ttsManager != null) {
-                ttsManager.speak(text != null && !text.isEmpty() ? text : "Hello! I am Ultron, your personal assistant.");
+                String phrase = (text != null && !text.trim().isEmpty()) ? text : "Systems online. I am listening.";
+                ttsManager.speak(phrase);
             }
+        }
+
+        @JavascriptInterface
+        public String getVoiceOptions() {
+            return ttsManager != null ? ttsManager.getVoiceOptionsJson() : "[]";
+        }
+
+        @JavascriptInterface
+        public void setVoiceName(String name) {
+            if (ttsManager != null) {
+                ttsManager.setVoiceName(name);
+            }
+        }
+
+        @JavascriptInterface
+        public void setVoiceStyle(String style) {
+            if (ttsManager != null) {
+                ttsManager.setVoiceStyle(style);
+            }
+        }
+
+        @JavascriptInterface
+        public String getVoiceStyle() {
+            return ttsManager != null ? ttsManager.getVoiceStyle() : UltronVoiceProfile.STYLE_ULTRON;
+        }
+
+        @JavascriptInterface
+        public String getVoiceStatusNote() {
+            return ttsManager != null ? ttsManager.getOfflineVoiceNotice() : null;
         }
 
         @JavascriptInterface

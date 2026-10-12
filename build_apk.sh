@@ -32,7 +32,7 @@ aapt package -f -m \
 # 3. Compile Java sources
 echo "[2/6] Compiling Java classes..."
 rm -rf obj/*
-if command -v javac >/dev/null 2>&1; then
+if [ "${USE_JAVAC:-0}" = "1" ] && command -v javac >/dev/null 2>&1; then
     javac -source 7 -target 7 -d obj -cp "$ANDROID_JAR:gen" \
         $(find android/app/src/main/java gen -name "*.java")
 else
