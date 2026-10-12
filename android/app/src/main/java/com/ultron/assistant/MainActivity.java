@@ -458,6 +458,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
     private void processCommandInternal(String rawText) {
         String normalized = intentEngine.normalizeSpeech(rawText);
         String commandBody = intentEngine.stripWakeWords(normalized);
+        String displayQuery = (normalized != null && !normalized.trim().isEmpty()) ? normalized.trim() : rawText;
 
         if (commandBody.isEmpty()) {
             shouldListenAfterSpeech = true;
@@ -469,10 +470,10 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         if (subCommands.size() <= 1) {
             UltronIntentEngine.ActionCommand action = intentEngine.classifyCommand(commandBody);
             String reply = executeAction(action);
-            sendWebReply(rawText, reply);
-            speakReply(reply, rawText);
+            sendWebReply(displayQuery, reply);
+            speakReply(reply, displayQuery);
         } else {
-            executeCompoundCommandsStepByStep(subCommands, rawText);
+            executeCompoundCommandsStepByStep(subCommands, displayQuery);
         }
     }
 
@@ -532,6 +533,16 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
                     }
                 });
                 return "Opening Ultron settings";
+
+            case "open_system_settings":
+                try {
+                    Intent settingsIntent = new Intent(android.provider.Settings.ACTION_SETTINGS);
+                    settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(settingsIntent);
+                    return "Opening device settings";
+                } catch (Exception e) {
+                    return "Could not open device settings";
+                }
 
             case "greet":
                 return "Hello! Ultron is online and ready for your commands.";

@@ -172,6 +172,10 @@ public class TTSManager {
 
             Locale targetLocale = Locale.US;
             Voice chosenVoice = null;
+            Voice defaultVoice = null;
+            try {
+                defaultVoice = tts.getDefaultVoice();
+            } catch (Throwable ignored) {}
 
             for (Voice v : voices) {
                 if (v == null) continue;
@@ -197,6 +201,9 @@ public class TTSManager {
                     }
 
                     String display = buildVoiceDisplayName(v, maleHint);
+                    if (defaultVoice != null && v.getName().equalsIgnoreCase(defaultVoice.getName())) {
+                        display = display + " [Default]";
+                    }
                     availableOfflineVoices.add(new OfflineVoiceInfo(name, vLoc.toString(), display, maleHint));
 
                     if (name.equalsIgnoreCase(selectedVoiceName)) {
@@ -205,10 +212,16 @@ public class TTSManager {
                 }
             }
 
-            // Sort voices: male-sounding first, then alphabetically
+            // Sort voices: default first, then male-sounding, then alphabetically
+            final Voice finalDefault = defaultVoice;
             Collections.sort(availableOfflineVoices, new Comparator<OfflineVoiceInfo>() {
                 @Override
                 public int compare(OfflineVoiceInfo o1, OfflineVoiceInfo o2) {
+                    boolean isDef1 = finalDefault != null && o1.name.equalsIgnoreCase(finalDefault.getName());
+                    boolean isDef2 = finalDefault != null && o2.name.equalsIgnoreCase(finalDefault.getName());
+                    if (isDef1 != isDef2) {
+                        return isDef1 ? -1 : 1;
+                    }
                     if (o1.isMaleHint != o2.isMaleHint) {
                         return o1.isMaleHint ? -1 : 1;
                     }
@@ -216,24 +229,40 @@ public class TTSManager {
                 }
             });
 
-            // If selected voice was not found or not specified, pick top ranked voice
-            if (chosenVoice == null && !availableOfflineVoices.isEmpty()) {
-                String topName = availableOfflineVoices.get(0).name;
-                for (Voice v : voices) {
-                    if (v.getName().equalsIgnoreCase(topName)) {
-                        chosenVoice = v;
-                        this.selectedVoiceName = topName;
-                        break;
+            // Voice selection logic:
+            // 1. If user explicitly specified a voice preference, try to apply it
+            if (selectedVoiceName != null && !selectedVoiceName.trim().isEmpty() && chosenVoice != null) {
+                try {
+                    int res = tts.setVoice(chosenVoice);
+                    if (res == TextToSpeech.ERROR) {
+                        Log.w(TAG, "tts.setVoice returned ERROR for " + chosenVoice.getName() + "; clearing pref and using default");
+                        chosenVoice = defaultVoice;
+                        this.selectedVoiceName = "";
+                        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                               .edit().remove(KEY_VOICE_NAME).apply();
+                    } else {
+                        UltronDebugLog.log(TAG, "TTS voice set from user preference: " + chosenVoice.getName());
                     }
+                } catch (Throwable t) {
+                    Log.w(TAG, "Exception applying voice " + chosenVoice.getName() + ": " + t.getMessage() + "; using default");
+                    chosenVoice = defaultVoice;
+                    this.selectedVoiceName = "";
+                    context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                           .edit().remove(KEY_VOICE_NAME).apply();
                 }
+            } else {
+                // 2. No custom voice selected: KEEP the system's verified default voice!
+                // NEVER force an uninstalled male voice descriptor, which causes Google TTS to crash.
+                chosenVoice = defaultVoice;
+                this.selectedVoiceName = "";
+                UltronDebugLog.log(TAG, "TTS keeping verified default engine voice: " + (defaultVoice != null ? defaultVoice.getName() : "system default"));
             }
 
-            if (chosenVoice != null) {
-                tts.setVoice(chosenVoice);
-                UltronDebugLog.log(TAG, "TTS voice chosen: " + chosenVoice.getName() + " (locale=" + chosenVoice.getLocale() + ", maleHint=" + isMaleVoiceHint(chosenVoice.getName()) + ")");
-            } else {
+            if (chosenVoice == null && availableOfflineVoices.isEmpty()) {
                 offlineVoiceMissing = true;
                 UltronDebugLog.log(TAG, "TTS no offline voice found for language " + targetLocale.getLanguage());
+            } else {
+                offlineVoiceMissing = false;
             }
 
         } catch (Throwable t) {
@@ -298,6 +327,12 @@ public class TTSManager {
                     notifySpeechCompleted();
                 }
             }
+
+            @Override
+            public void onError(final String utteranceId, int errorCode) {
+                Log.w(TAG, "Utterance error received: " + utteranceId + " (code=" + errorCode + ")");
+                onError(utteranceId);
+            }
         });
     }
 
@@ -331,7 +366,25 @@ public class TTSManager {
             applyPitchAndRateToEngine();
             isSpeaking = true;
             String utteranceId = "plain_" + gen;
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Bundle params = new Bundle();
+                params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
+                try {
+                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, utteranceId);
+                } catch (Throwable t) {
+                    Log.w(TAG, "tts.speak failed: " + t.getMessage(), t);
+                    notifySpeechCompleted();
+                }
+            } else {
+                HashMap<String, String> params = new HashMap<String, String>();
+                params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
+                try {
+                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, params);
+                } catch (Throwable t) {
+                    Log.w(TAG, "tts.speak failed: " + t.getMessage(), t);
+                    notifySpeechCompleted();
+                }
+            }
             return;
         }
 
@@ -375,12 +428,19 @@ public class TTSManager {
                 applyPitchAndRateToEngine();
 
                 int synthRes = -1;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    synthRes = tts.synthesizeToFile(sentence, (Bundle) null, tmpFile, utteranceId);
-                } else {
-                    HashMap<String, String> params = new HashMap<String, String>();
-                    params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
-                    synthRes = tts.synthesizeToFile(sentence, params, tmpFile.getAbsolutePath());
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        Bundle params = new Bundle();
+                        params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
+                        synthRes = tts.synthesizeToFile(sentence, params, tmpFile, utteranceId);
+                    } else {
+                        HashMap<String, String> params = new HashMap<String, String>();
+                        params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
+                        synthRes = tts.synthesizeToFile(sentence, params, tmpFile.getAbsolutePath());
+                    }
+                } catch (Throwable synthEx) {
+                    Log.w(TAG, "Exception during synthesizeToFile: " + synthEx.getMessage(), synthEx);
+                    synthRes = TextToSpeech.ERROR;
                 }
 
                 if (synthRes != TextToSpeech.SUCCESS) {
@@ -544,7 +604,20 @@ public class TTSManager {
                 applyPitchAndRateToEngine();
                 String utteranceId = "plain_" + gen;
                 if (tts != null) {
-                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            Bundle params = new Bundle();
+                            params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
+                            tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, utteranceId);
+                        } else {
+                            HashMap<String, String> params = new HashMap<String, String>();
+                            params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
+                            tts.speak(text, TextToSpeech.QUEUE_FLUSH, params);
+                        }
+                    } catch (Throwable t) {
+                        Log.w(TAG, "fallbackToPlainTts failed: " + t.getMessage(), t);
+                        notifySpeechCompleted();
+                    }
                 } else {
                     notifySpeechCompleted();
                 }
@@ -640,12 +713,29 @@ public class TTSManager {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && tts != null) {
             try {
+                if (voiceName.isEmpty() || "default".equalsIgnoreCase(voiceName)) {
+                    Voice def = tts.getDefaultVoice();
+                    if (def != null) {
+                        try { tts.setVoice(def); } catch (Throwable ignored) {}
+                    }
+                    UltronDebugLog.log(TAG, "TTS voice reset to system default");
+                    return;
+                }
+
                 Set<Voice> voices = tts.getVoices();
                 if (voices != null) {
                     for (Voice v : voices) {
                         if (v.getName().equalsIgnoreCase(voiceName)) {
-                            tts.setVoice(v);
-                            UltronDebugLog.log(TAG, "TTS voice chosen by user: " + voiceName);
+                            int res = tts.setVoice(v);
+                            if (res == TextToSpeech.ERROR) {
+                                Log.w(TAG, "Could not set voice: ERROR returned, falling back to default");
+                                Voice def = tts.getDefaultVoice();
+                                if (def != null) {
+                                    try { tts.setVoice(def); } catch (Throwable ignored) {}
+                                }
+                            } else {
+                                UltronDebugLog.log(TAG, "TTS voice chosen by user: " + voiceName);
+                            }
                             break;
                         }
                     }

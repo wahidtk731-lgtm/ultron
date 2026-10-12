@@ -140,6 +140,10 @@ public class AppLauncherAndroid {
             if (name.contains("settings")) {
                 set.add("setting");
                 set.add("system");
+                set.add("said things");
+                set.add("say things");
+                set.add("set things");
+                set.add("sed things");
             }
             if (name.contains("chrome")) {
                 set.add("browser");
