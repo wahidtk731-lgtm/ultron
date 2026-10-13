@@ -84,6 +84,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
         try {
             UltronDebugLog.init(this);
+            UltronDebugLog.log("UltronApp", "LOG TEST");
             String ver = "1.0";
             try {
                 android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -910,7 +911,19 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
 
         @JavascriptInterface
         public String getVoiceStatusNote() {
-            return ttsManager != null ? ttsManager.getOfflineVoiceNotice() : null;
+            return ttsManager != null ? ttsManager.getVoiceStatusNote() : null;
+        }
+
+        @JavascriptInterface
+        public void setTtsSafeMode(boolean enabled) {
+            if (ttsManager != null) {
+                ttsManager.setSafeMode(enabled);
+            }
+        }
+
+        @JavascriptInterface
+        public boolean isTtsSafeMode() {
+            return ttsManager != null && ttsManager.isSafeMode();
         }
 
         @JavascriptInterface
@@ -958,17 +971,47 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         }
 
         @JavascriptInterface
-        public void copyToClipboard(final String text) {
+        public boolean copyToClipboard(final String text) {
+            final boolean[] result = new boolean[]{false};
+            final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-                        android.content.ClipData clip = android.content.ClipData.newPlainText("Ultron Debug Log", text != null ? text : "");
-                        clipboard.setPrimaryClip(clip);
-                        android.widget.Toast.makeText(MainActivity.this, "Log copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                        if (clipboard != null) {
+                            android.content.ClipData clip = android.content.ClipData.newPlainText("Ultron Debug Log", text != null ? text : "");
+                            clipboard.setPrimaryClip(clip);
+                            android.widget.Toast.makeText(MainActivity.this, "Log copied", android.widget.Toast.LENGTH_SHORT).show();
+                            result[0] = true;
+                        }
                     } catch (Throwable t) {
                         android.util.Log.w("UltronBridge", "Failed to copy to clipboard: " + t.getMessage());
+                    } finally {
+                        latch.countDown();
+                    }
+                }
+            });
+            try {
+                latch.await(1500, java.util.concurrent.TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignored) {}
+            return result[0];
+        }
+
+        @JavascriptInterface
+        public void shareText(final String text) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                        sendIntent.setType("text/plain");
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, text != null ? text : "");
+                        Intent chooser = Intent.createChooser(sendIntent, "Share Ultron Log");
+                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(chooser);
+                    } catch (Throwable t) {
+                        android.util.Log.w("UltronBridge", "Failed to share text: " + t.getMessage());
                     }
                 }
             });

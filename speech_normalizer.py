@@ -45,10 +45,10 @@ APP_PHONETIC_REPLACEMENTS = [
     (r"\b(sub\s+lime|sub\s+line|sober\s+lime|sub\s+light)\b", "sublime"),
     
     # Settings
-    (r"\b(set\s+things|sat\s+things|sad\s+things|set\s+in|setting|setting\'s|system\s+set\s+things)\b", "settings"),
+    (r"\b(said\s+things|say\s+things|saying\s+things|sed\s+things|sit\s+things|set\s+things|sat\s+things|sad\s+things|sub\s+things|send\s+things|sent\s+things|set\s+thing|set\s+ins?|set\s+in|sayings|setting\'?s?|sitting|sittings|seeting|seetings)\b", "settings"),
     
     # Chrome / Browser
-    (r"\b(google\s+crown|google\s+crome|google\s+chrom)\b", "google chrome"),
+    (r"\b(google\s+crown|google\s+crome|google\s+chrom|browser|crome)\b", "chrome"),
     (r"\b(close\s+crown|close\s+crome|open\s+crown|open\s+crome)\b", lambda m: m.group(0).replace("crown", "chrome").replace("crome", "chrome")),
     
     # Terminal
@@ -62,10 +62,10 @@ APP_PHONETIC_REPLACEMENTS = [
     (r"\b(see\s+matrix|sea\s+matrix|c\s+matrix)\b", "cmatrix"),
     
     # YouTube
-    (r"\b(you\s+tube|u\s+tube|u-tube)\b", "youtube"),
+    (r"\b(you\s+tube|u\s+tube|u-tube|you\s+cube|utube|yt)\b", "youtube"),
     
     # Calculator
-    (r"\b(cal\s+cue\s+later|calcu\s+later)\b", "calculator"),
+    (r"\b(cal\s*cue?\s*later|calcu\s*later|kalkulator|calc|calculater)\b", "calculator"),
     
     # File extensions & filenames (learning.py, learning.cpp, etc.)
     (r"\b(learning\s+dot\s+py|learning\s+dot\s+pi|learning\s+dot\s+pie|learning\s+py|learning\s+pi|learning\s+pie)\b", "learning.py"),
@@ -75,29 +75,32 @@ APP_PHONETIC_REPLACEMENTS = [
     (r"\bdot\s+(py|cpp|js|html|css|txt|json|md|sh|c|java)\b", r".\1"),
     
     # WhatsApp
-    (r"\b(what\'?s?\s*app|wat[- ]?zap|watsapp|wa)\b", "whatsapp"),
+    (r"\b(what\'?s?\s*app|wat[- ]?zap|watsapp|wa|what\s+sap|watts\s+app)\b", "whatsapp"),
 
     # Instagram
     (r"\b(insta|ig|in\s+sta|insta\s+gram)\b", "instagram"),
 
     # Spotify
-    (r"\b(spot\s*ify|spotty\s*fy|spoti\s*pie|spot\s*fight)\b", "spotify"),
+    (r"\b(spot\s*ify|spotty\s*fy|spoti\s*pie|spot\s*fight|sportify|spodify)\b", "spotify"),
 
     # Telegram
-    (r"\b(tele\s*gram|tellegram)\b", "telegram"),
+    (r"\b(tele\s*gram|tellegram|tell\s+gram)\b", "telegram"),
 
     # Flashlight & Torch
-    (r"\b(flash\s*light|flesh\s*light|tour\s*ch|torch)\b", "flashlight"),
+    (r"\b(flash\s*light|flesh\s*light|flash\s+night|fresh\s+light|tour\s*ch|torch|torch\s+light|tourch)\b", "flashlight"),
+
+    # Hotspot
+    (r"\b(hot\s*spot|hat\s*spot|heart\s*spot)\b", "hotspot"),
 
     # Volume & Sound
-    (r"\b(valume|vol\s*ume|valyoom|sound\s+level)\b", "volume"),
+    (r"\b(valume|vol\s*ume|valyoom|sound\s+level|wall\s+volume)\b", "volume"),
 
     # Screenshot
-    (r"\b(screen\s*shot|screan\s*shot|snap\s+screen)\b", "screenshot"),
+    (r"\b(screen\s*shot|screan\s*shot|screen\s+short|snap\s+screen|screen\s+shoot|screencap)\b", "screenshot"),
 
     # Camera & Photos
-    (r"\b(cam\s*ra|kamra|kamera|cam)\b", "camera"),
-    (r"\b(gel\s*ry|gallary|galery|photoes|photos)\b", "gallery"),
+    (r"\b(cam\s*ra|kamra|kamera|cam|came\s+ra|camer)\b", "camera"),
+    (r"\b(gel\s*ry|gallary|galery|photoes|photos|gelry)\b", "gallery"),
 
     # Clock & Alarm
     (r"\b(clok|clack|alaram|alerm)\b", "clock"),
@@ -105,20 +108,35 @@ APP_PHONETIC_REPLACEMENTS = [
     # Messages
     (r"\b(text\s+message|sms|massage|massages)\b", "messages"),
 
+    # Additional popular apps
+    (r"\b(play\s*store|playstore|google\s+play)\b", "play store"),
+    (r"\b(g\s*mail|gee\s*mail|e[- ]?mail)\b", "gmail"),
+    (r"\b(google\s+maps?|g\s*maps?)\b", "maps"),
+    (r"\b(flip\s*kart|flipcard|flip\s*card)\b", "flipkart"),
+    (r"\b(amazom|amzon)\b", "amazon"),
+    (r"\b(net\s*flix|net\s*flex|net\s*flicks)\b", "netflix"),
+    (r"\b(face\s*book|fb|faith\s*book)\b", "facebook"),
+    (r"\b(twiter|twittr|x\s+app)\b", "twitter"),
+    (r"\b(zomatto|tomato\s+app)\b", "zomato"),
+    (r"\b(swigi|sweetie\s+app|swiggi)\b", "swiggy"),
+    (r"\b(my\s+files?|file\s+manager|explorer|my\s+file)\b", "files"),
+
     # Action verbs
     (r"\b(right|ride|rite)\s+(hi|hello|text|code|print|something|notes)\b", r"write \2"),
-    (r"\b(claws|clothes|closed)\s+(chrome|sublime|browser|terminal|geany|app|whatsapp|instagram|spotify)\b", r"close \2"),
-    (r"\b(blue\s*tooth|blue\s*tooths|bluetooths|blootooth)\b", "bluetooth"),
-    (r"\b(why\s*fi|wi\s*fi|wai\s*fai|wifi|wee\s*fee|waifai)\b", "wifi"),
+    (r"\b(claws|clothes|closed)\s+(chrome|sublime|browser|terminal|geany|app|whatsapp|instagram|spotify|youtube|settings)\b", r"close \2"),
+    (r"\b(blue\s*tooth|blue\s*tooths|bluetooths|blootooth|blue\s+truth|blow\s+tooth|plutooth|bluetoth)\b", "bluetooth"),
+    (r"\b(why\s*fi|wi\s*fi|wai\s*fai|wifi|wee\s*fee|waifai|why\s+fee|why\s+fire|wife|y\s+fi)\b", "wifi"),
     (r"\b(sirch|soorch|goggle|googel)\b", "search"),
     (r"\b(hoppen|opun|lunch|lanch)\b", "open"),
+    (r"\b(torn\s+on|tern\s+on|switch\s+on)\b", "turn on"),
+    (r"\b(torn\s+off|tern\s+off|switch\s+off)\b", "turn off"),
     (r"\b(notes|notification|notifications|notif|notifs)\b", "notifications"),
     (r"\b(clear|clean|dismiss|wipe|cancel)\s+(the\s+)?(notifications|notification|notifs)\b", "clear notifications"),
     (r"\b(quick\s+setting|kwick\s+settings)\b", "quick settings"),
     (r"\b(status\s+bar|stats\s+bar|notification\s+bar)\b", "status bar"),
-    (r"\b(reel\s+section|reels\s+section|reels|reel)\b", "reels"),
+    (r"\b(reel\s+section|reels\s+section|reels|reel|reals)\b", "reels"),
     (r"\b(short\s+section|shorts\s+section)\b", "shorts"),
-    (r"\b(recent\s+apps?|recently\s+opened\s+apps?|last\s+apps?|switch\s+apps?)\b", "recent apps"),
+    (r"\b(recent\s+apps?|recently\s+opened\s+apps?|last\s+apps?|switch\s+apps?|recents|overview)\b", "recent apps"),
     (r"\b(make\s+file|create\s+file|new\s+file)\b", "create file"),
     (r"\b(edit\s+file|open\s+file|modify\s+file)\b", "edit file"),
 ]

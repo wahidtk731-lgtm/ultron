@@ -139556,6 +139556,26 @@
     "intent": "wifi_on"
   },
   {
+    "text": "turn on my wifi",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "turn the wifi on",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "turn my wifi on",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "switch on the wifi",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "switch the wifi on",
+    "intent": "wifi_on"
+  },
+  {
     "text": "turn on wi fi",
     "intent": "wifi_on"
   },
@@ -139576,6 +139596,30 @@
     "intent": "wifi_on"
   },
   {
+    "text": "connect to wifi",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "turn on why fi",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "why fi on",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "turn on why fire",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "switch on why fi",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "turn wifi on",
+    "intent": "wifi_on"
+  },
+  {
     "text": "hey ultron turn on wifi",
     "intent": "wifi_on"
   },
@@ -139585,6 +139629,14 @@
   },
   {
     "text": "please turn on wifi",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "open wifi",
+    "intent": "wifi_on"
+  },
+  {
+    "text": "open the wifi",
     "intent": "wifi_on"
   },
   {
@@ -139612,6 +139664,26 @@
     "intent": "wifi_off"
   },
   {
+    "text": "turn off my wifi",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "turn the wifi off",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "turn my wifi off",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "switch off the wifi",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "switch the wifi off",
+    "intent": "wifi_off"
+  },
+  {
     "text": "turn off wi fi",
     "intent": "wifi_off"
   },
@@ -139629,6 +139701,30 @@
   },
   {
     "text": "disconnect wifi",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "disconnect from wifi",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "turn off why fi",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "why fi off",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "turn off why fire",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "switch off why fi",
+    "intent": "wifi_off"
+  },
+  {
+    "text": "turn wifi off",
     "intent": "wifi_off"
   },
   {
@@ -139668,6 +139764,50 @@
     "intent": "bluetooth_on"
   },
   {
+    "text": "turn on my bluetooth",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "turn the bluetooth on",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "turn my bluetooth on",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "switch on the bluetooth",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "switch the bluetooth on",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "connect bluetooth",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "connect to bluetooth",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "turn on blue tooth",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "blue tooth on",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "switch on blue tooth",
+    "intent": "bluetooth_on"
+  },
+  {
+    "text": "turn bluetooth on",
+    "intent": "bluetooth_on"
+  },
+  {
     "text": "hey ultron turn on bluetooth",
     "intent": "bluetooth_on"
   },
@@ -139701,6 +139841,50 @@
   },
   {
     "text": "turn off the bluetooth",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "turn off my bluetooth",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "turn the bluetooth off",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "turn my bluetooth off",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "switch off the bluetooth",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "switch the bluetooth off",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "disconnect bluetooth",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "disconnect from bluetooth",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "turn off blue tooth",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "blue tooth off",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "switch off blue tooth",
+    "intent": "bluetooth_off"
+  },
+  {
+    "text": "turn bluetooth off",
     "intent": "bluetooth_off"
   },
   {

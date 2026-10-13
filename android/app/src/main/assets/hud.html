@@ -56,19 +56,19 @@
     /* Floating Overlay Mode over other apps (YouTube, Chrome, Games) */
     body.overlay-mode {
       height: 100% !important;
-      min-height: unset !important;
-      padding: 4px 0 !important;
+      min-height: 100% !important;
+      padding-bottom: max(24px, env(safe-area-inset-bottom, 24px)) !important;
       margin: 0 !important;
       box-sizing: border-box !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: center !important;
+      justify-content: flex-end !important;
       align-items: center !important;
-      overflow: visible !important;
+      overflow: hidden !important;
     }
 
     body.overlay-mode .backdrop {
-      display: none !important;
+      display: block !important;
     }
 
     /* Never crowd floating mode with the assistant prompt banner */
@@ -77,10 +77,10 @@
     }
 
     body.overlay-mode .assistant-container {
-      width: 96% !important;
-      max-width: 480px !important;
+      width: 94% !important;
+      max-width: 500px !important;
       margin: 0 !important;
-      gap: 6px !important;
+      gap: 10px !important;
       animation: none !important;
       transform: none !important;
       box-sizing: border-box !important;
@@ -632,7 +632,9 @@
       line-height: 1.3;
     }
     .debug-log-view {
-      max-height: 180px;
+      width: 100%;
+      height: 160px;
+      max-height: 200px;
       overflow-y: auto;
       background: rgba(0, 0, 0, 0.45);
       border: 1px solid var(--gemini-border);
@@ -644,6 +646,10 @@
       white-space: pre-wrap;
       word-break: break-all;
       margin: 0;
+      box-sizing: border-box;
+      resize: vertical;
+      user-select: text;
+      -webkit-user-select: text;
     }
   </style>
 </head>
@@ -674,7 +680,6 @@
       <div class="chip" onclick="quickCommand('Clear notifications')">Clear Notifications</div>
       <div class="chip" onclick="quickCommand('Close app')">Close App</div>
       <div class="chip chip-primary" onclick="openSettingsModal()">Settings</div>
-      <div class="chip" id="chipDockPos" onclick="toggleDockPosition()" style="display: none;">Move HUD</div>
       <div class="chip" onclick="dismissAssistant()">Hide</div>
     </div>
 
@@ -711,7 +716,7 @@
           </div>
         </div>
 
-        <!-- Voice Sound & Style -->
+        <!-- Voice Style -->
         <div class="setting-item">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <label>Voice Style</label>
@@ -721,23 +726,6 @@
             <button class="voice-btn active" id="styleUltron" onclick="setVoiceStyle('ultron')">Ultron</button>
             <button class="voice-btn" id="styleDeep" onclick="setVoiceStyle('clean_deep')">Deep</button>
             <button class="voice-btn" id="styleNatural" onclick="setVoiceStyle('natural')">Natural</button>
-          </div>
-        </div>
-
-        <div class="setting-item">
-          <label>Voice</label>
-          <select id="voiceSelect" class="voice-select" onchange="onVoiceSelected(this.value)">
-            <option value="">Default Voice</option>
-          </select>
-          <div id="voiceNotice" class="voice-notice" style="display: none;"></div>
-        </div>
-
-        <div class="setting-item">
-          <label>Voice Pitch</label>
-          <div class="voice-options">
-            <button class="voice-btn" id="pitchDeep" onclick="setVoicePitch(0.8)">Deep</button>
-            <button class="voice-btn active" id="pitchNatural" onclick="setVoicePitch(0.95)">Natural</button>
-            <button class="voice-btn" id="pitchHigher" onclick="setVoicePitch(1.2)">Higher</button>
           </div>
         </div>
 
@@ -751,39 +739,13 @@
           </div>
         </div>
 
-        <!-- Voice Engine Mode -->
-        <div class="setting-item">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label>Voice Engine</label>
-            <span id="voiceEngineStatus" style="font-size: 11px; color: var(--accent-color);">Offline (Ready)</span>
-          </div>
-          <div class="voice-options" style="margin-top: 6px;">
-            <button class="voice-btn active" id="engineAuto" onclick="setVoiceEngineMode('auto')">Auto</button>
-            <button class="voice-btn" id="engineOffline" onclick="setVoiceEngineMode('offline_only')">Offline only</button>
-          </div>
-        </div>
-
         <!-- System Shortcuts -->
         <div class="setting-item">
-          <label>Device & System Settings</label>
+          <label>Device & System</label>
           <div class="shortcut-buttons">
             <button class="btn-setting-action" onclick="toggleFloating()">🫧 Floating Bubble Mode (Over other apps)</button>
             <button class="btn-setting-action" onclick="setAsDefaultAssistant()">⚙️ Change Default Assistant (Center Button)</button>
             <button class="btn-setting-action" onclick="refreshAppsIndex()">🔄 Re-train Installed Apps</button>
-            <button class="btn-setting-action" onclick="toggleDebugLogPanel()">📋 Diagnostics & Debug Log</button>
-            <div id="debugLogContainer" style="display: none; margin-top: 8px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-size: 11px; color: var(--text-dim);">Recent Logs</span>
-                <div style="display: flex; gap: 6px;">
-                  <button class="voice-btn" style="padding: 3px 8px; font-size: 11px;" onclick="refreshDebugLog()">🔄 Refresh</button>
-                  <button class="voice-btn" style="padding: 3px 8px; font-size: 11px;" onclick="copyDebugLog()">📋 Copy</button>
-                  <button class="voice-btn" style="padding: 3px 8px; font-size: 11px; color: #EF4444;" onclick="clearDebugLog()">🗑️ Clear</button>
-                </div>
-              </div>
-              <pre id="debugLogText" class="debug-log-view"></pre>
-            </div>
-            <button class="btn-setting-action" id="btnDockToggle" onclick="toggleDockPosition()" style="display: none;">📌 Move HUD to Top / Bottom</button>
-            <button class="btn-setting-action" id="btnOverlayClose" onclick="closeOverlayAction()" style="display: none;">❌ Close Floating Overlay</button>
           </div>
         </div>
       </div>
@@ -1184,117 +1146,11 @@
       localStorage.setItem("ultron_voice_style", style);
     }
 
-    function onVoiceSelected(voiceName) {
-      if (hasAndroidBridge && window.AndroidUltron.setVoiceName) {
-        window.AndroidUltron.setVoiceName(voiceName);
-      }
-      localStorage.setItem("ultron_voice_name", voiceName);
-    }
-
     function loadVoiceOptions() {
       if (!hasAndroidBridge) return;
-      const select = document.getElementById("voiceSelect");
-      if (!select) return;
-
       if (window.AndroidUltron.getVoiceStyle) {
         const curStyle = window.AndroidUltron.getVoiceStyle();
         if (curStyle) setVoiceStyle(curStyle);
-      }
-
-      if (window.AndroidUltron.getVoiceOptions) {
-        try {
-          const raw = window.AndroidUltron.getVoiceOptions();
-          const list = JSON.parse(raw || "[]");
-          select.textContent = "";
-          if (list.length === 0) {
-            const opt = document.createElement("option");
-            opt.value = "";
-            opt.textContent = "Default System Voice";
-            select.appendChild(opt);
-          } else {
-            for (let i = 0; i < list.length; i++) {
-              const item = list[i];
-              const opt = document.createElement("option");
-              opt.value = item.name;
-              opt.textContent = item.display;
-              if (item.selected) {
-                opt.selected = true;
-              }
-              select.appendChild(opt);
-            }
-          }
-        } catch (e) {
-          console.error("Error loading voice options: " + e);
-        }
-      }
-
-      if (window.AndroidUltron.getVoiceStatusNote) {
-        const note = window.AndroidUltron.getVoiceStatusNote();
-        const noticeDiv = document.getElementById("voiceNotice");
-        if (noticeDiv) {
-          if (note && note.length > 0) {
-            noticeDiv.textContent = note;
-            noticeDiv.style.display = "block";
-          } else {
-            noticeDiv.textContent = "";
-            noticeDiv.style.display = "none";
-          }
-        }
-      }
-    }
-
-    function toggleDebugLogPanel() {
-      const container = document.getElementById("debugLogContainer");
-      if (!container) return;
-      if (container.style.display === "none") {
-        container.style.display = "block";
-        refreshDebugLog();
-      } else {
-        container.style.display = "none";
-      }
-    }
-
-    function refreshDebugLog() {
-      const logView = document.getElementById("debugLogText");
-      if (!logView) return;
-      if (hasAndroidBridge && window.AndroidUltron.getDebugLog) {
-        const text = window.AndroidUltron.getDebugLog();
-        logView.textContent = text || "No log entries recorded yet.";
-      } else {
-        logView.textContent = "Debug log is only available in Android runtime.";
-      }
-      logView.scrollTop = logView.scrollHeight;
-    }
-
-    function copyDebugLog() {
-      const logView = document.getElementById("debugLogText");
-      const text = logView ? logView.textContent : "";
-      if (hasAndroidBridge && window.AndroidUltron.copyToClipboard) {
-        window.AndroidUltron.copyToClipboard(text);
-      } else if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-          alert("Log copied to clipboard");
-        }).catch(err => {
-          console.error(err);
-        });
-      }
-    }
-
-    function clearDebugLog() {
-      if (hasAndroidBridge && window.AndroidUltron.clearDebugLog) {
-        window.AndroidUltron.clearDebugLog();
-      }
-      const logView = document.getElementById("debugLogText");
-      if (logView) {
-        logView.textContent = "Log cleared.";
-      }
-    }
-
-    function closeOverlayAction() {
-      if (hasAndroidBridge && window.AndroidUltron.closeFloatingOverlay) {
-        window.AndroidUltron.closeFloatingOverlay();
-      } else if (hasAndroidBridge) {
-        window.AndroidUltron.dismiss();
       }
     }
 

@@ -153,6 +153,7 @@ public final class UltronDebugLog {
                 return "No log entries recorded yet.";
             }
 
+            long fileBytes = target.length();
             BufferedReader reader = null;
             try {
                 reader = new BufferedReader(new InputStreamReader(new FileInputStream(target), "UTF-8"));
@@ -166,6 +167,7 @@ public final class UltronDebugLog {
                 }
 
                 StringBuilder sb = new StringBuilder();
+                sb.append("[Ultron Log: ").append(fileBytes).append(" bytes | showing ").append(lines.size()).append(" lines]\n");
                 for (String l : lines) {
                     sb.append(l).append("\n");
                 }

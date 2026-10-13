@@ -6,20 +6,25 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -43,9 +48,17 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     private static FloatingHUDService instance;
 
     private WindowManager windowManager;
-    private View floatingView;
-    private WindowManager.LayoutParams windowParams;
+    private FloatingBubbleView bubbleView;
+    private WindowManager.LayoutParams bubbleParams;
+    private FloatingTrashView trashView;
+    private WindowManager.LayoutParams trashParams;
     private WebView webView;
+    private WindowManager.LayoutParams hudParams;
+    private boolean isHudExpanded = false;
+    private boolean isBubbleAttached = false;
+    private boolean isTrashAttached = false;
+    private boolean isHudAttached = false;
+
     private UltronIndependentVoiceInput voiceInput;
     private UltronIntentEngine intentEngine;
     private AppLauncherAndroid appLauncher;
@@ -53,7 +66,6 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     private Handler mainHandler;
 
     private boolean shouldListenAfterSpeech = false;
-    private boolean isDockedTop = false;
 
     public static FloatingHUDService getInstance() {
         return instance;
@@ -74,6 +86,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         instance = this;
 
         UltronDebugLog.init(this);
+        UltronDebugLog.log("UltronApp", "LOG TEST");
         String ver = "1.0";
         try {
             android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -158,14 +171,15 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    private boolean isViewAttached = false;
-
     public void setOverlayVisible(final boolean visible) {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (floatingView != null) {
-                    floatingView.setVisibility(visible ? View.VISIBLE : View.GONE);
+                if (bubbleView != null) {
+                    bubbleView.setVisibility((visible && !isHudExpanded) ? View.VISIBLE : View.GONE);
+                }
+                if (webView != null && isHudExpanded) {
+                    webView.setVisibility(visible ? View.VISIBLE : View.GONE);
                 }
             }
         });
@@ -187,19 +201,48 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
         }
 
-        // Use guaranteed explicit height (140dp) to fit chips, capsule, and status comfortably
-        windowParams = new WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            dpToPx(140),
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        int screenW = dm.widthPixels;
+        int screenH = dm.heightPixels;
+
+        // Load saved bubble coordinates
+        SharedPreferences prefs = getSharedPreferences("ultron_prefs", MODE_PRIVATE);
+        int defaultX = screenW - dpToPx(70);
+        int defaultY = screenH / 3;
+        int bubbleX = prefs.getInt("bubble_x", defaultX);
+        int bubbleY = prefs.getInt("bubble_y", defaultY);
+
+        // 1. Native Draggable Floating Bubble
+        bubbleView = new FloatingBubbleView(this);
+        bubbleParams = new WindowManager.LayoutParams(
+            dpToPx(58),
+            dpToPx(58),
             layoutFlag,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         );
+        bubbleParams.gravity = Gravity.TOP | Gravity.START;
+        bubbleParams.x = bubbleX;
+        bubbleParams.y = bubbleY;
 
-        windowParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        windowParams.y = dpToPx(70); // Sit 70dp above bottom navigation buttons
+        setupBubbleTouchListener();
 
+        // 2. Trash / Close Target at Bottom Center of Screen
+        trashView = new FloatingTrashView(this);
+        trashParams = new WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            dpToPx(130),
+            layoutFlag,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        );
+        trashParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        trashView.setVisibility(View.GONE);
+
+        // 3. Assistant HUD (WebView)
         webView = new WebView(this);
         webView.setBackgroundColor(0);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
@@ -230,90 +273,225 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         });
 
         webView.loadUrl("file:///android_asset/hud.html");
-        floatingView = webView;
 
-        if (!isViewAttached) {
-            try {
-                windowManager.addView(floatingView, windowParams);
-                isViewAttached = true;
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to add floating view: " + e.getMessage());
+        // Initially collapsed: 0x0 size and NOT_TOUCHABLE so it does NOT block any screen touches!
+        hudParams = new WindowManager.LayoutParams(
+            0,
+            0,
+            layoutFlag,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            PixelFormat.TRANSLUCENT
+        );
+        hudParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        webView.setVisibility(View.GONE);
+
+        try {
+            if (!isTrashAttached) {
+                windowManager.addView(trashView, trashParams);
+                isTrashAttached = true;
             }
+            if (!isHudAttached) {
+                windowManager.addView(webView, hudParams);
+                isHudAttached = true;
+            }
+            if (!isBubbleAttached) {
+                windowManager.addView(bubbleView, bubbleParams);
+                isBubbleAttached = true;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed adding floating views: " + e.getMessage());
         }
     }
 
-    public void toggleDockPosition() {
+    private void setupBubbleTouchListener() {
+        final int touchSlop = dpToPx(8);
+        bubbleView.setOnTouchListener(new View.OnTouchListener() {
+            private int initialX;
+            private int initialY;
+            private float initialTouchX;
+            private float initialTouchY;
+            private long downTime;
+            private boolean isDragging = false;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (windowManager == null || bubbleView == null) return false;
+
+                DisplayMetrics dm = getResources().getDisplayMetrics();
+                int screenH = dm.heightPixels;
+
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initialX = bubbleParams.x;
+                        initialY = bubbleParams.y;
+                        initialTouchX = event.getRawX();
+                        initialTouchY = event.getRawY();
+                        downTime = SystemClock.uptimeMillis();
+                        isDragging = false;
+                        bubbleView.setPressedState(true);
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
+                        float dx = event.getRawX() - initialTouchX;
+                        float dy = event.getRawY() - initialTouchY;
+                        if (!isDragging && Math.hypot(dx, dy) > touchSlop) {
+                            isDragging = true;
+                            if (trashView != null) {
+                                trashView.show(true);
+                            }
+                        }
+                        if (isDragging) {
+                            bubbleParams.x = (int) (initialX + dx);
+                            bubbleParams.y = (int) (initialY + dy);
+                            try {
+                                windowManager.updateViewLayout(bubbleView, bubbleParams);
+                            } catch (Exception ignored) {}
+
+                            if (trashView != null) {
+                                boolean overTrash = trashView.isOverTarget(event.getRawX(), event.getRawY(), screenH);
+                                trashView.setHovered(overTrash);
+                            }
+                        }
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                        bubbleView.setPressedState(false);
+                        if (isDragging) {
+                            boolean overTrash = false;
+                            if (trashView != null) {
+                                overTrash = trashView.isOverTarget(event.getRawX(), event.getRawY(), screenH);
+                                trashView.show(false);
+                            }
+                            if (overTrash) {
+                                closeFloatingBubble();
+                            } else {
+                                clampAndSaveBubblePosition();
+                            }
+                        } else {
+                            long duration = SystemClock.uptimeMillis() - downTime;
+                            if (duration < 350) {
+                                expandAssistantHUD();
+                            }
+                        }
+                        return true;
+
+                    case MotionEvent.ACTION_CANCEL:
+                        bubbleView.setPressedState(false);
+                        if (isDragging && trashView != null) {
+                            trashView.show(false);
+                            clampAndSaveBubblePosition();
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+    }
+
+    private void clampAndSaveBubblePosition() {
+        if (windowManager == null || bubbleView == null || bubbleParams == null) return;
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        int screenW = dm.widthPixels;
+        int screenH = dm.heightPixels;
+        int bubbleSize = dpToPx(58);
+
+        bubbleParams.x = Math.max(dpToPx(4), Math.min(screenW - bubbleSize - dpToPx(4), bubbleParams.x));
+        bubbleParams.y = Math.max(dpToPx(24), Math.min(screenH - bubbleSize - dpToPx(24), bubbleParams.y));
+
+        try {
+            windowManager.updateViewLayout(bubbleView, bubbleParams);
+        } catch (Exception ignored) {}
+
+        getSharedPreferences("ultron_prefs", MODE_PRIVATE).edit()
+            .putInt("bubble_x", bubbleParams.x)
+            .putInt("bubble_y", bubbleParams.y)
+            .apply();
+    }
+
+    public void closeFloatingBubble() {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (floatingView != null && windowManager != null) {
-                    isDockedTop = !isDockedTop;
-                    if (isDockedTop) {
-                        windowParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-                        windowParams.y = dpToPx(40);
-                    } else {
-                        windowParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-                        windowParams.y = dpToPx(70);
-                    }
-                    try {
-                        windowManager.updateViewLayout(floatingView, windowParams);
-                    } catch (Exception e) {
-                        Log.w(TAG, "Failed updating dock position layout: " + e.getMessage());
-                    }
+                try {
+                    Toast.makeText(FloatingHUDService.this, "Ultron Floating Bubble closed", Toast.LENGTH_SHORT).show();
+                } catch (Exception ignored) {}
+                stopSelf();
+            }
+        });
+    }
+
+    public void expandAssistantHUD() {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (windowManager == null || webView == null) return;
+                isHudExpanded = true;
+                if (bubbleView != null) {
+                    bubbleView.setVisibility(View.GONE);
+                }
+
+                hudParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+                hudParams.height = WindowManager.LayoutParams.MATCH_PARENT;
+                hudParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                                  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                webView.setVisibility(View.VISIBLE);
+
+                try {
+                    windowManager.updateViewLayout(webView, hudParams);
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed updating HUD layout: " + e.getMessage());
+                }
+
+                webView.evaluateJavascript("if(window.setOverlayMode) window.setOverlayMode(true);", null);
+                startListening();
+            }
+        });
+    }
+
+    public void collapseToBubble() {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (windowManager == null || webView == null) return;
+                isHudExpanded = false;
+                webView.setVisibility(View.GONE);
+
+                hudParams.width = 0;
+                hudParams.height = 0;
+                hudParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                                  WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+
+                try {
+                    windowManager.updateViewLayout(webView, hudParams);
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed collapsing HUD layout: " + e.getMessage());
+                }
+
+                if (bubbleView != null) {
+                    bubbleView.setVisibility(View.VISIBLE);
+                    bubbleView.setAssistantState("ready");
                 }
             }
         });
+    }
+
+    public void toggleDockPosition() {
+        // Overlay comfortably occupies bottom position with safe area padding
     }
 
     private void expandOverlay(final boolean expand) {
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (floatingView != null && windowManager != null) {
-                    windowParams.height = dpToPx(expand ? 280 : 140);
-                    windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
-                    try {
-                        windowManager.updateViewLayout(floatingView, windowParams);
-                    } catch (Exception e) {
-                        Log.w(TAG, "Failed updating expand layout: " + e.getMessage());
-                    }
-                }
-            }
-        });
+        // Managed dynamically by MATCH_PARENT overlay window
     }
-
-    private boolean isMiniBubble = false;
 
     public void setMiniBubbleMode(final boolean mini) {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (floatingView != null && windowManager != null) {
-                    isMiniBubble = mini;
-                    if (mini) {
-                        windowParams.width = dpToPx(56);
-                        windowParams.height = dpToPx(56);
-                        windowParams.gravity = Gravity.TOP | Gravity.START;
-                        windowParams.x = dpToPx(16);
-                        windowParams.y = dpToPx(240);
-                        if (webView != null) {
-                            webView.evaluateJavascript("if(window.setMiniBubbleView) window.setMiniBubbleView(true);", null);
-                        }
-                    } else {
-                        windowParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-                        windowParams.height = dpToPx(140);
-                        windowParams.gravity = isDockedTop ? (Gravity.TOP | Gravity.CENTER_HORIZONTAL) : (Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-                        windowParams.x = 0;
-                        windowParams.y = isDockedTop ? dpToPx(40) : dpToPx(70);
-                        if (webView != null) {
-                            webView.evaluateJavascript("if(window.setMiniBubbleView) window.setMiniBubbleView(false);", null);
-                        }
-                    }
-                    try {
-                        windowManager.updateViewLayout(floatingView, windowParams);
-                    } catch (Exception e) {
-                        Log.w(TAG, "Failed updating mini bubble layout: " + e.getMessage());
-                    }
+                if (mini) {
+                    collapseToBubble();
+                } else {
+                    expandAssistantHUD();
                 }
             }
         });
@@ -408,7 +586,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
     }
 
     public void wakeUpFromAssist() {
-        startListening();
+        expandAssistantHUD();
     }
 
     public void processCommandFromBridge(final String text) {
@@ -604,7 +782,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
                 mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        setMiniBubbleMode(!isMiniBubble);
+                        if (isHudExpanded) {
+                            collapseToBubble();
+                        } else {
+                            expandAssistantHUD();
+                        }
                     }
                 });
                 return "Toggled floating bubble mode";
@@ -676,6 +858,9 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
+                if (bubbleView != null) {
+                    bubbleView.setAssistantState(state);
+                }
                 if (webView != null) {
                     String s = state != null ? state : "";
                     String m = message != null ? message : "";
@@ -719,23 +904,25 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         mainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                expandOverlay(false);
+                if (isHudExpanded) {
+                    collapseToBubble();
+                }
             }
-        }, 3000);
+        }, 3500);
     }
 
     public void setFocusable(final boolean focusable) {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (windowManager != null && floatingView != null) {
+                if (windowManager != null && webView != null && isHudExpanded && isHudAttached) {
                     if (focusable) {
-                        windowParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                        hudParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
                     } else {
-                        windowParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                        hudParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
                     }
                     try {
-                        windowManager.updateViewLayout(floatingView, windowParams);
+                        windowManager.updateViewLayout(webView, hudParams);
                     } catch (Exception e) {
                         Log.w(TAG, "Failed updating focus layout: " + e.getMessage());
                     }
@@ -753,24 +940,35 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             mainHandler.removeCallbacksAndMessages(null);
         }
 
-        if (floatingView != null && windowManager != null && isViewAttached) {
-            try {
-                windowManager.removeView(floatingView);
-            } catch (Exception e) {
-                Log.w(TAG, "Failed removing floating view: " + e.getMessage());
+        if (windowManager != null) {
+            if (bubbleView != null && isBubbleAttached) {
+                try {
+                    windowManager.removeView(bubbleView);
+                } catch (Exception ignored) {}
+                isBubbleAttached = false;
             }
-            isViewAttached = false;
+            if (trashView != null && isTrashAttached) {
+                try {
+                    windowManager.removeView(trashView);
+                } catch (Exception ignored) {}
+                isTrashAttached = false;
+            }
+            if (webView != null && isHudAttached) {
+                try {
+                    windowManager.removeView(webView);
+                } catch (Exception ignored) {}
+                isHudAttached = false;
+            }
         }
 
         if (webView != null) {
             try {
                 webView.destroy();
-            } catch (Exception e) {
-                Log.w(TAG, "Failed destroying WebView: " + e.getMessage());
-            }
+            } catch (Exception ignored) {}
             webView = null;
-            floatingView = null;
         }
+        bubbleView = null;
+        trashView = null;
 
         if (voiceInput != null) {
             voiceInput.destroy();
@@ -825,7 +1023,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    stopSelf();
+                    collapseToBubble();
                 }
             });
         }
@@ -835,7 +1033,11 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    setMiniBubbleMode(!isMiniBubble);
+                    if (isHudExpanded) {
+                        collapseToBubble();
+                    } else {
+                        expandAssistantHUD();
+                    }
                 }
             });
         }
@@ -884,19 +1086,7 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
         @JavascriptInterface
         public void setWindowHeight(final int dp) {
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (floatingView != null && windowManager != null) {
-                        windowParams.height = dpToPx(dp);
-                        try {
-                            windowManager.updateViewLayout(floatingView, windowParams);
-                        } catch (Exception e) {
-                            Log.w(TAG, "Failed updating window height layout: " + e.getMessage());
-                        }
-                    }
-                }
-            });
+            // MATCH_PARENT layout accommodates all content height dynamically
         }
 
         @JavascriptInterface
@@ -942,7 +1132,19 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
         @JavascriptInterface
         public String getVoiceStatusNote() {
-            return ttsManager != null ? ttsManager.getOfflineVoiceNotice() : null;
+            return ttsManager != null ? ttsManager.getVoiceStatusNote() : null;
+        }
+
+        @JavascriptInterface
+        public void setTtsSafeMode(boolean enabled) {
+            if (ttsManager != null) {
+                ttsManager.setSafeMode(enabled);
+            }
+        }
+
+        @JavascriptInterface
+        public boolean isTtsSafeMode() {
+            return ttsManager != null && ttsManager.isSafeMode();
         }
 
         @JavascriptInterface
@@ -990,17 +1192,47 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
         }
 
         @JavascriptInterface
-        public void copyToClipboard(final String text) {
+        public boolean copyToClipboard(final String text) {
+            final boolean[] result = new boolean[]{false};
+            final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-                        android.content.ClipData clip = android.content.ClipData.newPlainText("Ultron Debug Log", text != null ? text : "");
-                        clipboard.setPrimaryClip(clip);
-                        android.widget.Toast.makeText(FloatingHUDService.this, "Log copied to clipboard", android.widget.Toast.LENGTH_SHORT).show();
+                        if (clipboard != null) {
+                            android.content.ClipData clip = android.content.ClipData.newPlainText("Ultron Debug Log", text != null ? text : "");
+                            clipboard.setPrimaryClip(clip);
+                            android.widget.Toast.makeText(FloatingHUDService.this, "Log copied", android.widget.Toast.LENGTH_SHORT).show();
+                            result[0] = true;
+                        }
                     } catch (Throwable t) {
-                        android.util.Log.w("UltronBridge", "Failed to copy to clipboard: " + t.getMessage());
+                        android.util.Log.w(TAG, "Failed to copy to clipboard: " + t.getMessage());
+                    } finally {
+                        latch.countDown();
+                    }
+                }
+            });
+            try {
+                latch.await(1500, java.util.concurrent.TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignored) {}
+            return result[0];
+        }
+
+        @JavascriptInterface
+        public void shareText(final String text) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+                        sendIntent.setType("text/plain");
+                        sendIntent.putExtra(Intent.EXTRA_TEXT, text != null ? text : "");
+                        Intent chooser = Intent.createChooser(sendIntent, "Share Ultron Log");
+                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(chooser);
+                    } catch (Throwable t) {
+                        android.util.Log.w(TAG, "Failed to share text: " + t.getMessage());
                     }
                 }
             });
@@ -1023,17 +1255,26 @@ public class FloatingHUDService extends Service implements TTSManager.TTSListene
 
         @JavascriptInterface
         public void minimizeToBubble() {
-            setMiniBubbleMode(true);
+            collapseToBubble();
         }
 
         @JavascriptInterface
         public void expandFromBubble() {
-            setMiniBubbleMode(false);
+            expandAssistantHUD();
         }
 
         @JavascriptInterface
         public void toggleBubbleMode() {
-            setMiniBubbleMode(!isMiniBubble);
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (isHudExpanded) {
+                        collapseToBubble();
+                    } else {
+                        expandAssistantHUD();
+                    }
+                }
+            });
         }
 
         @JavascriptInterface

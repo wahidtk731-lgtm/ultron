@@ -394,15 +394,19 @@ def generate_full_dataset():
     # 6. WI-FI CONTROLS
     wifi_on_phrases = [
         "turn on wifi", "enable wifi", "start wifi", "switch on wifi", "wifi on", "turn on the wifi",
-        "turn on wi fi", "enable wi fi", "switch on wi fi", "wi fi on", "connect wifi",
-        "hey ultron turn on wifi", "ultron turn on wifi", "please turn on wifi"
+        "turn on my wifi", "turn the wifi on", "turn my wifi on", "switch on the wifi", "switch the wifi on",
+        "turn on wi fi", "enable wi fi", "switch on wi fi", "wi fi on", "connect wifi", "connect to wifi",
+        "turn on why fi", "why fi on", "turn on why fire", "switch on why fi", "turn wifi on",
+        "hey ultron turn on wifi", "ultron turn on wifi", "please turn on wifi", "open wifi", "open the wifi"
     ]
     for p in wifi_on_phrases:
         add_sample(p, "wifi_on")
 
     wifi_off_phrases = [
         "turn off wifi", "disable wifi", "stop wifi", "switch off wifi", "wifi off", "turn off the wifi",
-        "turn off wi fi", "disable wi fi", "switch off wi fi", "wi fi off", "disconnect wifi",
+        "turn off my wifi", "turn the wifi off", "turn my wifi off", "switch off the wifi", "switch the wifi off",
+        "turn off wi fi", "disable wi fi", "switch off wi fi", "wi fi off", "disconnect wifi", "disconnect from wifi",
+        "turn off why fi", "why fi off", "turn off why fire", "switch off why fi", "turn wifi off",
         "hey ultron turn off wifi", "ultron turn off wifi", "please turn off wifi"
     ]
     for p in wifi_off_phrases:
@@ -411,14 +415,20 @@ def generate_full_dataset():
     # 7. BLUETOOTH CONTROLS
     bt_on_phrases = [
         "turn on bluetooth", "enable bluetooth", "start bluetooth", "switch on bluetooth", "bluetooth on",
-        "turn on the bluetooth", "hey ultron turn on bluetooth", "ultron turn on bluetooth", "please turn on bluetooth"
+        "turn on the bluetooth", "turn on my bluetooth", "turn the bluetooth on", "turn my bluetooth on",
+        "switch on the bluetooth", "switch the bluetooth on", "connect bluetooth", "connect to bluetooth",
+        "turn on blue tooth", "blue tooth on", "switch on blue tooth", "turn bluetooth on",
+        "hey ultron turn on bluetooth", "ultron turn on bluetooth", "please turn on bluetooth"
     ]
     for p in bt_on_phrases:
         add_sample(p, "bluetooth_on")
 
     bt_off_phrases = [
         "turn off bluetooth", "disable bluetooth", "stop bluetooth", "switch off bluetooth", "bluetooth off",
-        "turn off the bluetooth", "hey ultron turn off bluetooth", "ultron turn off bluetooth", "please turn off bluetooth"
+        "turn off the bluetooth", "turn off my bluetooth", "turn the bluetooth off", "turn my bluetooth off",
+        "switch off the bluetooth", "switch the bluetooth off", "disconnect bluetooth", "disconnect from bluetooth",
+        "turn off blue tooth", "blue tooth off", "switch off blue tooth", "turn bluetooth off",
+        "hey ultron turn off bluetooth", "ultron turn off bluetooth", "please turn off bluetooth"
     ]
     for p in bt_off_phrases:
         add_sample(p, "bluetooth_off")

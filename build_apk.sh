@@ -5,6 +5,9 @@
 
 set -e
 
+# Unset JAVA_HOME so Termux dalvikvm + ecj runs reliably without jrt provider error
+unset JAVA_HOME
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 

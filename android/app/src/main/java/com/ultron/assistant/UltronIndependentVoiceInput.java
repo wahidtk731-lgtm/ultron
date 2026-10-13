@@ -509,6 +509,9 @@ public class UltronIndependentVoiceInput {
                     String rescued = lastPartial.trim();
                     UltronDebugLog.log(TAG, "Rescued partial on error " + error + ": " + rescued);
                     notifyResult(rescued);
+                } else if ((error == SpeechRecognizer.ERROR_NO_MATCH || (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT && plan != null && planIndex < plan.length && plan[planIndex] == STEP_SYSTEM_ONLINE)) && plan != null && planIndex + 1 < plan.length) {
+                    UltronDebugLog.log(TAG, "No match / online timeout on step " + stepName(plan[planIndex]) + "; advancing to fallback engine");
+                    advanceOrFail(error);
                 } else {
                     notifyError("I didn't catch that. Tap the mic and try again. [E" + error + "]");
                 }
@@ -728,6 +731,9 @@ public class UltronIndependentVoiceInput {
                 String rescued = lastPartial.trim();
                 UltronDebugLog.log(TAG, "Rescued partial from empty results: " + rescued);
                 notifyResult(rescued);
+            } else if (plan != null && planIndex + 1 < plan.length) {
+                UltronDebugLog.log(TAG, "Empty results on step " + stepName(plan[planIndex]) + "; advancing to fallback engine");
+                advanceOrFail(SpeechRecognizer.ERROR_NO_MATCH);
             } else {
                 notifyError("Didn't catch that. Tap mic to retry." + formatDiag(SpeechRecognizer.ERROR_NO_MATCH));
             }

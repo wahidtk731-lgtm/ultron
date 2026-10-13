@@ -19,7 +19,8 @@ public class UltronVoskEngine {
 
     private static final String TAG = "UltronVoskEngine";
     private static final float SAMPLE_RATE = 16000.0f;
-    private static final long SILENCE_TIMEOUT_MS = 8000; // 8 seconds silence watchdog
+    private static final long INITIAL_SILENCE_TIMEOUT_MS = 6000; // 6s initial silence timeout (waiting for user to speak)
+    private static final long SPEECH_PAUSE_TIMEOUT_MS = 1400;    // 1.4s adaptive pause finalizer once speech is detected
 
     public interface Listener {
         void onReady();
@@ -42,6 +43,7 @@ public class UltronVoskEngine {
     private org.vosk.Recognizer currentRecognizer;
     private org.vosk.android.SpeechService currentSpeechService;
     private final AtomicBoolean isListening = new AtomicBoolean(false);
+    private volatile String latestPartialText = "";
     private Runnable silenceWatchdog;
     private Listener currentListener;
 
@@ -113,6 +115,20 @@ public class UltronVoskEngine {
         return isListening.get();
     }
 
+    public static String getGrammarJson() {
+        return "[\"open\", \"launch\", \"start\", \"run\", \"close\", \"kill\", \"exit\", \"stop\", \"shut\", \"down\", " +
+               "\"turn\", \"switch\", \"enable\", \"disable\", \"take\", \"capture\", \"clear\", \"clean\", \"dismiss\", " +
+               "\"on\", \"off\", \"up\", \"down\", \"the\", \"my\", \"a\", \"an\", \"and\", \"app\", \"to\", \"in\", \"for\", \"please\", " +
+               "\"wifi\", \"bluetooth\", \"flashlight\", \"torch\", \"light\", \"volume\", \"sound\", \"louder\", \"quieter\", " +
+               "\"screenshot\", \"screen\", \"notifications\", \"notification\", \"quick\", \"status\", \"bar\", " +
+               "\"recent\", \"apps\", \"floating\", \"bubble\", \"mode\", \"time\", \"date\", \"clock\", \"today\", \"now\", " +
+               "\"hello\", \"hi\", \"hey\", \"help\", \"who\", \"what\", \"can\", \"you\", \"do\", " +
+               "\"google\", \"chrome\", \"youtube\", \"camera\", \"gallery\", \"photos\", \"settings\", " +
+               "\"whats\", \"insta\", \"reels\", \"shorts\", \"spotify\", \"music\", \"song\", \"play\", \"pause\", \"next\", \"previous\", " +
+               "\"files\", \"messages\", \"message\", \"phone\", \"call\", \"dialer\", \"maps\", \"gmail\", \"store\", " +
+               "\"netflix\", \"amazon\", \"calculator\", \"device\", \"system\", \"[unk]\"]";
+    }
+
     /**
      * Starts listening for speech using the offline Vosk engine.
      */
@@ -143,19 +159,34 @@ public class UltronVoskEngine {
         }
 
         try {
-            currentRecognizer = new org.vosk.Recognizer(sCachedModel, SAMPLE_RATE);
+            org.vosk.Recognizer rec = null;
+            try {
+                rec = new org.vosk.Recognizer(sCachedModel, SAMPLE_RATE, getGrammarJson());
+                UltronDebugLog.log(TAG, "Vosk Recognizer initialized with high-accuracy assistant grammar");
+            } catch (Throwable gramEx) {
+                UltronDebugLog.log(TAG, "Grammar init fallback to open-vocabulary: " + gramEx.getMessage());
+                rec = new org.vosk.Recognizer(sCachedModel, SAMPLE_RATE);
+            }
+            currentRecognizer = rec;
+            try {
+                currentRecognizer.setWords(true);
+                currentRecognizer.setPartialWords(true);
+            } catch (Throwable ignored) {}
             currentSpeechService = new org.vosk.android.SpeechService(currentRecognizer, SAMPLE_RATE);
 
             isListening.set(true);
+            latestPartialText = "";
 
             boolean started = currentSpeechService.startListening(new org.vosk.android.RecognitionListener() {
                 @Override
                 public void onPartialResult(String hypothesis) {
                     if (!isListening.get()) return;
-                    resetSilenceWatchdog();
                     String partial = parseJsonField(hypothesis, "partial");
                     if (!partial.isEmpty()) {
+                        latestPartialText = partial;
                         dispatchPartialResult(partial);
+                        // Speech detected: arm adaptive speech-pause finalizer
+                        resetSpeechPauseWatchdog();
                     }
                 }
 
@@ -173,9 +204,13 @@ public class UltronVoskEngine {
                 public void onFinalResult(String hypothesis) {
                     if (!isListening.get()) return;
                     String text = parseJsonField(hypothesis, "text");
+                    String rescue = latestPartialText;
                     stopListening();
                     if (!text.isEmpty()) {
                         dispatchResult(text);
+                    } else if (rescue != null && !rescue.trim().isEmpty()) {
+                        UltronDebugLog.log(TAG, "Rescued Vosk partial from empty final result: " + rescue.trim());
+                        dispatchResult(rescue.trim());
                     } else {
                         dispatchError(SpeechRecognizer.ERROR_NO_MATCH, "Didn't catch that. Tap mic to speak.");
                     }
@@ -193,8 +228,14 @@ public class UltronVoskEngine {
                 public void onTimeout() {
                     if (!isListening.get()) return;
                     UltronDebugLog.log(TAG, "Vosk SpeechService timeout");
+                    String rescue = latestPartialText;
                     stopListening();
-                    dispatchError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT, "I didn't hear anything. Tap the mic and speak.");
+                    if (rescue != null && !rescue.trim().isEmpty()) {
+                        UltronDebugLog.log(TAG, "Rescued Vosk partial on timeout: " + rescue.trim());
+                        dispatchResult(rescue.trim());
+                    } else {
+                        dispatchError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT, "I didn't hear anything. Tap the mic and speak.");
+                    }
                 }
             });
 
@@ -206,7 +247,7 @@ public class UltronVoskEngine {
 
             UltronDebugLog.log(TAG, "Vosk SpeechService started listening");
             dispatchReady();
-            resetSilenceWatchdog();
+            resetInitialSilenceWatchdog();
 
         } catch (Throwable t) {
             UltronDebugLog.log(TAG, "startListening exception: " + t.getMessage());
@@ -223,27 +264,36 @@ public class UltronVoskEngine {
 
         isListening.set(false);
 
-        if (currentSpeechService != null) {
-            try {
-                currentSpeechService.stop();
-                currentSpeechService.shutdown();
-            } catch (Throwable t) {
-                Log.w(TAG, "Error stopping SpeechService", t);
-            }
-            currentSpeechService = null;
-        }
+        final org.vosk.android.SpeechService serviceToStop = currentSpeechService;
+        final org.vosk.Recognizer recToClose = currentRecognizer;
+        currentSpeechService = null;
+        currentRecognizer = null;
 
-        if (currentRecognizer != null) {
-            try {
-                currentRecognizer.close();
-            } catch (Throwable t) {
-                Log.w(TAG, "Error closing Recognizer", t);
-            }
-            currentRecognizer = null;
+        if (serviceToStop != null || recToClose != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (serviceToStop != null) {
+                        try {
+                            serviceToStop.stop();
+                            serviceToStop.shutdown();
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Error stopping SpeechService in background", t);
+                        }
+                    }
+                    if (recToClose != null) {
+                        try {
+                            recToClose.close();
+                        } catch (Throwable t) {
+                            Log.w(TAG, "Error closing Recognizer in background", t);
+                        }
+                    }
+                }
+            }, "VoskStopWorker").start();
         }
     }
 
-    private void resetSilenceWatchdog() {
+    private void resetInitialSilenceWatchdog() {
         if (silenceWatchdog != null) {
             mainHandler.removeCallbacks(silenceWatchdog);
         }
@@ -251,13 +301,39 @@ public class UltronVoskEngine {
             @Override
             public void run() {
                 if (isListening.get()) {
-                    UltronDebugLog.log(TAG, "Silence watchdog triggered (" + (SILENCE_TIMEOUT_MS / 1000) + "s)");
+                    UltronDebugLog.log(TAG, "Initial silence watchdog triggered (" + (INITIAL_SILENCE_TIMEOUT_MS / 1000) + "s)");
+                    String rescue = latestPartialText;
                     stopListening();
-                    dispatchError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT, "I didn't hear anything. Tap the mic and speak.");
+                    if (rescue != null && !rescue.trim().isEmpty()) {
+                        UltronDebugLog.log(TAG, "Rescued Vosk partial on initial timeout: " + rescue.trim());
+                        dispatchResult(rescue.trim());
+                    } else {
+                        dispatchError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT, "I didn't hear anything. Tap the mic and speak.");
+                    }
                 }
             }
         };
-        mainHandler.postDelayed(silenceWatchdog, SILENCE_TIMEOUT_MS);
+        mainHandler.postDelayed(silenceWatchdog, INITIAL_SILENCE_TIMEOUT_MS);
+    }
+
+    private void resetSpeechPauseWatchdog() {
+        if (silenceWatchdog != null) {
+            mainHandler.removeCallbacks(silenceWatchdog);
+        }
+        silenceWatchdog = new Runnable() {
+            @Override
+            public void run() {
+                if (isListening.get()) {
+                    String rescue = latestPartialText;
+                    if (rescue != null && !rescue.trim().isEmpty()) {
+                        UltronDebugLog.log(TAG, "Speech pause watchdog (" + SPEECH_PAUSE_TIMEOUT_MS + "ms) triggered: finalizing \"" + rescue.trim() + "\"");
+                        stopListening();
+                        dispatchResult(rescue.trim());
+                    }
+                }
+            }
+        };
+        mainHandler.postDelayed(silenceWatchdog, SPEECH_PAUSE_TIMEOUT_MS);
     }
 
     private void dispatchReady() {
