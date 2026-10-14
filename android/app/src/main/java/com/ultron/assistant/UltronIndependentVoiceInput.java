@@ -318,13 +318,13 @@ public class UltronIndependentVoiceInput {
 
     private int[] buildPlan(boolean isOnline) {
         String engineMode = context.getSharedPreferences("ultron_prefs", Context.MODE_PRIVATE)
-                .getString("voice_engine_mode", "auto");
+                .getString("voice_engine_mode", "offline_only");
         boolean offlineOnly = "offline_only".equals(engineMode);
 
         if (offlineOnly) {
             return new int[]{STEP_VOSK};
         } else if (isOnline) {
-            return new int[]{STEP_SYSTEM_ONLINE, STEP_VOSK, STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US};
+            return new int[]{STEP_VOSK, STEP_SYSTEM_ONLINE, STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US};
         } else {
             return new int[]{STEP_VOSK, STEP_ONDEVICE_API, STEP_SYSTEM_OFFLINE, STEP_SYSTEM_OFFLINE_EN_US};
         }

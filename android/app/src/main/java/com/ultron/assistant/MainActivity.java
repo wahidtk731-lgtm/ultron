@@ -943,7 +943,7 @@ public class MainActivity extends Activity implements TTSManager.TTSListener {
         @JavascriptInterface
         public String getVoiceEngineMode() {
             return getSharedPreferences("ultron_prefs", MODE_PRIVATE)
-                .getString("voice_engine_mode", "auto");
+                .getString("voice_engine_mode", "offline_only");
         }
 
         @JavascriptInterface

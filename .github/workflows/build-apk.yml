@@ -60,9 +60,10 @@ jobs:
           fi
           echo "Using Android Jar: $ANDROID_JAR"
           
-          # 0. Fetch Voice Assets (Vosk + JNA + Model)
-          echo "Step 0: Fetching Voice Assets..."
+          # 0. Fetch Voice Assets (Vosk + JNA + Model) and build SAM synthesizer
+          echo "Step 0: Fetching Voice Assets & Building SAM Synth..."
           bash scripts/fetch_voice_assets.sh
+          bash scripts/build_sam_libs.sh
 
           # 1. Generate R.java
           echo "Step 1: Generating R.java..."
@@ -106,8 +107,8 @@ jobs:
           cp vendor/native/arm64-v8a/*.so build/native-stage/lib/arm64-v8a/
           cp vendor/native/armeabi-v7a/*.so build/native-stage/lib/armeabi-v7a/
           (cd build/native-stage && aapt add ../../bin/UltronAssistant-unaligned.apk \
-            lib/arm64-v8a/libvosk.so lib/arm64-v8a/libjnidispatch.so \
-            lib/armeabi-v7a/libvosk.so lib/armeabi-v7a/libjnidispatch.so)
+            lib/arm64-v8a/libvosk.so lib/arm64-v8a/libjnidispatch.so lib/arm64-v8a/libultronsam.so \
+            lib/armeabi-v7a/libvosk.so lib/armeabi-v7a/libjnidispatch.so lib/armeabi-v7a/libultronsam.so)
 
           # 6. Align APK
           echo "Step 6: Running zipalign..."

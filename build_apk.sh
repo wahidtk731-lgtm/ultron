@@ -19,6 +19,7 @@ mkdir -p bin obj gen ~/.android-sdk
 
 # 0. Fetch Voice Assets (Vosk + JNA + Model) if needed
 bash scripts/fetch_voice_assets.sh
+bash scripts/build_sam_libs.sh
 
 # 1. Locate android.jar
 ANDROID_JAR="$HOME/.android-sdk/android.jar"
@@ -82,8 +83,8 @@ mkdir -p build/native-stage/lib/arm64-v8a build/native-stage/lib/armeabi-v7a
 cp vendor/native/arm64-v8a/*.so build/native-stage/lib/arm64-v8a/
 cp vendor/native/armeabi-v7a/*.so build/native-stage/lib/armeabi-v7a/
 (cd build/native-stage && aapt add ../../bin/UltronAssistant-unaligned.apk \
-    lib/arm64-v8a/libvosk.so lib/arm64-v8a/libjnidispatch.so \
-    lib/armeabi-v7a/libvosk.so lib/armeabi-v7a/libjnidispatch.so)
+    lib/arm64-v8a/libvosk.so lib/arm64-v8a/libjnidispatch.so lib/arm64-v8a/libultronsam.so \
+    lib/armeabi-v7a/libvosk.so lib/armeabi-v7a/libjnidispatch.so lib/armeabi-v7a/libultronsam.so)
 
 # 6. Sign APK
 echo "[5/6] Signing APK (v1 JAR SHA-256 + SHA-1)..."
